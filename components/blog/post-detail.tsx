@@ -418,8 +418,8 @@ export function PostDetail({ post }: PostDetailProps) {
   return (
     <article className="max-w-4xl mx-auto">
       {/* Header */}
-      <header className="mb-8">
-        <div className="flex flex-wrap gap-2 mb-4">
+      <header className="mb-6 space-y-4">
+        <div className="flex flex-wrap gap-2 mb-3">
           {categoryName && (
             <Badge variant="outline" className="bg-primary/10">
               <Link href={`/blog/categorias/${post.categoryId}`}>{categoryName}</Link>
@@ -447,13 +447,13 @@ export function PostDetail({ post }: PostDetailProps) {
             })}
         </div>
 
-        <h1 className="text-3xl md:text-4xl font-bold mb-4" style={titleStyle}>
+        <h1 className="text-3xl md:text-4xl font-bold mb-3" style={titleStyle}>
           {post.title}
         </h1>
 
-        <div className="text-muted-foreground mb-4">{post.shortDescription || post.excerpt}</div>
+        <div className="text-muted-foreground mb-3">{post.shortDescription || post.excerpt}</div>
 
-        <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground mb-4">
+        <div className="flex flex-wrap items-center gap-3 text-sm text-muted-foreground mb-3">
           <div className="flex items-center">
             <Calendar className="h-4 w-4 mr-1.5" />
             <time dateTime={new Date(post.publishDate).toISOString()}>{formattedPublishDate}</time>
@@ -487,7 +487,7 @@ export function PostDetail({ post }: PostDetailProps) {
           </div>
         </div>
 
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mt-1">
           <div className="flex items-center gap-3">
             <Avatar className="h-10 w-10">
               <AvatarImage src={post.authorImageUrl || ""} alt={post.author} />

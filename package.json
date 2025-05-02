@@ -85,14 +85,14 @@
     "remark-gfm": "latest",
     "rehype-raw": "latest",
     "sharp": "latest",
-    "react-syntax-highlighter": "latest",
     "marked": "latest",
     "react-hot-toast": "latest",
     "react-icons": "latest",
     "react-easy-crop": "latest",
     "@tanstack/react-virtual": "latest",
     "resend": "latest",
-    "@fingerprintjs/fingerprintjs": "latest"
+    "@fingerprintjs/fingerprintjs": "latest",
+    "react-syntax-highlighter": "latest"
   },
   "devDependencies": {
     "@types/node": "^22",
