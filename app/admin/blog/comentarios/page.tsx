@@ -1,5 +1,5 @@
 import type { Metadata } from "next"
-import AdminCommentsListWrapper from "@/components/admin/admin-comments-list"
+import { AdminCommentsList } from "@/components/admin/admin-comments-list"
 import AdminRouteGuard from "@/components/auth/admin-route-guard"
 
 export const metadata: Metadata = {
@@ -12,7 +12,7 @@ export default function AdminCommentsPage() {
     <AdminRouteGuard>
       <div className="container mx-auto px-4 py-8">
         <h1 className="text-2xl font-bold mb-6">Administrar Comentarios</h1>
-        <AdminCommentsListWrapper />
+        <AdminCommentsList />
       </div>
     </AdminRouteGuard>
   )

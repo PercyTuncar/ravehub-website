@@ -400,7 +400,6 @@ export default function CurrencySettings() {
             <p>EXCHANGE_RATE_API_KEY=tu_api_key_aquí</p>
             <p>OPEN_EXCHANGE_RATES_API_KEY=tu_api_key_aquí</p>
             <p>CURRENCY_API_KEY=tu_api_key_aquí</p>
-            <p>NEXT_PUBLIC_OPEN_EXCHANGE_RATES_API_KEY=tu_api_key_aquí</p>
           </div>
           <p className="mt-4 text-sm text-muted-foreground">
             En Vercel, puedes agregar estas variables en la sección "Environment Variables" de la configuración de tu

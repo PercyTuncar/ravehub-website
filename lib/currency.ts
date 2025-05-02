@@ -61,18 +61,12 @@ export async function getExchangeRates(): Promise<ExchangeRates> {
 // Función para obtener tasas de cambio de una API externa
 async function fetchExchangeRatesFromAPI(): Promise<ExchangeRates> {
   try {
-    // Usamos Open Exchange Rates API (requiere API key)
-    const apiKey = process.env.NEXT_PUBLIC_OPEN_EXCHANGE_RATES_API_KEY
-
-    if (!apiKey) {
-      throw new Error("No se encontró API key para Open Exchange Rates")
-    }
-
-    const response = await fetch(`https://openexchangerates.org/api/latest.json?app_id=${apiKey}`)
+    // Use our server API route instead of directly calling the external API
+    const response = await fetch("/api/exchange-rates")
     const data = await response.json()
 
-    if (data.rates) {
-      console.log("Tasas de cambio obtenidas de API externa")
+    if (response.ok && data.rates) {
+      console.log("Tasas de cambio obtenidas de API externa via servidor")
 
       // Guardar en localStorage solamente (no en Firestore)
       localStorage.setItem("exchangeRates", JSON.stringify(data.rates))
@@ -80,7 +74,7 @@ async function fetchExchangeRatesFromAPI(): Promise<ExchangeRates> {
 
       return data.rates
     } else {
-      throw new Error("Formato de respuesta de API inválido")
+      throw new Error(data.error || "Formato de respuesta de API inválido")
     }
   } catch (error) {
     console.error("Error al obtener tasas de API externa:", error)
