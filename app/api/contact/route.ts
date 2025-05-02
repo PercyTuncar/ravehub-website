@@ -1,0 +1,46 @@
+import { NextResponse } from "next/server"
+import { Resend } from "resend"
+
+// Initialize Resend with your API key
+const resend = new Resend(process.env.RESEND_API_KEY)
+
+export async function POST(request: Request) {
+  try {
+    // Parse the request body
+    const { name, email, message } = await request.json()
+
+    // Basic validation
+    if (!name || !email || !message) {
+      return NextResponse.json({ error: "Nombre, correo y mensaje son requeridos" }, { status: 400 })
+    }
+
+    if (!email.includes("@") || !email.includes(".")) {
+      return NextResponse.json({ error: "Por favor ingresa un correo electrónico válido" }, { status: 400 })
+    }
+
+    // Send email using Resend
+    const { data, error } = await resend.emails.send({
+      from: "Contacto RaveHub <no-reply@ravehublatam.com>",
+      to: "percy@ravehublatam.com",
+      subject: `Nuevo mensaje de contacto de ${name}`,
+      html: `
+        <h2>Nuevo mensaje de contacto</h2>
+        <p><strong>Nombre:</strong> ${name}</p>
+        <p><strong>Correo:</strong> ${email}</p>
+        <p><strong>Mensaje:</strong></p>
+        <p>${message.replace(/\n/g, "<br>")}</p>
+      `,
+      reply_to: email,
+    })
+
+    if (error) {
+      console.error("Error sending email:", error)
+      return NextResponse.json({ error: "Error al enviar el mensaje" }, { status: 500 })
+    }
+
+    return NextResponse.json({ success: true, data })
+  } catch (error) {
+    console.error("Error in contact form submission:", error)
+    return NextResponse.json({ error: "Error al procesar la solicitud" }, { status: 500 })
+  }
+}

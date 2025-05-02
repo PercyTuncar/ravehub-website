@@ -1,0 +1,14 @@
+# Allow all web crawlers
+User-agent: *
+Allow: /
+
+# Disallow admin pages
+Disallow: /admin/
+Disallow: /login
+Disallow: /register
+Disallow: /reset-password
+Disallow: /checkout
+Disallow: /cart
+
+# Sitemap
+Sitemap: https://ravehub.com/sitemap.xml

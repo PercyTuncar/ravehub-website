@@ -1,0 +1,59 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Función para verificar si el usuario está autenticado
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    // Función para verificar si el usuario es administrador
+    function isAdmin() {
+      return isAuthenticated() && 
+        exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
+    
+    // Función para verificar si el usuario es el propietario del documento
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+    
+    // Reglas para la colección de reseñas de productos
+    match /productReviews/{reviewId} {
+      // Cualquiera puede leer las reseñas aprobadas
+      allow read: if resource.data.approved == true || isAdmin() || isOwner(resource.data.userId);
+      
+      // Solo usuarios autenticados pueden crear reseñas
+      allow create: if isAuthenticated() && 
+                     request.resource.data.userId == request.auth.uid &&
+                     request.resource.data.approved == false &&
+                     validateReviewLimit(request.resource.data.userId, request.resource.data.productId);
+      
+      // Solo el propietario puede actualizar campos específicos
+      allow update: if isOwner(resource.data.userId) && 
+                      !request.resource.data.diff(resource.data).affectedKeys().hasAny(['approved', 'approvedBy', 'approvedAt']);
+      
+      // Solo administradores pueden aprobar reseñas
+      allow update: if isAdmin();
+      
+      // Solo administradores o el propietario pueden eliminar
+      allow delete: if isAdmin() || isOwner(resource.data.userId);
+      
+      // Función para validar el límite de reseñas por usuario por producto
+      function validateReviewLimit(userId, productId) {
+        let userReviews = getReviewsCount(userId, productId);
+        return userReviews < 3;
+      }
+      
+      // Función para contar las reseñas de un usuario para un producto
+      function getReviewsCount(userId, productId) {
+        return firestore.getCountFromQuery(
+          firestore.query('productReviews', 
+            where('userId', '==', userId), 
+            where('productId', '==', productId)
+          )
+        );
+      }
+    }
+  }
+}
