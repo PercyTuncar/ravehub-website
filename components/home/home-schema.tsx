@@ -24,10 +24,31 @@ export function HomeSchema({ featuredEvents }: HomeSchemaProps) {
       url: "/eventos",
       description: "Encuentra los mejores eventos de música electrónica en Latinoamérica",
     },
-    { name: "Tienda", url: "/tienda", description: "Compra merchandise oficial y productos exclusivos" },
-    { name: "Blog", url: "/blog", description: "Noticias, artículos y contenido sobre la escena electrónica" },
-    { name: "Galería", url: "/galeria", description: "Fotos de los mejores eventos y festivales" },
-    { name: "Contacto", url: "/contacto", description: "Ponte en contacto con nosotros" },
+    {
+      name: "Tienda",
+      url: "/tienda",
+      description: "Compra merchandise oficial y productos exclusivos de música electrónica",
+    },
+    {
+      name: "Blog",
+      url: "/blog",
+      description: "Noticias, artículos y contenido sobre la escena electrónica en Latinoamérica",
+    },
+    {
+      name: "Galería",
+      url: "/galeria",
+      description: "Fotos de los mejores eventos y festivales de música electrónica",
+    },
+    {
+      name: "DJ Ranking",
+      url: "/dj-ranking",
+      description: "Descubre, sugiere y vota por los mejores DJs de cada país",
+    },
+    {
+      name: "Contacto",
+      url: "/contacto",
+      description: "Ponte en contacto con nosotros para cualquier consulta o colaboración",
+    },
   ]
 
   const schemaData = {

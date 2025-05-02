@@ -84,10 +84,17 @@ export const metadata: Metadata = {
     "eventos techno",
     "eventos house",
     "fiestas electrónicas",
+    "merchandise oficial",
+    "ravehub.pe",
   ],
   category: "Entertainment",
   verification: {
     google: "verification-code", // Replace with your actual Google verification code
+  },
+  other: {
+    "facebook-domain-verification": "", // Add your Facebook domain verification if available
+    "google-site-verification": "", // Add your Google site verification if available
+    "msvalidate.01": "", // Add your Bing verification if available
   },
     generator: 'v0.dev'
 }
@@ -116,7 +123,7 @@ export default function RootLayout({
 
         {/* Añadir los meta tags para PWA */}
         <link rel="apple-touch-icon" href="/icons/icon-192x192.png" />
-        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
         <meta name="apple-mobile-web-app-title" content="RaveHub" />
 

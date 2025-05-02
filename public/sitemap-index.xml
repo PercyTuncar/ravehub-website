@@ -2,6 +2,22 @@
 <sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <sitemap>
     <loc>https://www.ravehublatam.com/sitemap.xml</loc>
-    <lastmod>2023-04-30T12:00:00+00:00</lastmod>
+    <lastmod>2023-05-01T00:00:00+00:00</lastmod>
+  </sitemap>
+  <sitemap>
+    <loc>https://www.ravehublatam.com/sitemap-eventos.xml</loc>
+    <lastmod>2023-05-01T00:00:00+00:00</lastmod>
+  </sitemap>
+  <sitemap>
+    <loc>https://www.ravehublatam.com/sitemap-blog.xml</loc>
+    <lastmod>2023-05-01T00:00:00+00:00</lastmod>
+  </sitemap>
+  <sitemap>
+    <loc>https://www.ravehublatam.com/sitemap-tienda.xml</loc>
+    <lastmod>2023-05-01T00:00:00+00:00</lastmod>
+  </sitemap>
+  <sitemap>
+    <loc>https://www.ravehublatam.com/sitemap-galeria.xml</loc>
+    <lastmod>2023-05-01T00:00:00+00:00</lastmod>
   </sitemap>
 </sitemapindex>
