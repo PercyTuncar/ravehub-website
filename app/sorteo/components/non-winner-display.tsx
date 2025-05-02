@@ -57,10 +57,12 @@ export default function NonWinnerDisplay({ nonWinner, position, onNext }: NonWin
             <p className="text-sm font-medium text-gray-500 mb-1">Nombre</p>
             <p className="text-gray-700 font-medium">{nonWinner.name}</p>
           </div>
-          
+
           <div className="bg-gray-50 p-4 rounded-lg">
             <p className="text-sm font-medium text-gray-500 mb-1">Email</p>
-            <p className="text-gray-700">{nonWinner.email.substring(0, 3)}***{nonWinner.email.substring(nonWinner.email.lastIndexOf('@'))}</p>
+            <p className="text-gray-700">
+              {nonWinner.email.substring(0, 3)}***{nonWinner.email.substring(nonWinner.email.lastIndexOf("@"))}
+            </p>
           </div>
         </div>
       </div>
@@ -73,8 +75,8 @@ export default function NonWinnerDisplay({ nonWinner, position, onNext }: NonWin
           className="bg-gradient-to-r from-indigo-500 to-purple-500 text-white px-8 py-3 rounded-full font-semibold flex items-center space-x-2 mx-auto hover:shadow-lg transition-all duration-300"
         >
           <span>Siguiente intento</span>
-          <ArrowRight\
-</motion.button>
+          <ArrowRight />
+        </motion.button>
       </div>
     </motion.div>
   )
