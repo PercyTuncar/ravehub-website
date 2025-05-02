@@ -451,7 +451,10 @@ export function PostDetail({ post }: PostDetailProps) {
           {post.title}
         </h1>
 
-        <div className="text-muted-foreground mb-3">{post.shortDescription || post.excerpt}</div>
+        <div className="text-muted-foreground mb-4 p-4 bg-primary/5 border-l-4 border-primary/20 rounded-r-lg shadow-sm backdrop-blur-sm relative overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-to-r from-primary/10 to-transparent opacity-20 pointer-events-none"></div>
+          <p className="relative z-10">{post.shortDescription || post.excerpt}</p>
+        </div>
 
         <div className="flex flex-wrap items-center gap-3 text-sm text-muted-foreground mb-3">
           <div className="flex items-center">
