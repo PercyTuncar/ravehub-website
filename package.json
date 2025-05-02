@@ -92,7 +92,8 @@
     "@tanstack/react-virtual": "latest",
     "resend": "latest",
     "@fingerprintjs/fingerprintjs": "latest",
-    "react-syntax-highlighter": "latest"
+    "react-syntax-highlighter": "latest",
+    "canvas-confetti": "latest"
   },
   "devDependencies": {
     "@types/node": "^22",
