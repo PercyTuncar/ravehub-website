@@ -5,6 +5,7 @@ import { ProductListWrapper } from "@/components/store/product-list-wrapper"
 import { FeaturedProducts } from "@/components/store/featured-products"
 import { StoreBanner } from "@/components/store/store-banner"
 import { Separator } from "@/components/ui/separator"
+import { Breadcrumbs } from "@/components/breadcrumbs"
 
 export const metadata: Metadata = {
   title: "Tienda RaveHub | Productos para eventos y fiestas",
@@ -33,6 +34,8 @@ export default function StorePage() {
       <section className="mb-12">
         <StoreBanner />
       </section>
+
+      <Breadcrumbs className="mb-6" />
 
       {/* Featured Products Carousel - Desktop Only */}
       <section className="hidden md:block mb-12" aria-labelledby="featured-products-heading">

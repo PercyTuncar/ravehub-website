@@ -4,6 +4,7 @@ import { EventsList } from "@/components/events/events-list"
 import { EventsLoading } from "@/components/events/events-loading"
 import { EventsBanner } from "@/components/events/events-banner"
 import { EventsCategories } from "@/components/events/events-categories"
+import { Breadcrumbs } from "@/components/breadcrumbs"
 
 export const metadata = {
   title: "Eventos | RaveHub - Música Electrónica en Latinoamérica",
@@ -44,6 +45,7 @@ export default function EventsPage() {
   return (
     <div className="w-full">
       <EventsBanner />
+      <Breadcrumbs className="container mx-auto" />
 
       <div className="container mx-auto px-4 py-6">
         <h1 className="text-3xl font-bold text-center mb-6">Eventos</h1>

@@ -10,7 +10,11 @@ interface BreadcrumbItem {
   isCurrent?: boolean
 }
 
-export function Breadcrumbs() {
+interface BreadcrumbsProps {
+  className?: string
+}
+
+export function Breadcrumbs({ className = "" }: BreadcrumbsProps) {
   const pathname = usePathname()
 
   // Skip rendering breadcrumbs on homepage
@@ -71,7 +75,7 @@ export function Breadcrumbs() {
   }
 
   return (
-    <nav aria-label="Breadcrumbs" className="py-2 px-4 bg-gray-50 dark:bg-gray-800 text-sm">
+    <nav aria-label="Breadcrumbs" className={`py-2 px-4 bg-gray-50 dark:bg-gray-800 text-sm ${className}`}>
       <ol className="flex flex-wrap items-center">
         {breadcrumbs.map((crumb, idx) => (
           <li key={idx} className="flex items-center">

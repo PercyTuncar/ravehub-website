@@ -9,6 +9,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Card, CardContent } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useToast } from "@/hooks/use-toast"
+import { Breadcrumbs } from "@/components/breadcrumbs"
 
 const TiktokIcon = (props) => (
   <svg
@@ -160,6 +161,8 @@ export default function ContactPage() {
           mensaje directo.
         </p>
       </motion.div>
+
+      <Breadcrumbs className="container mx-auto my-4" />
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-16">
         <motion.div

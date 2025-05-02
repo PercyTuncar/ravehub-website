@@ -3,6 +3,7 @@ import { Suspense } from "react"
 import BlogList from "./blog-list"
 import BlogListFallback from "./blog-list-fallback"
 import FeaturedBlogBanner from "@/components/blog/featured-blog-banner"
+import { Breadcrumbs } from "@/components/breadcrumbs"
 
 export const metadata: Metadata = {
   title: "Blog | RaveHub",
@@ -30,6 +31,7 @@ export default function BlogPage() {
   return (
     <div className="container mx-auto px-4 py-8">
       <FeaturedBlogBanner />
+      <Breadcrumbs className="my-4" />
       <h1 className="text-3xl font-bold mb-8">Blog</h1>
 
       <Suspense fallback={<BlogListFallback />}>

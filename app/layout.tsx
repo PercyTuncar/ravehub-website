@@ -17,7 +17,6 @@ import { UpdatePrompt } from "@/components/pwa/update-prompt"
 import GoogleAnalytics from "@/components/analytics/google-analytics"
 import { Suspense } from "react"
 import { FontOptimization } from "@/components/font-optimization"
-import { Breadcrumbs } from "@/components/breadcrumbs"
 
 // Optimizar la carga de fuentes
 const inter = Inter({
@@ -143,7 +142,6 @@ export default function RootLayout({
                   <UpdatePrompt />
                   <div className="flex min-h-screen flex-col">
                     <Navbar />
-                    <Breadcrumbs />
                     <main className="flex-1 w-full pb-safe">{children}</main>
                     <Footer />
                   </div>

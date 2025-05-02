@@ -4,6 +4,7 @@ import { GalleryFilters } from "@/components/gallery/gallery-filters"
 import { GalleryHero } from "@/components/gallery/gallery-hero"
 import { getAllAlbums, getAlbumsByYear } from "@/lib/firebase/gallery"
 import type { Metadata } from "next"
+import { Breadcrumbs } from "@/components/breadcrumbs"
 
 export const metadata: Metadata = {
   title: "Galería de imágenes | RaveHub",
@@ -30,6 +31,9 @@ export default async function GalleryPage({ searchParams }: GalleryPageProps) {
   return (
     <div className="min-h-screen bg-gradient-to-b from-background to-background/95">
       <GalleryHero />
+      <div className="container px-4 mt-4">
+        <Breadcrumbs />
+      </div>
 
       <div className="container px-4 py-12 space-y-10">
         <div className="space-y-2">
