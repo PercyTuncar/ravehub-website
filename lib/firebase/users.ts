@@ -19,6 +19,12 @@ export interface UserData {
   createdAt?: any
   updatedAt?: any
   photoURL?: string // Para la foto de perfil
+  // Nuevos campos para preferencias
+  emailNotifications?: boolean
+  eventReminders?: boolean
+  marketingEmails?: boolean
+  orderUpdates?: boolean
+  showProfilePublicly?: boolean
 }
 
 // Obtener todos los usuarios
@@ -140,6 +146,11 @@ export async function updateUserProfile(uid: string, data: Partial<UserData>): P
       "preferredCurrency",
       "role",
       "isActive",
+      "emailNotifications",
+      "eventReminders",
+      "marketingEmails",
+      "orderUpdates",
+      "showProfilePublicly",
     ].forEach((field) => {
       if (data[field] !== undefined) {
         validatedData[field] = data[field]
