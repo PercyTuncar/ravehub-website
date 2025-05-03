@@ -24,9 +24,24 @@ import {
   getUserCommentReaction,
   addCommentReaction,
   removeCommentReaction,
+  pinComment,
+  unpinComment,
 } from "@/lib/firebase/blog"
 import { getUserById } from "@/lib/firebase/users"
-import { Loader2, MessageCircle, AlertCircle, Reply, MoreVertical, Edit, Trash2, Check, X, Smile } from "lucide-react"
+import {
+  Loader2,
+  MessageCircle,
+  AlertCircle,
+  Reply,
+  MoreVertical,
+  Edit,
+  Trash2,
+  Check,
+  X,
+  Smile,
+  Pin,
+  PinOff,
+} from "lucide-react"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import type { BlogComment } from "@/types/blog"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
@@ -49,6 +64,72 @@ type CommentReactionType =
   | "surprise"
   | "sad"
   | "angry"
+
+// Add these fields to the BlogComment interface
+interface ExtendedBlogComment extends BlogComment {
+  isPinned?: boolean
+  pinnedAt?: Date
+  pinnedBy?: string
+}
+
+// Add this function after the imports
+function renderTextWithLinks(text: string) {
+  if (!text) return ""
+
+  // Regular expression to match URLs starting with http://, https://, or www.
+  const urlRegex = /(https?:\/\/[^\s]+)|(www\.[^\s]+)/g
+
+  // Find all URLs in the text
+  const urls = text.match(urlRegex) || []
+
+  if (urls.length === 0) {
+    // If no URLs found, return the original text
+    return text
+  }
+
+  // Create an array to hold the result
+  const result = []
+
+  // Split the text by URLs and process each part
+  let lastIndex = 0
+  let index = 0
+
+  for (const url of urls) {
+    // Find the position of this URL in the text
+    const urlIndex = text.indexOf(url, lastIndex)
+
+    // Add the text before the URL
+    if (urlIndex > lastIndex) {
+      result.push(<span key={`text-${index}`}>{text.substring(lastIndex, urlIndex)}</span>)
+      index++
+    }
+
+    // Add the URL as a link
+    const href = url.startsWith("www.") ? `https://${url}` : url
+    result.push(
+      <a
+        key={`link-${index}`}
+        href={href}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="text-primary hover:underline break-all"
+      >
+        {url}
+      </a>,
+    )
+    index++
+
+    // Update lastIndex to after this URL
+    lastIndex = urlIndex + url.length
+  }
+
+  // Add any remaining text after the last URL
+  if (lastIndex < text.length) {
+    result.push(<span key={`text-${index}`}>{text.substring(lastIndex)}</span>)
+  }
+
+  return result
+}
 
 export function CommentsSection({ postId }: CommentsSectionProps) {
   const { user } = useAuth()
@@ -83,6 +164,7 @@ export function CommentsSection({ postId }: CommentsSectionProps) {
     types: {} as Record<CommentReactionType, number>,
     topReactions: [],
   })
+  const [pinnedComments, setPinnedComments] = useState<ExtendedBlogComment[]>([])
 
   const getReactionInfo = (type: CommentReactionType) => {
     const reactionInfo: Record<CommentReactionType, { emoji: string; label: string }> = {
@@ -102,7 +184,6 @@ export function CommentsSection({ postId }: CommentsSectionProps) {
     return reactionInfo[type]
   }
 
-  // Load comments
   const loadComments = useCallback(async () => {
     try {
       setIsLoading(true)
@@ -132,9 +213,30 @@ export function CommentsSection({ postId }: CommentsSectionProps) {
       })
       setUserPhotos(photoMap)
 
+      // Separate pinned comments from regular comments
+      const pinned: ExtendedBlogComment[] = []
+      const regular: BlogComment[] = []
+
+      commentsData.forEach((comment) => {
+        if (comment.isPinned) {
+          pinned.push(comment as ExtendedBlogComment)
+        } else if (!comment.parentCommentId) {
+          regular.push(comment)
+        }
+      })
+
+      // Sort pinned comments by pinnedAt (newest first)
+      pinned.sort((a, b) => {
+        const dateA = a.pinnedAt ? new Date(a.pinnedAt).getTime() : 0
+        const dateB = b.pinnedAt ? new Date(b.pinnedAt).getTime() : 0
+        return dateB - dateA
+      })
+
+      setPinnedComments(pinned)
+
       // Organize comments into a hierarchical structure
       const parentComments: BlogComment[] = []
-      const commentMap = new Map<string, string, BlogComment>()
+      const commentMap = new Map<string, BlogComment>()
 
       // First pass: create a map of all comments by ID
       commentsData.forEach((comment) => {
@@ -155,7 +257,7 @@ export function CommentsSection({ postId }: CommentsSectionProps) {
               },
             )
           }
-        } else {
+        } else if (!comment.isPinned) {
           parentComments.push(
             commentMap.get(comment.id) || {
               ...comment,
@@ -178,7 +280,7 @@ export function CommentsSection({ postId }: CommentsSectionProps) {
       setComments(parentComments)
 
       // Load reactions for each comment
-      const reactionsPromises = parentComments.map(async (comment) => {
+      const reactionsPromises = [...pinned, ...parentComments].map(async (comment) => {
         const reactionCounts = await getCommentReactionCounts(comment.id)
         return { commentId: comment.id, reactionCounts }
       })
@@ -218,7 +320,7 @@ export function CommentsSection({ postId }: CommentsSectionProps) {
 
       // Load user reactions if user is logged in
       if (user) {
-        const userReactionsPromises = parentComments.map(async (comment) => {
+        const userReactionsPromises = [...pinned, ...parentComments].map(async (comment) => {
           if (!comment.id || !user.id) {
             return { commentId: comment.id || "unknown", reactionType: null }
           }
@@ -301,6 +403,46 @@ export function CommentsSection({ postId }: CommentsSectionProps) {
       setIsLoading(false)
     }
   }, [postId, user, toast])
+
+  const handlePinComment = async (commentId: string) => {
+    if (!user || user.role !== "admin") return
+
+    try {
+      await pinComment(commentId, user.id)
+      toast({
+        title: "Comentario fijado",
+        description: "El comentario ha sido fijado correctamente",
+      })
+      loadComments()
+    } catch (error) {
+      console.error("Error pinning comment:", error)
+      toast({
+        title: "Error",
+        description: "Hubo un problema al fijar el comentario. Inténtalo nuevamente.",
+        variant: "destructive",
+      })
+    }
+  }
+
+  const handleUnpinComment = async (commentId: string) => {
+    if (!user || user.role !== "admin") return
+
+    try {
+      await unpinComment(commentId)
+      toast({
+        title: "Comentario desfijado",
+        description: "El comentario ha sido desfijado correctamente",
+      })
+      loadComments()
+    } catch (error) {
+      console.error("Error unpinning comment:", error)
+      toast({
+        title: "Error",
+        description: "Hubo un problema al desfijar el comentario. Inténtalo nuevamente.",
+        variant: "destructive",
+      })
+    }
+  }
 
   useEffect(() => {
     loadComments()
@@ -733,12 +875,14 @@ export function CommentsSection({ postId }: CommentsSectionProps) {
   // 3. Update the UI to show all reaction types and counts
   // 4. Add functionality to remove reactions
 
-  const renderComment = (comment: BlogComment, isReply = false) => {
+  const renderComment = (comment: BlogComment, isReply = false, isPinned = false) => {
     const isEditing = editingId === comment.id
     const isAuthor = user && user.id === comment.userId
     const isAdmin = user && user.role === "admin"
     const canEdit = isAuthor && !isReply
     const canDelete = isAuthor || isAdmin
+    const canPin = isAdmin && !isReply && !isPinned
+    const canUnpin = isAdmin && isPinned
 
     // Ensure likedBy is an array before using includes
     const likedBy = Array.isArray(comment.likedBy) ? comment.likedBy : []
@@ -775,7 +919,19 @@ export function CommentsSection({ postId }: CommentsSectionProps) {
             )}
           </div>
           <div className="flex-1 min-w-0 overflow-hidden">
-            <div className="bg-muted/30 hover:bg-muted/40 transition-colors rounded-lg p-3 md:p-4 border border-border/30 shadow-sm">
+            <div
+              className={`${
+                isPinned
+                  ? "bg-gradient-to-br from-amber-50 to-amber-100 dark:from-amber-950/30 dark:to-amber-900/20 border-amber-200 dark:border-amber-800/50 shadow-md"
+                  : "bg-muted/30 hover:bg-muted/40 border-border/30"
+              } transition-colors rounded-lg p-3 md:p-4 border shadow-sm relative`}
+            >
+              {isPinned && (
+                <div className="absolute top-0 right-0 transform translate-x-1/3 -translate-y-1/3 rotate-12">
+                  <Pin className="h-5 w-5 text-amber-500 drop-shadow-md" />
+                </div>
+              )}
+
               <div className="flex items-center justify-between mb-1.5">
                 <div className="flex flex-col overflow-hidden">
                   <span className="font-semibold text-foreground truncate">{comment.userName}</span>
@@ -786,10 +942,15 @@ export function CommentsSection({ postId }: CommentsSectionProps) {
                     {comment.isEdited && (
                       <span className="text-xs text-muted-foreground italic whitespace-nowrap">(editado)</span>
                     )}
+                    {isPinned && (
+                      <span className="text-xs text-amber-600 dark:text-amber-400 font-medium whitespace-nowrap flex items-center gap-0.5">
+                        <Pin className="h-3 w-3" /> Fijado
+                      </span>
+                    )}
                   </div>
                 </div>
 
-                {(canEdit || canDelete) && !isEditing && (
+                {(canEdit || canDelete || canPin || canUnpin) && !isEditing && (
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                       <Button variant="ghost" size="sm" className="h-8 w-8 p-0 rounded-full hover:bg-muted">
@@ -801,6 +962,18 @@ export function CommentsSection({ postId }: CommentsSectionProps) {
                         <DropdownMenuItem onClick={() => startEditing(comment)}>
                           <Edit className="h-4 w-4 mr-2" />
                           Editar
+                        </DropdownMenuItem>
+                      )}
+                      {canPin && (
+                        <DropdownMenuItem onClick={() => handlePinComment(comment.id)}>
+                          <Pin className="h-4 w-4 mr-2" />
+                          Fijar comentario
+                        </DropdownMenuItem>
+                      )}
+                      {canUnpin && (
+                        <DropdownMenuItem onClick={() => handleUnpinComment(comment.id)}>
+                          <PinOff className="h-4 w-4 mr-2" />
+                          Desfijar comentario
                         </DropdownMenuItem>
                       )}
                       {canDelete && (
@@ -837,7 +1010,7 @@ export function CommentsSection({ postId }: CommentsSectionProps) {
                   </div>
                 </div>
               ) : (
-                <p className="text-sm leading-relaxed text-foreground">{comment.content}</p>
+                <p className="text-sm leading-relaxed text-foreground">{renderTextWithLinks(comment.content)}</p>
               )}
             </div>
 
@@ -1096,7 +1269,18 @@ export function CommentsSection({ postId }: CommentsSectionProps) {
       <Separator className="my-6" />
 
       {/* Comments List */}
-      <div className="space-y-4">
+      <div className="space-y-6">
+        {/* Pinned Comments Section */}
+        {pinnedComments.length > 0 && (
+          <div className="mb-8">
+            <div className="flex items-center gap-2 mb-4">
+              <Pin className="h-5 w-5 text-amber-500" />
+              <h3 className="text-lg font-semibold text-amber-700 dark:text-amber-400">Comentarios destacados</h3>
+            </div>
+            <div className="space-y-4 px-1">{pinnedComments.map((comment) => renderComment(comment, false, true))}</div>
+          </div>
+        )}
+
         {isLoading ? (
           <div className="flex justify-center p-8 bg-muted/10 rounded-lg border border-border/20 shadow-sm">
             <div className="flex flex-col items-center gap-2">

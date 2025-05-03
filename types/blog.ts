@@ -150,6 +150,7 @@ export interface BlogComment {
   isDeletable: boolean // Indica si el comentario puede ser eliminado por el autor o un administrador.
   userCommentCount: number // Número de comentarios realizados por el usuario en este post.
   userReplyCount: number // Número de respuestas realizadas por el usuario en este post.
+  isPinned: boolean // Indica si el comentario está fijado en la parte superior.
 }
 
 /**

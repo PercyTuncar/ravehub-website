@@ -1934,3 +1934,63 @@ export async function getPopularTags(limitCount = 10): Promise<BlogTag[]> {
 //     return [];
 //   }
 // }
+
+// Pin a comment (admin only)
+export async function pinComment(commentId: string, adminId: string): Promise<void> {
+  try {
+    // First check how many pinned comments we already have
+    const commentsRef = collection(db, "blogComments")
+    const q = query(commentsRef, where("isPinned", "==", true))
+    const querySnapshot = await getDocs(q)
+
+    // Limit to 3 pinned comments
+    if (querySnapshot.size >= 3) {
+      // Find the oldest pinned comment to replace
+      let oldestPinnedComment: { id: string; pinnedAt: Date } | null = null
+
+      querySnapshot.forEach((doc) => {
+        const data = doc.data()
+        const pinnedAt = data.pinnedAt ? new Date(data.pinnedAt.toDate()) : new Date(0)
+
+        if (!oldestPinnedComment || pinnedAt < oldestPinnedComment.pinnedAt) {
+          oldestPinnedComment = { id: doc.id, pinnedAt }
+        }
+      })
+
+      // Unpin the oldest comment
+      if (oldestPinnedComment) {
+        await updateDoc(doc(db, "blogComments", oldestPinnedComment.id), {
+          isPinned: false,
+          pinnedAt: null,
+          pinnedBy: null,
+        })
+      }
+    }
+
+    // Pin the new comment
+    const commentRef = doc(db, "blogComments", commentId)
+    await updateDoc(commentRef, {
+      isPinned: true,
+      pinnedAt: new Date(),
+      pinnedBy: adminId,
+    })
+  } catch (error) {
+    console.error(`Error pinning comment ${commentId}:`, error)
+    throw error
+  }
+}
+
+// Unpin a comment
+export async function unpinComment(commentId: string): Promise<void> {
+  try {
+    const commentRef = doc(db, "blogComments", commentId)
+    await updateDoc(commentRef, {
+      isPinned: false,
+      pinnedAt: null,
+      pinnedBy: null,
+    })
+  } catch (error) {
+    console.error(`Error unpinning comment ${commentId}:`, error)
+    throw error
+  }
+}
