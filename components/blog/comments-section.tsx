@@ -927,7 +927,7 @@ export function CommentsSection({ postId }: CommentsSectionProps) {
               } transition-colors rounded-lg p-3 md:p-4 border shadow-sm relative`}
             >
               {isPinned && (
-                <div className="absolute top-0 right-0 transform translate-x-1/3 -translate-y-1/3 rotate-12">
+                <div className="absolute top-1 right-1 transform rotate-12">
                   <Pin className="h-5 w-5 text-amber-500 drop-shadow-md" />
                 </div>
               )}
