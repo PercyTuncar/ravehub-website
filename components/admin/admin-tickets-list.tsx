@@ -13,6 +13,10 @@ import {
   getPendingTicketTransactions,
   rejectTicketTransaction,
   getPaidTicketTransactions,
+  getPendingTicketTransactionsCount,
+  getPaidTicketTransactionsCount,
+  getPendingTicketTransactionsPaginated,
+  getPaidTicketTransactionsPaginated,
 } from "@/lib/firebase/tickets"
 import type { TicketTransaction } from "@/types"
 import { toast } from "@/components/ui/use-toast"
@@ -22,6 +26,16 @@ import { formatDate } from "@/lib/utils"
 
 // Añadir el import para el modal de asignación de tickets
 import { AssignTicketModal } from "@/components/admin/assign-ticket-modal"
+
+// Modificar los imports para añadir los componentes de paginación
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination"
 
 export function AdminTicketsList() {
   const { user } = useAuth()
@@ -43,6 +57,11 @@ export function AdminTicketsList() {
   // Añadir el estado para controlar la visibilidad del modal de asignación
   const [isAssignModalOpen, setIsAssignModalOpen] = useState(false)
 
+  // Modificar el estado para manejar la paginación
+  const [currentPage, setCurrentPage] = useState(1)
+  const [totalPages, setTotalPages] = useState(1)
+  const ITEMS_PER_PAGE = 10
+
   // Fetch pending transactions
   useEffect(() => {
     const fetchTransactions = async () => {
@@ -50,13 +69,75 @@ export function AdminTicketsList() {
         setLoading(true)
         setError(null)
 
-        const [pendingTx, paidTx] = await Promise.all([getPendingTicketTransactions(), getPaidTicketTransactions()])
+        // Obtener el total de transacciones para calcular las páginas
+        let pendingTxCount = 0
+        let paidTxCount = 0
 
-        setTransactions(pendingTx)
-        setPaidTransactions(paidTx)
+        try {
+          pendingTxCount = await getPendingTicketTransactionsCount()
+          paidTxCount = await getPaidTicketTransactionsCount()
+        } catch (countError) {
+          console.error("Error obteniendo conteo de transacciones:", countError)
+          // Continuar con valores predeterminados si hay error en el conteo
+        }
+
+        const totalItems = pendingTxCount + paidTxCount
+        const calculatedTotalPages = Math.max(1, Math.ceil(totalItems / ITEMS_PER_PAGE))
+        setTotalPages(calculatedTotalPages)
+
+        // Cargar datos de la primera página
+        loadPageData()
       } catch (err) {
-        console.error("Error fetching transactions:", err)
-        setError("Ocurrió un error al cargar las transacciones")
+        console.error("Error general al cargar transacciones:", err)
+        setError("Ocurrió un error al cargar las transacciones. Por favor, intente nuevamente.")
+        setLoading(false)
+      }
+    }
+
+    const loadPageData = async () => {
+      if (currentPage < 1) return
+
+      setLoading(true)
+      try {
+        if (statusFilter === "paid" || statusFilter === "all") {
+          try {
+            const paidTx = await getPaidTicketTransactionsPaginated(currentPage, ITEMS_PER_PAGE)
+            setPaidTransactions(paidTx)
+          } catch (error) {
+            console.error("Error cargando transacciones pagadas:", error)
+            toast({
+              title: "Error",
+              description: "No se pudieron cargar los tickets pagados",
+              variant: "destructive",
+            })
+          }
+        }
+
+        if (
+          statusFilter === "pending" ||
+          statusFilter === "approved" ||
+          statusFilter === "rejected" ||
+          statusFilter === "all"
+        ) {
+          try {
+            const pendingTx = await getPendingTicketTransactionsPaginated(currentPage, ITEMS_PER_PAGE)
+            setTransactions(pendingTx)
+          } catch (error) {
+            console.error("Error cargando transacciones pendientes:", error)
+            toast({
+              title: "Error",
+              description: "No se pudieron cargar los tickets pendientes",
+              variant: "destructive",
+            })
+          }
+        }
+      } catch (err) {
+        console.error("Error general al cambiar de página:", err)
+        toast({
+          title: "Error",
+          description: "No se pudieron cargar más tickets",
+          variant: "destructive",
+        })
       } finally {
         setLoading(false)
       }
@@ -64,6 +145,60 @@ export function AdminTicketsList() {
 
     fetchTransactions()
   }, [])
+
+  // Recargar cuando cambie la página
+  useEffect(() => {
+    const loadPageData = async () => {
+      if (currentPage < 1) return
+
+      setLoading(true)
+      try {
+        if (statusFilter === "paid" || statusFilter === "all") {
+          try {
+            const paidTx = await getPaidTicketTransactionsPaginated(currentPage, ITEMS_PER_PAGE)
+            setPaidTransactions(paidTx)
+          } catch (error) {
+            console.error("Error cargando transacciones pagadas:", error)
+            toast({
+              title: "Error",
+              description: "No se pudieron cargar los tickets pagados",
+              variant: "destructive",
+            })
+          }
+        }
+
+        if (
+          statusFilter === "pending" ||
+          statusFilter === "approved" ||
+          statusFilter === "rejected" ||
+          statusFilter === "all"
+        ) {
+          try {
+            const pendingTx = await getPendingTicketTransactionsPaginated(currentPage, ITEMS_PER_PAGE)
+            setTransactions(pendingTx)
+          } catch (error) {
+            console.error("Error cargando transacciones pendientes:", error)
+            toast({
+              title: "Error",
+              description: "No se pudieron cargar los tickets pendientes",
+              variant: "destructive",
+            })
+          }
+        }
+      } catch (err) {
+        console.error("Error general al cambiar de página:", err)
+        toast({
+          title: "Error",
+          description: "No se pudieron cargar más tickets",
+          variant: "destructive",
+        })
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    loadPageData()
+  }, [currentPage, statusFilter])
 
   // Filter transactions based on search term and status
   const filteredTransactions = (() => {
@@ -172,6 +307,12 @@ export function AdminTicketsList() {
     }
   }
 
+  const handlePageChange = (page: number) => {
+    if (page < 1 || page > totalPages || page === currentPage) return
+    setCurrentPage(page)
+    window.scrollTo({ top: 0, behavior: "smooth" })
+  }
+
   return (
     <Card>
       <CardHeader>
@@ -207,7 +348,7 @@ export function AdminTicketsList() {
           </div>
         </div>
 
-        <div className="rounded-md border">
+        <div className="rounded-md border overflow-hidden">
           <Table>
             <TableHeader>
               <TableRow>
@@ -308,6 +449,52 @@ export function AdminTicketsList() {
               )}
             </TableBody>
           </Table>
+          {!loading && !error && filteredTransactions.length > 0 && (
+            <div className="mt-4 flex justify-center">
+              <Pagination>
+                <PaginationContent>
+                  <PaginationItem>
+                    <PaginationPrevious
+                      onClick={() => handlePageChange(currentPage - 1)}
+                      className={currentPage <= 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                    />
+                  </PaginationItem>
+
+                  {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                    // Mostrar páginas alrededor de la actual
+                    let pageToShow
+                    if (totalPages <= 5) {
+                      pageToShow = i + 1
+                    } else if (currentPage <= 3) {
+                      pageToShow = i + 1
+                    } else if (currentPage >= totalPages - 2) {
+                      pageToShow = totalPages - 4 + i
+                    } else {
+                      pageToShow = currentPage - 2 + i
+                    }
+
+                    return (
+                      <PaginationItem key={pageToShow}>
+                        <PaginationLink
+                          onClick={() => handlePageChange(pageToShow)}
+                          isActive={currentPage === pageToShow}
+                        >
+                          {pageToShow}
+                        </PaginationLink>
+                      </PaginationItem>
+                    )
+                  })}
+
+                  <PaginationItem>
+                    <PaginationNext
+                      onClick={() => handlePageChange(currentPage + 1)}
+                      className={currentPage >= totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                    />
+                  </PaginationItem>
+                </PaginationContent>
+              </Pagination>
+            </div>
+          )}
         </div>
       </CardContent>
 

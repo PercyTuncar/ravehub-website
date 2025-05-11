@@ -142,7 +142,7 @@ export default function RootLayout({
                   <UpdatePrompt />
                   <div className="flex min-h-screen flex-col">
                     <Navbar />
-                    <main className="flex-1 w-full pb-safe">{children}</main>
+                    <main className="flex-1 w-full pb-safe bg-gray-50">{children}</main>
                     <Footer />
                   </div>
                   <Toaster />

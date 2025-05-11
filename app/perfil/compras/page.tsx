@@ -1,6 +1,8 @@
 import type { Metadata } from "next"
 import { UserOrders } from "@/components/store/user-orders"
 import AuthRouteGuard from "@/components/auth/auth-route-guard"
+import { ProfileLayout } from "@/components/profile/profile-layout"
+import { PageHeader } from "@/components/page-header"
 
 export const metadata: Metadata = {
   title: "Mis Compras | RaveHub",
@@ -10,14 +12,14 @@ export const metadata: Metadata = {
 export default function PurchasesPage() {
   return (
     <AuthRouteGuard>
-      <main className="container py-8 px-4 md:px-6">
-        <div className="space-y-2 mb-8">
-          <h1 className="text-3xl font-bold tracking-tight">Mis Compras</h1>
-          <p className="text-muted-foreground">Historial y estado de tus compras en RaveHub</p>
+      <ProfileLayout>
+        <div>
+          <PageHeader title="Mis Compras" description="Historial y estado de tus compras en RaveHub" />
+          <div className="mt-6">
+            <UserOrders />
+          </div>
         </div>
-
-        <UserOrders />
-      </main>
+      </ProfileLayout>
     </AuthRouteGuard>
   )
 }

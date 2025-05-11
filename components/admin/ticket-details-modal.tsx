@@ -57,14 +57,18 @@ export function TicketDetailsModal({ isOpen, onClose, transaction }: TicketDetai
   // Add these useState hooks after the existing ones
   const [isEditingNominations, setIsEditingNominations] = useState<Record<string, boolean>>({})
   const [nomineeDataMap, setNomineeDataMap] = useState<Record<string, any>>({})
+  const [isUploading, setIsUploading] = useState(false)
+  const [uploadProgress, setUploadProgress] = useState(0)
+  const [localTransaction, setLocalTransaction] = useState<TicketTransaction>(transaction)
 
   // Asegurar que downloadDate sea válido al inicializar y cuando cambia transaction
   useEffect(() => {
+    setLocalTransaction(transaction)
+
+    // Inicializar fecha de descarga
     if (transaction.ticketsDownloadAvailableDate) {
       try {
-        // Intentar crear una fecha válida
         let dateValue: Date
-
         if (typeof transaction.ticketsDownloadAvailableDate === "string") {
           dateValue = new Date(transaction.ticketsDownloadAvailableDate)
         } else if (transaction.ticketsDownloadAvailableDate instanceof Date) {
@@ -78,7 +82,6 @@ export function TicketDetailsModal({ isOpen, onClose, transaction }: TicketDetai
           throw new Error("Invalid date format")
         }
 
-        // Verificar si la fecha es válida
         if (!isNaN(dateValue.getTime())) {
           setDownloadDate(dateValue)
         } else {
@@ -91,10 +94,8 @@ export function TicketDetailsModal({ isOpen, onClose, transaction }: TicketDetai
     } else {
       setDownloadDate(undefined)
     }
-  }, [transaction])
 
-  // Inicializar el estado de edición cuando cambia la transacción
-  useEffect(() => {
+    // Inicializar estado de edición
     setEditedTransaction({
       adminNotes: transaction.adminNotes || "",
       currency: transaction.currency || "USD",
@@ -104,11 +105,8 @@ export function TicketDetailsModal({ isOpen, onClose, transaction }: TicketDetai
       paymentType: transaction.paymentType || "full",
       totalAmount: transaction.totalAmount || 0,
     })
-  }, [transaction])
 
-  // Add this useEffect after the existing useEffect hooks
-  useEffect(() => {
-    // Initialize nomination data for each ticket
+    // Inicializar datos de nominación
     const initialNomineeData: Record<string, any> = {}
     const initialEditingState: Record<string, boolean> = {}
 
@@ -118,7 +116,7 @@ export function TicketDetailsModal({ isOpen, onClose, transaction }: TicketDetai
         nomineeLastName: ticket.nomineeLastName || "",
         nomineeDocType: ticket.nomineeDocType || "dni",
         nomineeDocNumber: ticket.nomineeDocNumber || "",
-        searchResults: [], // Add this line to initialize searchResults
+        searchResults: [],
       }
       initialEditingState[ticket.id] = false
     })
@@ -126,6 +124,17 @@ export function TicketDetailsModal({ isOpen, onClose, transaction }: TicketDetai
     setNomineeDataMap(initialNomineeData)
     setIsEditingNominations(initialEditingState)
   }, [transaction])
+
+  useEffect(() => {
+    if (!isOpen) {
+      setTicketFile(null)
+      setSelectedTicketId(null)
+      setUploadProgress(0)
+      setIsUploading(false)
+      setImageError(false)
+      setActiveTab("details")
+    }
+  }, [isOpen])
 
   const handleEditChange = (field: string, value: any) => {
     setEditedTransaction((prev) => ({
@@ -137,13 +146,30 @@ export function TicketDetailsModal({ isOpen, onClose, transaction }: TicketDetai
   const handleSaveChanges = async () => {
     try {
       setIsUpdating(true)
+
+      // Validar datos antes de guardar
+      if (editedTransaction.totalAmount !== undefined && editedTransaction.totalAmount <= 0) {
+        toast({
+          title: "Error",
+          description: "El monto total debe ser mayor que cero",
+          variant: "destructive",
+        })
+        return
+      }
+
       await updateTicketTransaction(transaction.id, editedTransaction)
+
+      // Actualizar el estado local con los cambios
+      setLocalTransaction((prev) => ({
+        ...prev,
+        ...editedTransaction,
+      }))
+
       toast({
         title: "Cambios guardados",
         description: "Los cambios han sido guardados exitosamente",
       })
       setIsEditing(false)
-      onClose()
     } catch (error) {
       console.error("Error saving changes:", error)
       toast({
@@ -172,7 +198,31 @@ export function TicketDetailsModal({ isOpen, onClose, transaction }: TicketDetai
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
-      setTicketFile(e.target.files[0])
+      const file = e.target.files[0]
+
+      // Validar tipo de archivo
+      if (file.type !== "application/pdf") {
+        toast({
+          title: "Error",
+          description: "Solo se permiten archivos PDF",
+          variant: "destructive",
+        })
+        e.target.value = ""
+        return
+      }
+
+      // Validar tamaño del archivo (máximo 5MB)
+      if (file.size > 5 * 1024 * 1024) {
+        toast({
+          title: "Error",
+          description: "El archivo no debe superar los 5MB",
+          variant: "destructive",
+        })
+        e.target.value = ""
+        return
+      }
+
+      setTicketFile(file)
     }
   }
 
@@ -189,11 +239,17 @@ export function TicketDetailsModal({ isOpen, onClose, transaction }: TicketDetai
     try {
       setIsUpdating(true)
       await updateTicketDownloadDate(transaction.id, downloadDate)
+
+      // Actualizar el estado local
+      setLocalTransaction((prev) => ({
+        ...prev,
+        ticketsDownloadAvailableDate: downloadDate,
+      }))
+
       toast({
         title: "Fecha actualizada",
         description: "La fecha de descarga ha sido actualizada exitosamente",
       })
-      onClose()
     } catch (error) {
       console.error("Error updating download date:", error)
       toast({
@@ -217,21 +273,62 @@ export function TicketDetailsModal({ isOpen, onClose, transaction }: TicketDetai
       return
     }
 
+    // Validar tipo de archivo
+    if (ticketFile.type !== "application/pdf") {
+      toast({
+        title: "Error",
+        description: "Solo se permiten archivos PDF",
+        variant: "destructive",
+      })
+      return
+    }
+
     try {
-      setIsUpdating(true)
+      setIsUploading(true)
+      setUploadProgress(0)
+
+      // Simular progreso de carga
+      const progressInterval = setInterval(() => {
+        setUploadProgress((prev) => {
+          if (prev >= 90) {
+            clearInterval(progressInterval)
+            return prev
+          }
+          return prev + 10
+        })
+      }, 300)
+
       const ticketPdfUrl = await uploadTicketPdf(
         ticketFile,
         `tickets/${transaction.userId}/${transaction.id}/${ticketItemId}.pdf`,
       )
 
-      // Update the ticketPdfUrl in the ticketItems array within the transaction
+      // Actualizar el ticketPdfUrl en la base de datos
       await updateTicketPdf(transaction.id, ticketItemId, ticketPdfUrl)
+
+      clearInterval(progressInterval)
+      setUploadProgress(100)
+
+      // Actualizar el estado local
+      setLocalTransaction((prev) => ({
+        ...prev,
+        ticketItems: prev.ticketItems.map((item) =>
+          item.id === ticketItemId ? { ...item, ticketPdfUrl, updatedAt: new Date() } : item,
+        ),
+      }))
 
       toast({
         title: "Ticket actualizado",
         description: "El PDF del ticket ha sido actualizado exitosamente",
       })
-      onClose()
+
+      // Limpiar estados
+      setTimeout(() => {
+        setTicketFile(null)
+        setSelectedTicketId(null)
+        setIsUploading(false)
+        setUploadProgress(0)
+      }, 1000)
     } catch (error) {
       console.error("Error uploading ticket:", error)
       toast({
@@ -239,8 +336,8 @@ export function TicketDetailsModal({ isOpen, onClose, transaction }: TicketDetai
         description: "Ocurrió un error al subir el PDF del ticket",
         variant: "destructive",
       })
-    } finally {
-      setIsUpdating(false)
+      setIsUploading(false)
+      setUploadProgress(0)
     }
   }
 
@@ -263,12 +360,136 @@ export function TicketDetailsModal({ isOpen, onClose, transaction }: TicketDetai
     }
   }
 
+  const saveNomination = async (ticket) => {
+    if (
+      !nomineeDataMap[ticket.id].nomineeFirstName ||
+      !nomineeDataMap[ticket.id].nomineeLastName ||
+      !nomineeDataMap[ticket.id].nomineeDocNumber
+    ) {
+      toast({
+        title: "Error",
+        description: "Todos los campos de nominación son obligatorios",
+        variant: "destructive",
+      })
+      return
+    }
+
+    try {
+      setIsUpdating(true)
+
+      // Crear ticket actualizado con datos de nominación
+      const updatedTicket = {
+        ...ticket,
+        isNominated: true,
+        nomineeFirstName: nomineeDataMap[ticket.id].nomineeFirstName,
+        nomineeLastName: nomineeDataMap[ticket.id].nomineeLastName,
+        nomineeDocType: nomineeDataMap[ticket.id].nomineeDocType,
+        nomineeDocNumber: nomineeDataMap[ticket.id].nomineeDocNumber,
+        updatedAt: new Date().toISOString(),
+      }
+
+      // Encontrar el índice del ticket en la transacción
+      const ticketIndex = localTransaction.ticketItems.findIndex((t) => t.id === ticket.id)
+      const updatedTicketItems = [...localTransaction.ticketItems]
+      updatedTicketItems[ticketIndex] = updatedTicket
+
+      // Actualizar la transacción en la base de datos
+      await updateTicketTransaction(transaction.id, {
+        ticketItems: updatedTicketItems,
+      })
+
+      // Actualizar el estado local
+      setLocalTransaction((prev) => ({
+        ...prev,
+        ticketItems: updatedTicketItems,
+      }))
+
+      toast({
+        title: "Nominación actualizada",
+        description: "La nominación ha sido actualizada exitosamente",
+      })
+
+      setIsEditingNominations((prev) => ({
+        ...prev,
+        [ticket.id]: false,
+      }))
+    } catch (error) {
+      console.error("Error updating nomination:", error)
+      toast({
+        title: "Error",
+        description: "Ocurrió un error al actualizar la nominación",
+        variant: "destructive",
+      })
+    } finally {
+      setIsUpdating(false)
+    }
+  }
+
+  const removeNomination = async (ticket) => {
+    try {
+      setIsUpdating(true)
+
+      // Crear ticket actualizado sin datos de nominación
+      const updatedTicket = {
+        ...ticket,
+        isNominated: false,
+        nomineeFirstName: "",
+        nomineeLastName: "",
+        nomineeDocType: "",
+        nomineeDocNumber: "",
+        updatedAt: new Date().toISOString(),
+      }
+
+      // Encontrar el índice del ticket en la transacción
+      const ticketIndex = localTransaction.ticketItems.findIndex((t) => t.id === ticket.id)
+      const updatedTicketItems = [...localTransaction.ticketItems]
+      updatedTicketItems[ticketIndex] = updatedTicket
+
+      // Actualizar la transacción en la base de datos
+      await updateTicketTransaction(transaction.id, {
+        ticketItems: updatedTicketItems,
+      })
+
+      // Actualizar el estado local
+      setLocalTransaction((prev) => ({
+        ...prev,
+        ticketItems: updatedTicketItems,
+      }))
+
+      // Actualizar el estado de nominación
+      setNomineeDataMap((prev) => ({
+        ...prev,
+        [ticket.id]: {
+          nomineeFirstName: "",
+          nomineeLastName: "",
+          nomineeDocType: "dni",
+          nomineeDocNumber: "",
+          searchResults: [],
+        },
+      }))
+
+      toast({
+        title: "Nominación eliminada",
+        description: "La nominación ha sido eliminada exitosamente",
+      })
+    } catch (error) {
+      console.error("Error removing nomination:", error)
+      toast({
+        title: "Error",
+        description: "Ocurrió un error al eliminar la nominación",
+        variant: "destructive",
+      })
+    } finally {
+      setIsUpdating(false)
+    }
+  }
+
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[700px] max-h-[90vh] overflow-hidden">
         <DialogHeader>
           <DialogTitle>Detalles de la transacción</DialogTitle>
-          <DialogDescription>ID: {transaction.id}</DialogDescription>
+          <DialogDescription>ID: {localTransaction.id}</DialogDescription>
         </DialogHeader>
 
         <Tabs defaultValue="details" value={activeTab} onValueChange={setActiveTab}>
@@ -285,39 +506,41 @@ export function TicketDetailsModal({ isOpen, onClose, transaction }: TicketDetai
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <h3 className="text-sm font-medium text-muted-foreground">Evento</h3>
-                <p className="text-base">{transaction.event?.name || "Evento"}</p>
+                <p className="text-base">{localTransaction.event?.name || "Evento"}</p>
               </div>
               <div>
                 <h3 className="text-sm font-medium text-muted-foreground">Estado</h3>
-                <div>{getStatusBadge(transaction.paymentStatus)}</div>
+                <div>{getStatusBadge(localTransaction.paymentStatus)}</div>
               </div>
               <div>
                 <h3 className="text-sm font-medium text-muted-foreground">Fecha de compra</h3>
                 <p className="text-base">
-                  {transaction.createdAt ? formatDate(transaction.createdAt) : "Fecha no disponible"}
+                  {localTransaction.createdAt ? formatDate(localTransaction.createdAt) : "Fecha no disponible"}
                 </p>
               </div>
               <div>
                 <h3 className="text-sm font-medium text-muted-foreground">Monto total</h3>
                 <p className="text-base">
-                  ${transaction.totalAmount.toFixed(2)} {transaction.currency}
+                  ${localTransaction.totalAmount.toFixed(2)} {localTransaction.currency}
                 </p>
               </div>
               <div>
                 <h3 className="text-sm font-medium text-muted-foreground">Tipo de pago</h3>
-                <p className="text-base">{transaction.paymentType === "full" ? "Pago completo" : "Pago en cuotas"}</p>
+                <p className="text-base">
+                  {localTransaction.paymentType === "full" ? "Pago completo" : "Pago en cuotas"}
+                </p>
               </div>
               <div>
                 <h3 className="text-sm font-medium text-muted-foreground">Método de pago</h3>
                 <p className="text-base">
-                  {transaction.offlinePaymentMethod === "yape"
+                  {localTransaction.offlinePaymentMethod === "yape"
                     ? "Yape"
-                    : transaction.offlinePaymentMethod === "plin"
+                    : localTransaction.offlinePaymentMethod === "plin"
                       ? "Plin"
                       : "Transferencia bancaria"}
                 </p>
               </div>
-              {transaction.isCourtesy && (
+              {localTransaction.isCourtesy && (
                 <div className="col-span-2">
                   <h3 className="text-sm font-medium text-muted-foreground">Tipo de entrada</h3>
                   <Badge variant="secondary" className="mt-1">
@@ -325,10 +548,10 @@ export function TicketDetailsModal({ isOpen, onClose, transaction }: TicketDetai
                   </Badge>
                 </div>
               )}
-              {transaction.adminNotes && (
+              {localTransaction.adminNotes && (
                 <div className="col-span-2">
                   <h3 className="text-sm font-medium text-muted-foreground">Notas administrativas</h3>
-                  <p className="text-base">{transaction.adminNotes}</p>
+                  <p className="text-base">{localTransaction.adminNotes}</p>
                 </div>
               )}
             </div>
@@ -338,7 +561,7 @@ export function TicketDetailsModal({ isOpen, onClose, transaction }: TicketDetai
             <div>
               <h3 className="text-sm font-medium mb-2">Entradas</h3>
               <div className="space-y-2">
-                {transaction.ticketItems.map((ticket, index) => (
+                {localTransaction.ticketItems.map((ticket, index) => (
                   <div key={ticket.id} className="border rounded-md p-3">
                     <div className="flex justify-between">
                       <div>
@@ -356,7 +579,7 @@ export function TicketDetailsModal({ isOpen, onClose, transaction }: TicketDetai
                       </div>
                       <div>
                         <p className="text-sm">
-                          ${ticket.price.toFixed(2)} {transaction.currency}
+                          ${ticket.price.toFixed(2)} {localTransaction.currency}
                         </p>
                       </div>
                     </div>
@@ -365,19 +588,19 @@ export function TicketDetailsModal({ isOpen, onClose, transaction }: TicketDetai
               </div>
             </div>
 
-            {transaction.paymentType === "installment" && transaction.installments && (
+            {localTransaction.paymentType === "installment" && localTransaction.installments && (
               <>
                 <Separator />
 
                 <div>
                   <h3 className="text-sm font-medium mb-2">Cuotas</h3>
                   <div className="space-y-2">
-                    {transaction.installments.map((installment) => (
+                    {localTransaction.installments.map((installment) => (
                       <div key={installment.id} className="border rounded-md p-3">
                         <div className="flex justify-between">
                           <div>
                             <p className="font-medium">
-                              Cuota {installment.installmentNumber} de {transaction.numberOfInstallments}
+                              Cuota {installment.installmentNumber} de {localTransaction.numberOfInstallments}
                             </p>
                             <p className="text-sm text-muted-foreground">
                               Vencimiento:{" "}
@@ -386,7 +609,7 @@ export function TicketDetailsModal({ isOpen, onClose, transaction }: TicketDetai
                           </div>
                           <div className="flex flex-col items-end">
                             <p className="text-sm">
-                              ${installment.amount.toFixed(2)} {transaction.currency}
+                              ${installment.amount.toFixed(2)} {localTransaction.currency}
                             </p>
                             {getStatusBadge(installment.status)}
                           </div>
@@ -404,46 +627,46 @@ export function TicketDetailsModal({ isOpen, onClose, transaction }: TicketDetai
               <div>
                 <h3 className="text-sm font-medium text-muted-foreground">Nombre</h3>
                 <p className="text-base">
-                  {transaction.user?.firstName} {transaction.user?.lastName}
+                  {localTransaction.user?.firstName} {localTransaction.user?.lastName}
                 </p>
               </div>
               <div>
                 <h3 className="text-sm font-medium text-muted-foreground">Email</h3>
-                <p className="text-base">{transaction.user?.email}</p>
+                <p className="text-base">{localTransaction.user?.email}</p>
               </div>
               <div>
                 <h3 className="text-sm font-medium text-muted-foreground">Teléfono</h3>
                 <p className="text-base">
-                  {transaction.user?.phonePrefix} {transaction.user?.phone}
+                  {localTransaction.user?.phonePrefix} {localTransaction.user?.phone}
                 </p>
               </div>
               <div>
                 <h3 className="text-sm font-medium text-muted-foreground">País</h3>
-                <p className="text-base">{transaction.user?.country}</p>
+                <p className="text-base">{localTransaction.user?.country}</p>
               </div>
               <div>
                 <h3 className="text-sm font-medium text-muted-foreground">Documento</h3>
                 <p className="text-base">
-                  {transaction.user?.documentType} {transaction.user?.documentNumber}
+                  {localTransaction.user?.documentType} {localTransaction.user?.documentNumber}
                 </p>
               </div>
-              {transaction.reviewedBy && (
+              {localTransaction.reviewedBy && (
                 <div>
                   <h3 className="text-sm font-medium text-muted-foreground">Revisado por</h3>
-                  <p className="text-base">{transaction.reviewedBy}</p>
+                  <p className="text-base">{localTransaction.reviewedBy}</p>
                 </div>
               )}
-              {transaction.reviewedAt && (
+              {localTransaction.reviewedAt && (
                 <div>
                   <h3 className="text-sm font-medium text-muted-foreground">Fecha de revisión</h3>
-                  <p className="text-base">{formatDate(transaction.reviewedAt)}</p>
+                  <p className="text-base">{formatDate(localTransaction.reviewedAt)}</p>
                 </div>
               )}
             </div>
           </TabsContent>
 
           <TabsContent value="payment" className="space-y-4">
-            {transaction.paymentProofUrl ? (
+            {localTransaction.paymentProofUrl ? (
               <div className="flex flex-col items-center">
                 <h3 className="text-sm font-medium mb-2">Comprobante de pago</h3>
                 {imageError ? (
@@ -458,7 +681,7 @@ export function TicketDetailsModal({ isOpen, onClose, transaction }: TicketDetai
                 ) : (
                   <div className="relative w-full h-[400px] border rounded-md overflow-hidden">
                     <Image
-                      src={transaction.paymentProofUrl || "/placeholder.svg"}
+                      src={localTransaction.paymentProofUrl || "/placeholder.svg"}
                       alt="Comprobante de pago"
                       fill
                       className="object-contain"
@@ -467,10 +690,10 @@ export function TicketDetailsModal({ isOpen, onClose, transaction }: TicketDetai
                   </div>
                 )}
                 <div className="flex gap-2 mt-4">
-                  <Button variant="outline" onClick={() => window.open(transaction.paymentProofUrl, "_blank")}>
+                  <Button variant="outline" onClick={() => window.open(localTransaction.paymentProofUrl, "_blank")}>
                     Ver en tamaño completo
                   </Button>
-                  {transaction.paymentStatus === "pending" && (
+                  {localTransaction.paymentStatus === "pending" && (
                     <Button
                       variant="default"
                       onClick={() => {
@@ -488,7 +711,7 @@ export function TicketDetailsModal({ isOpen, onClose, transaction }: TicketDetai
                   )}
                 </div>
               </div>
-            ) : transaction.isCourtesy ? (
+            ) : localTransaction.isCourtesy ? (
               <div className="text-center py-8">
                 <Badge variant="secondary" className="mb-2">
                   Cortesía
@@ -545,7 +768,7 @@ export function TicketDetailsModal({ isOpen, onClose, transaction }: TicketDetai
             </div>
 
             <div className="space-y-4">
-              {transaction.ticketItems.map((ticket, index) => {
+              {localTransaction.ticketItems.map((ticket, index) => {
                 const handleNomineeChange = (field: string, value: string) => {
                   setNomineeDataMap((prev) => ({
                     ...prev,
@@ -554,103 +777,6 @@ export function TicketDetailsModal({ isOpen, onClose, transaction }: TicketDetai
                       [field]: value,
                     },
                   }))
-                }
-
-                const saveNomination = async () => {
-                  try {
-                    setIsUpdating(true)
-
-                    // Create updated ticket item with nomination data
-                    const updatedTicket = {
-                      ...ticket,
-                      isNominated: true,
-                      nomineeFirstName: nomineeDataMap[ticket.id].nomineeFirstName,
-                      nomineeLastName: nomineeDataMap[ticket.id].nomineeLastName,
-                      nomineeDocType: nomineeDataMap[ticket.id].nomineeDocType,
-                      nomineeDocNumber: nomineeDataMap[ticket.id].nomineeDocNumber,
-                      updatedAt: new Date().toISOString(),
-                    }
-
-                    // Find the index of the ticket in the transaction
-                    const ticketIndex = transaction.ticketItems.findIndex((t) => t.id === ticket.id)
-
-                    // Create a copy of the ticket items array
-                    const updatedTicketItems = [...transaction.ticketItems]
-
-                    // Replace the ticket at the found index
-                    updatedTicketItems[ticketIndex] = updatedTicket
-
-                    // Update the transaction with the new ticket items
-                    await updateTicketTransaction(transaction.id, {
-                      ticketItems: updatedTicketItems,
-                    })
-
-                    toast({
-                      title: "Nominación actualizada",
-                      description: "La nominación ha sido actualizada exitosamente",
-                    })
-
-                    setIsEditingNominations((prev) => ({
-                      ...prev,
-                      [ticket.id]: false,
-                    }))
-                    onClose()
-                  } catch (error) {
-                    console.error("Error updating nomination:", error)
-                    toast({
-                      title: "Error",
-                      description: "Ocurrió un error al actualizar la nominación",
-                      variant: "destructive",
-                    })
-                  } finally {
-                    setIsUpdating(false)
-                  }
-                }
-
-                const removeNomination = async () => {
-                  try {
-                    setIsUpdating(true)
-
-                    // Create updated ticket item without nomination data
-                    const updatedTicket = {
-                      ...ticket,
-                      isNominated: false,
-                      nomineeFirstName: "",
-                      nomineeLastName: "",
-                      nomineeDocType: "",
-                      nomineeDocNumber: "",
-                      updatedAt: new Date().toISOString(),
-                    }
-
-                    // Find the index of the ticket in the transaction
-                    const ticketIndex = transaction.ticketItems.findIndex((t) => t.id === ticket.id)
-
-                    // Create a copy of the ticket items array
-                    const updatedTicketItems = [...transaction.ticketItems]
-
-                    // Replace the ticket at the found index
-                    updatedTicketItems[ticketIndex] = updatedTicket
-
-                    // Update the transaction with the new ticket items
-                    await updateTicketTransaction(transaction.id, {
-                      ticketItems: updatedTicketItems,
-                    })
-
-                    toast({
-                      title: "Nominación eliminada",
-                      description: "La nominación ha sido eliminada exitosamente",
-                    })
-                    onClose()
-                  } catch (error) {
-                    console.error("Error removing nomination:", error)
-                    toast({
-                      title: "Error",
-                      description: "Ocurrió un error al eliminar la nominación",
-                      variant: "destructive",
-                    })
-                  } finally {
-                    setIsUpdating(false)
-                  }
                 }
 
                 return (
@@ -702,7 +828,12 @@ export function TicketDetailsModal({ isOpen, onClose, transaction }: TicketDetai
                             <Edit className="h-4 w-4 mr-1" />
                             Editar nominación
                           </Button>
-                          <Button variant="destructive" size="sm" onClick={removeNomination} disabled={isUpdating}>
+                          <Button
+                            variant="destructive"
+                            size="sm"
+                            onClick={() => removeNomination(ticket)}
+                            disabled={isUpdating}
+                          >
                             <X className="h-4 w-4 mr-1" />
                             Eliminar nominación
                           </Button>
@@ -728,43 +859,53 @@ export function TicketDetailsModal({ isOpen, onClose, transaction }: TicketDetai
                                     const usersRef = collection(db, "users")
                                     const searchTerm = e.target.value.toLowerCase()
 
-                                    // Search by name, email or document number
-                                    const nameQuery = query(
-                                      usersRef,
-                                      where("firstName", ">=", searchTerm),
-                                      where("firstName", "<=", searchTerm + "\uf8ff"),
-                                      limit(5),
-                                    )
+                                    // Mostrar indicador de carga
+                                    setNomineeDataMap((prev) => ({
+                                      ...prev,
+                                      [ticket.id]: {
+                                        ...prev[ticket.id],
+                                        isSearching: true,
+                                        searchResults: [],
+                                      },
+                                    }))
 
-                                    const emailQuery = query(
-                                      usersRef,
-                                      where("email", ">=", searchTerm),
-                                      where("email", "<=", searchTerm + "\uf8ff"),
-                                      limit(5),
-                                    )
-
-                                    const docQuery = query(
-                                      usersRef,
-                                      where("documentNumber", ">=", searchTerm),
-                                      where("documentNumber", "<=", searchTerm + "\uf8ff"),
-                                      limit(5),
-                                    )
-
-                                    const lastNameQuery = query(
-                                      usersRef,
-                                      where("lastName", ">=", searchTerm),
-                                      where("lastName", "<=", searchTerm + "\uf8ff"),
-                                      limit(5),
-                                    )
-
+                                    // Realizar búsquedas en paralelo
                                     const [nameResults, emailResults, docResults, lastNameResults] = await Promise.all([
-                                      getDocs(nameQuery),
-                                      getDocs(emailQuery),
-                                      getDocs(docQuery),
-                                      getDocs(lastNameQuery),
+                                      getDocs(
+                                        query(
+                                          usersRef,
+                                          where("firstName", ">=", searchTerm),
+                                          where("firstName", "<=", searchTerm + "\uf8ff"),
+                                          limit(5),
+                                        ),
+                                      ).catch(() => ({ docs: [] })),
+                                      getDocs(
+                                        query(
+                                          usersRef,
+                                          where("email", ">=", searchTerm),
+                                          where("email", "<=", searchTerm + "\uf8ff"),
+                                          limit(5),
+                                        ),
+                                      ).catch(() => ({ docs: [] })),
+                                      getDocs(
+                                        query(
+                                          usersRef,
+                                          where("documentNumber", ">=", searchTerm),
+                                          where("documentNumber", "<=", searchTerm + "\uf8ff"),
+                                          limit(5),
+                                        ),
+                                      ).catch(() => ({ docs: [] })),
+                                      getDocs(
+                                        query(
+                                          usersRef,
+                                          where("lastName", ">=", searchTerm),
+                                          where("lastName", "<=", searchTerm + "\uf8ff"),
+                                          limit(5),
+                                        ),
+                                      ).catch(() => ({ docs: [] })),
                                     ])
 
-                                    // Combine results and remove duplicates
+                                    // Combinar resultados y eliminar duplicados
                                     const userMap = new Map()
                                     ;[
                                       ...nameResults.docs,
@@ -779,16 +920,29 @@ export function TicketDetailsModal({ isOpen, onClose, transaction }: TicketDetai
 
                                     const searchResults = Array.from(userMap.values())
 
-                                    // Update state with search results
+                                    // Actualizar estado con resultados de búsqueda
                                     setNomineeDataMap((prev) => ({
                                       ...prev,
                                       [ticket.id]: {
                                         ...prev[ticket.id],
                                         searchResults,
+                                        isSearching: false,
                                       },
                                     }))
                                   } catch (error) {
                                     console.error("Error searching users:", error)
+                                    toast({
+                                      title: "Error",
+                                      description: "Ocurrió un error al buscar usuarios",
+                                      variant: "destructive",
+                                    })
+                                    setNomineeDataMap((prev) => ({
+                                      ...prev,
+                                      [ticket.id]: {
+                                        ...prev[ticket.id],
+                                        isSearching: false,
+                                      },
+                                    }))
                                   }
                                 }}
                               />
@@ -924,13 +1078,23 @@ export function TicketDetailsModal({ isOpen, onClose, transaction }: TicketDetai
                               >
                                 Cancelar
                               </Button>
-                              <Button variant="default" size="sm" onClick={saveNomination} disabled={isUpdating}>
+                              <Button
+                                variant="default"
+                                size="sm"
+                                onClick={() => saveNomination(ticket)}
+                                disabled={isUpdating}
+                              >
                                 {isUpdating ? "Guardando..." : "Guardar cambios"}
                               </Button>
                             </>
                           ) : (
                             <>
-                              <Button variant="default" size="sm" onClick={saveNomination} disabled={isUpdating}>
+                              <Button
+                                variant="default"
+                                size="sm"
+                                onClick={() => saveNomination(ticket)}
+                                disabled={isUpdating}
+                              >
                                 {isUpdating ? "Nominando..." : "Nominar entrada"}
                               </Button>
                             </>
@@ -1084,7 +1248,7 @@ export function TicketDetailsModal({ isOpen, onClose, transaction }: TicketDetai
               <div className="space-y-2">
                 <h3 className="text-lg font-medium">Archivos PDF de tickets</h3>
                 <div className="grid gap-4">
-                  {transaction.ticketItems.map((ticket, index) => (
+                  {localTransaction.ticketItems.map((ticket, index) => (
                     <div key={ticket.id} className="border rounded-md p-3">
                       <div className="flex flex-col gap-2">
                         <div className="flex justify-between items-center">
@@ -1147,27 +1311,73 @@ export function TicketDetailsModal({ isOpen, onClose, transaction }: TicketDetai
                 <div className="border rounded-md p-4 bg-muted/20">
                   <div className="flex justify-between items-center mb-4">
                     <h4 className="font-medium">
-                      {transaction.ticketItems.find((t) => t.id === selectedTicketId)?.ticketPdfUrl
+                      {localTransaction.ticketItems.find((t) => t.id === selectedTicketId)?.ticketPdfUrl
                         ? "Reemplazar PDF del ticket"
                         : "Subir nuevo PDF del ticket"}
                     </h4>
-                    <Button variant="ghost" size="sm" onClick={() => setSelectedTicketId(null)}>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => {
+                        setSelectedTicketId(null)
+                        setTicketFile(null)
+                      }}
+                    >
                       <X className="h-4 w-4" />
                     </Button>
                   </div>
 
                   <div className="flex flex-col gap-3">
-                    <Input type="file" accept=".pdf" onChange={handleFileChange} className="w-full" />
+                    <Input
+                      type="file"
+                      accept=".pdf"
+                      onChange={handleFileChange}
+                      className="w-full"
+                      disabled={isUploading}
+                    />
+
+                    {isUploading && (
+                      <div className="w-full bg-muted rounded-full h-2.5 mb-2">
+                        <div
+                          className="bg-primary h-2.5 rounded-full transition-all duration-300"
+                          style={{ width: `${uploadProgress}%` }}
+                        ></div>
+                      </div>
+                    )}
+
                     <Button
                       variant="default"
-                      onClick={() => {
-                        handleUploadTicket(selectedTicketId)
-                        setSelectedTicketId(null)
-                      }}
-                      disabled={isUpdating || !ticketFile}
+                      onClick={() => handleUploadTicket(selectedTicketId)}
+                      disabled={isUploading || !ticketFile}
                     >
-                      <Upload className="h-4 w-4 mr-1" />
-                      {isUpdating ? "Subiendo..." : "Subir PDF"}
+                      {isUploading ? (
+                        <>
+                          <span className="animate-spin mr-2">
+                            <svg className="h-4 w-4" viewBox="0 0 24 24">
+                              <circle
+                                className="opacity-25"
+                                cx="12"
+                                cy="12"
+                                r="10"
+                                stroke="currentColor"
+                                strokeWidth="4"
+                                fill="none"
+                              ></circle>
+                              <path
+                                className="opacity-75"
+                                fill="currentColor"
+                                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                              ></path>
+                            </svg>
+                          </span>
+                          Subiendo {uploadProgress}%
+                        </>
+                      ) : (
+                        <>
+                          <Upload className="h-4 w-4 mr-1" />
+                          Subir PDF
+                        </>
+                      )}
                     </Button>
                   </div>
                 </div>

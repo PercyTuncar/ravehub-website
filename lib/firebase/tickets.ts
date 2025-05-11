@@ -12,6 +12,9 @@ import {
   serverTimestamp,
   getFirestore,
   setDoc,
+  getCountFromServer,
+  startAfter,
+  limit,
 } from "firebase/firestore"
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage"
 import { db, storage } from "@/lib/firebase/config"
@@ -263,6 +266,234 @@ export async function getPendingTicketTransactions(): Promise<TicketTransaction[
   } catch (error) {
     console.error("Error getting pending ticket transactions:", error)
     return []
+  }
+}
+
+/**
+ * Obtiene el conteo total de transacciones de tickets pendientes
+ */
+// Reemplazar la función getPendingTicketTransactionsCount con esta versión corregida:
+export async function getPendingTicketTransactionsCount(): Promise<number> {
+  try {
+    const ticketsRef = collection(db, "ticketTransactions")
+
+    // Consulta para contar documentos pendientes, aprobados y rechazados
+    const pendingQuery = query(ticketsRef, where("paymentStatus", "in", ["pending", "approved", "rejected"]))
+
+    const snapshot = await getCountFromServer(pendingQuery)
+    return snapshot.data().count
+  } catch (error) {
+    console.error("Error getting pending ticket transactions count:", error)
+    return 0
+  }
+}
+
+/**
+ * Obtiene el conteo total de transacciones de tickets pagados
+ */
+// Reemplazar la función getPaidTicketTransactionsCount con esta versión corregida:
+export async function getPaidTicketTransactionsCount(): Promise<number> {
+  try {
+    const ticketsRef = collection(db, "ticketTransactions")
+
+    // Consulta para contar documentos pagados
+    const paidQuery = query(ticketsRef, where("paymentStatus", "==", "paid"))
+
+    const snapshot = await getCountFromServer(paidQuery)
+    return snapshot.data().count
+  } catch (error) {
+    console.error("Error getting paid ticket transactions count:", error)
+    return 0
+  }
+}
+
+/**
+ * Obtiene transacciones de tickets pendientes con paginación
+ */
+// Reemplazar la función getPendingTicketTransactionsPaginated con esta versión corregida:
+export async function getPendingTicketTransactionsPaginated(page = 1, pageSize = 10): Promise<TicketTransaction[]> {
+  try {
+    const ticketsRef = collection(db, "ticketTransactions")
+
+    // Consulta base para transacciones pendientes, aprobadas o rechazadas
+    let baseQuery = query(
+      ticketsRef,
+      where("paymentStatus", "in", ["pending", "approved", "rejected"]),
+      orderBy("createdAt", "desc"),
+    )
+
+    // Si no es la primera página, necesitamos obtener el último documento de la página anterior
+    if (page > 1) {
+      // Calcular cuántos documentos saltar
+      const skipCount = (page - 1) * pageSize
+
+      // Obtener los documentos hasta el punto de inicio para esta página
+      const docSnaps = await getDocs(query(baseQuery, limit(skipCount)))
+      const lastVisible = docSnaps.docs[docSnaps.docs.length - 1]
+
+      if (lastVisible) {
+        // Crear una nueva consulta que comience después del último documento visible
+        baseQuery = query(
+          ticketsRef,
+          where("paymentStatus", "in", ["pending", "approved", "rejected"]),
+          orderBy("createdAt", "desc"),
+          startAfter(lastVisible),
+          limit(pageSize),
+        )
+      } else {
+        // Si no hay último documento visible, simplemente limitar los resultados
+        baseQuery = query(baseQuery, limit(pageSize))
+      }
+    } else {
+      // Para la primera página, simplemente limitar los resultados
+      baseQuery = query(baseQuery, limit(pageSize))
+    }
+
+    // Ejecutar la consulta final
+    const querySnapshot = await getDocs(baseQuery)
+    const transactions: TicketTransaction[] = []
+
+    // Procesar los resultados
+    for (const docSnapshot of querySnapshot.docs) {
+      const transaction = docSnapshot.data() as TicketTransaction
+
+      // Obtener información del usuario
+      let user = null
+      if (transaction.userId) {
+        const userDoc = await getDoc(doc(db, "users", transaction.userId))
+        if (userDoc.exists()) {
+          user = userDoc.data() as User
+        }
+      }
+
+      // Obtener información del evento
+      let event = null
+      if (transaction.eventId) {
+        const eventDoc = await getDoc(doc(db, "events", transaction.eventId))
+        if (eventDoc.exists()) {
+          event = eventDoc.data() as Event
+        }
+      }
+
+      // Procesar los tickets
+      const ticketItems = Array.isArray(transaction.ticketItems)
+        ? transaction.ticketItems.map((item) => ({
+            ...item,
+            createdAt: typeof item.createdAt === "string" ? new Date(item.createdAt) : item.createdAt,
+            updatedAt: typeof item.updatedAt === "string" ? new Date(item.updatedAt) : item.updatedAt,
+          }))
+        : []
+
+      // Añadir la transacción procesada al array de resultados
+      transactions.push({
+        ...transaction,
+        id: docSnapshot.id,
+        createdAt: convertFirestoreDate(transaction.createdAt) || new Date(),
+        updatedAt: convertFirestoreDate(transaction.updatedAt) || new Date(),
+        ticketsDownloadAvailableDate: convertFirestoreDate(transaction.ticketsDownloadAvailableDate),
+        ticketItems,
+        user,
+        event,
+      })
+    }
+
+    return transactions
+  } catch (error) {
+    console.error("Error getting pending ticket transactions:", error)
+    throw error
+  }
+}
+
+/**
+ * Obtiene transacciones de tickets pagados con paginación
+ */
+// Reemplazar la función getPaidTicketTransactionsPaginated con esta versión corregida:
+export async function getPaidTicketTransactionsPaginated(page = 1, pageSize = 10): Promise<TicketTransaction[]> {
+  try {
+    const ticketsRef = collection(db, "ticketTransactions")
+
+    // Consulta base para transacciones pagadas
+    let baseQuery = query(ticketsRef, where("paymentStatus", "==", "paid"), orderBy("createdAt", "desc"))
+
+    // Si no es la primera página, necesitamos obtener el último documento de la página anterior
+    if (page > 1) {
+      // Calcular cuántos documentos saltar
+      const skipCount = (page - 1) * pageSize
+
+      // Obtener los documentos hasta el punto de inicio para esta página
+      const docSnaps = await getDocs(query(baseQuery, limit(skipCount)))
+      const lastVisible = docSnaps.docs[docSnaps.docs.length - 1]
+
+      if (lastVisible) {
+        // Crear una nueva consulta que comience después del último documento visible
+        baseQuery = query(
+          ticketsRef,
+          where("paymentStatus", "==", "paid"),
+          orderBy("createdAt", "desc"),
+          startAfter(lastVisible),
+          limit(pageSize),
+        )
+      } else {
+        // Si no hay último documento visible, simplemente limitar los resultados
+        baseQuery = query(baseQuery, limit(pageSize))
+      }
+    } else {
+      // Para la primera página, simplemente limitar los resultados
+      baseQuery = query(baseQuery, limit(pageSize))
+    }
+
+    // Ejecutar la consulta final
+    const querySnapshot = await getDocs(baseQuery)
+    const transactions: TicketTransaction[] = []
+
+    // Procesar los resultados
+    for (const docSnapshot of querySnapshot.docs) {
+      const transaction = docSnapshot.data() as TicketTransaction
+
+      // Obtener información del usuario
+      let user = null
+      if (transaction.userId) {
+        const userDoc = await getDoc(doc(db, "users", transaction.userId))
+        if (userDoc.exists()) {
+          user = userDoc.data() as User
+        }
+      }
+
+      // Obtener información del evento
+      let event = null
+      if (transaction.eventId) {
+        const eventDoc = await getDoc(doc(db, "events", transaction.eventId))
+        if (eventDoc.exists()) {
+          event = eventDoc.data() as Event
+        }
+      }
+
+      // Procesar los tickets
+      const ticketItems = Array.isArray(transaction.ticketItems)
+        ? transaction.ticketItems.map((item) => ({
+            ...item,
+            createdAt: typeof item.createdAt === "string" ? new Date(item.createdAt) : item.createdAt,
+            updatedAt: typeof item.updatedAt === "string" ? new Date(item.updatedAt) : item.updatedAt,
+          }))
+        : []
+
+      // Añadir la transacción procesada al array de resultados
+      transactions.push({
+        ...transaction,
+        id: docSnapshot.id,
+        createdAt: convertFirestoreDate(transaction.createdAt) || new Date(),
+        updatedAt: convertFirestoreDate(transaction.updatedAt) || new Date(),
+        ticketsDownloadAvailableDate: convertFirestoreDate(transaction.ticketsDownloadAvailableDate),
+        ticketItems,
+        user,
+        event,
+      })
+    }
+
+    return transactions
+  } catch (error) {
+    console.error("Error getting paid ticket transactions:", error)
+    throw error
   }
 }
 
