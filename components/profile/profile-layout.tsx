@@ -27,6 +27,12 @@ export function ProfileLayout({ children }: ProfileLayoutProps) {
       if (user?.uid) {
         try {
           const data = await getUserById(user.uid)
+          console.log("User data loaded:", data)
+          if (data?.photoURL) {
+            console.log("Photo URL found:", data.photoURL)
+          } else {
+            console.log("No photo URL found in user data")
+          }
           setUserData(data)
         } catch (error) {
           console.error("Error fetching user data:", error)
@@ -62,11 +68,19 @@ export function ProfileLayout({ children }: ProfileLayoutProps) {
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
         {/* Sidebar for desktop */}
         <div className="hidden lg:block lg:col-span-3 space-y-6">
-          <Card className="overflow-hidden">
+          <Card className="overflow-hidden sticky top-24">
             <div className="bg-gradient-to-r from-purple-500 to-pink-500 h-24 relative">
               <div className="absolute -bottom-10 left-1/2 transform -translate-x-1/2">
                 <Avatar className="h-20 w-20 border-4 border-white">
-                  <AvatarImage src={userData?.photoURL || undefined} alt={userData?.firstName || "User"} />
+                  <AvatarImage
+                    src={userData?.photoURL || "/placeholder.svg"}
+                    alt={userData?.firstName || "User"}
+                    className="object-cover"
+                    onError={(e) => {
+                      console.error("Error loading profile image:", e)
+                      // Don't hide the image, let the fallback show instead
+                    }}
+                  />
                   <AvatarFallback className="text-lg bg-gradient-to-br from-purple-400 to-pink-400 text-white">
                     {getInitials()}
                   </AvatarFallback>

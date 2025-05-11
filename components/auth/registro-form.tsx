@@ -37,24 +37,50 @@ export default function RegistroForm() {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  // Get document types based on selected country
-  const getDocumentTypes = () => {
-    if (!formData.country) return []
-    return documentTypesByCountry[formData.country] || documentTypesByCountry.DEFAULT
-  }
-
   // Get phone prefix based on selected country
   const getPhonePrefix = (countryCode: string) => {
     const prefixes: Record<string, string> = {
-      PE: "+51",
-      CL: "+56",
-      MX: "+52",
-      AR: "+54",
-      CO: "+57",
-      BR: "+55",
-      WORLD: "+1",
+      AR: "+54", // Argentina
+      BO: "+591", // Bolivia
+      BR: "+55", // Brasil
+      CL: "+56", // Chile
+      CO: "+57", // Colombia
+      CR: "+506", // Costa Rica
+      CU: "+53", // Cuba
+      DO: "+1", // República Dominicana
+      EC: "+593", // Ecuador
+      SV: "+503", // El Salvador
+      GT: "+502", // Guatemala
+      HN: "+504", // Honduras
+      MX: "+52", // México
+      NI: "+505", // Nicaragua
+      PA: "+507", // Panamá
+      PY: "+595", // Paraguay
+      PE: "+51", // Perú
+      PR: "+1", // Puerto Rico
+      UY: "+598", // Uruguay
+      VE: "+58", // Venezuela
+      WORLD: "+1", // Default for non-Latin American countries
     }
-    return prefixes[countryCode] || ""
+    return prefixes[countryCode] || "+1" // Default to +1 if country code not found
+  }
+
+  // Ensure all document types include passport option
+  const getDocumentTypes = () => {
+    if (!formData.country) return []
+
+    // Get the document types for the selected country
+    const countryDocTypes = documentTypesByCountry[formData.country] || documentTypesByCountry.DEFAULT
+
+    // Check if passport is already included
+    const hasPassport = countryDocTypes.some((doc) => doc.code === "PASSPORT")
+
+    // If passport is not included, add it
+    if (!hasPassport) {
+      return [...countryDocTypes, { code: "PASSPORT", name: "Pasaporte" }]
+    }
+
+    return countryDocTypes
   }
 
   // Handle form input changes

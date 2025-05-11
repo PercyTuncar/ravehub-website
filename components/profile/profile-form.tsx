@@ -2,7 +2,7 @@
 
 import type React from "react"
 
-import { useState, useRef } from "react"
+import { useState, useRef, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
@@ -27,6 +27,7 @@ import { FcGoogle } from "react-icons/fc"
 import { linkGoogleAccount, setPasswordForGoogleUser } from "@/lib/firebase/auth"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Badge } from "@/components/ui/badge"
+import { documentTypesByCountry } from "@/lib/constants"
 
 // Añadir esquema de validación para el formulario de cambio de contraseña
 const passwordChangeSchema = z
@@ -115,16 +116,6 @@ export default function ProfileForm({ initialData, userEmail }: ProfileFormProps
   const [confirmPassword, setConfirmPassword] = useState("")
   const [passwordError, setPasswordError] = useState<string | null>(null)
 
-  // Formulario para cambio de contraseña
-  const passwordForm = useForm<PasswordChangeValues>({
-    resolver: zodResolver(passwordChangeSchema),
-    defaultValues: {
-      currentPassword: "",
-      newPassword: "",
-      confirmPassword: "",
-    },
-  })
-
   // Configurar el formulario con los valores iniciales
   const form = useForm<ProfileFormValues>({
     resolver: zodResolver(profileFormSchema),
@@ -139,6 +130,33 @@ export default function ProfileForm({ initialData, userEmail }: ProfileFormProps
       preferredCurrency: initialData.preferredCurrency || "PEN",
     },
   })
+
+  const passwordForm = useForm<PasswordChangeValues>({
+    resolver: zodResolver(passwordChangeSchema),
+    defaultValues: {
+      currentPassword: "",
+      newPassword: "",
+      confirmPassword: "",
+    },
+  })
+
+  const [availableDocumentTypes, setAvailableDocumentTypes] = useState<{ code: string; name: string }[]>(
+    documentTypesByCountry[form.getValues("country")] || documentTypesByCountry.DEFAULT,
+  )
+
+  // Update document types when country changes
+  useEffect(() => {
+    const country = form.getValues("country")
+    const documentTypes = documentTypesByCountry[country] || documentTypesByCountry.DEFAULT
+    setAvailableDocumentTypes(documentTypes)
+
+    // If current document type is not available in the new country, reset to first option
+    const currentDocType = form.getValues("documentType")
+    const isDocTypeAvailable = documentTypes.some((type) => type.code === currentDocType)
+    if (!isDocTypeAvailable && documentTypes.length > 0) {
+      form.setValue("documentType", documentTypes[0].code)
+    }
+  }, [form.watch("country")])
 
   // Manejar la selección de archivo de imagen
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -660,10 +678,11 @@ export default function ProfileForm({ initialData, userEmail }: ProfileFormProps
                     <SelectValue placeholder="Selecciona el tipo de documento" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="DNI">DNI</SelectItem>
-                    <SelectItem value="PASSPORT">Pasaporte</SelectItem>
-                    <SelectItem value="CE">Carnet de Extranjería</SelectItem>
-                    <SelectItem value="OTHER">Otro</SelectItem>
+                    {availableDocumentTypes.map((docType) => (
+                      <SelectItem key={docType.code} value={docType.code}>
+                        {docType.name}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
