@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react"
 import { collection, query, where, getDocs } from "firebase/firestore"
 import { db } from "@/lib/firebase/firebase"
-import { PostSchema } from "./post-schema"
+import { ComprehensiveSchema } from "./comprehensive-schema"
 import type { BlogPost, BlogCategory, BlogComment } from "@/types/blog"
 
 interface PostReaction {
@@ -19,9 +19,10 @@ interface EnhancedPostSchemaProps {
   post: BlogPost
   category?: BlogCategory | null
   url: string
+  breadcrumbs?: Array<{ name: string; item: string }>
 }
 
-export function EnhancedPostSchema({ post, category, url }: EnhancedPostSchemaProps) {
+export function EnhancedPostSchema({ post, category, url, breadcrumbs }: EnhancedPostSchemaProps) {
   const [comments, setComments] = useState<BlogComment[]>([])
   const [reactions, setReactions] = useState<PostReaction[]>([])
   const [isLoading, setIsLoading] = useState(true)
@@ -66,7 +67,7 @@ export function EnhancedPostSchema({ post, category, url }: EnhancedPostSchemaPr
             post.ratingCount = ratingsSnapshot.size
           }
         } else {
-          // Asegúrate de que los valores existentes sean números
+          // Make sure existing values are numbers
           post.averageRating = Number(post.averageRating)
           post.ratingCount = Number(post.ratingCount)
         }
@@ -88,5 +89,14 @@ export function EnhancedPostSchema({ post, category, url }: EnhancedPostSchemaPr
   // Don't render anything while loading to avoid flashing
   if (isLoading) return null
 
-  return <PostSchema post={post} category={category} url={url} comments={comments} reactions={reactions} />
+  return (
+    <ComprehensiveSchema
+      post={post}
+      category={category}
+      url={url}
+      comments={comments}
+      reactions={reactions}
+      breadcrumbs={breadcrumbs}
+    />
+  )
 }

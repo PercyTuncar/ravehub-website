@@ -7,7 +7,7 @@ import { PostDetailSkeleton } from "@/components/blog/post-detail-skeleton"
 import { BlogSidebarSkeleton } from "@/components/blog/blog-sidebar-skeleton"
 import { PostDetailWrapper } from "@/components/blog/post-detail-wrapper"
 import { BlogSidebarWrapper } from "@/components/blog/blog-sidebar-wrapper"
-// Importar la función getRedirectedSlug y redirect de Next.js
+// Import the function getRedirectedSlug and redirect from Next.js
 import { getRedirectedSlug } from "@/lib/firebase/slug-redirects"
 import { EnhancedPostSchema } from "@/components/blog/enhanced-post-schema"
 
@@ -96,33 +96,51 @@ export async function generateMetadata({ params }: BlogPostPageProps): Promise<M
   }
 }
 
-// Modificar la función principal para manejar redirecciones
+// Update the page component to include breadcrumbs in the schema
 export default async function BlogPostPage({ params }: BlogPostPageProps) {
-  // Verificar si el slug actual es el definitivo o necesita redirección
+  // Verify if the current slug is the definitive one or needs redirection
   const finalSlug = await getRedirectedSlug(params.slug)
 
-  // Si el slug final es diferente al original, redirigir
+  // If the final slug is different from the original, redirect
   if (finalSlug !== params.slug) {
     redirect(`/blog/${finalSlug}`)
   }
 
-  // Continuar con la lógica existente usando el slug final
+  // Continue with existing logic using the final slug
   const post = await getPostBySlug(finalSlug)
 
   if (!post) {
-    console.log(`Post no encontrado para slug: ${finalSlug}`)
+    console.log(`Post not found for slug: ${finalSlug}`)
     notFound()
   }
 
-  // URL completa para el schema
-  const fullUrl = `${process.env.NEXT_PUBLIC_BASE_URL || "https://ravehub.com"}/blog/${post.slug}`
+  // Full URL for the schema
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://www.ravehublatam.com"
+  const fullUrl = `${baseUrl}/blog/${post.slug}`
 
-  // Construir la ruta de navegación básica (sin categoría que se cargará después)
+  // Build the basic navigation path (without category that will be loaded later)
   const breadcrumbItems = [
     { label: "Inicio", href: "/" },
     { label: "Blog", href: "/blog" },
     { label: post.title, href: `/blog/${post.slug}`, current: true },
   ]
+
+  // Create breadcrumbs for schema
+  const schemaBreadcrumbs = [
+    { name: "Inicio", item: baseUrl },
+    { name: "Blog", item: `${baseUrl}/blog` },
+  ]
+
+  // Add category to breadcrumbs if available
+  if (post.category && post.category.name && post.category.slug) {
+    schemaBreadcrumbs.push({
+      name: post.category.name,
+      item: `${baseUrl}/blog/categorias/${post.category.slug}`,
+    })
+  }
+
+  // Add current post to breadcrumbs
+  schemaBreadcrumbs.push({ name: post.title, item: fullUrl })
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -135,7 +153,7 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
           </Suspense>
         </div>
 
-        {/* Barra lateral */}
+        {/* Sidebar */}
         <div className="lg:col-span-1">
           <Suspense fallback={<BlogSidebarSkeleton />}>
             <BlogSidebarWrapper postId={post.id} />
@@ -143,9 +161,9 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
         </div>
       </div>
 
-      {/* Datos estructurados para SEO */}
+      {/* Structured data for SEO */}
       <Suspense fallback={null}>
-        <EnhancedPostSchema post={post} category={post.category} url={fullUrl} />
+        <EnhancedPostSchema post={post} category={post.category} url={fullUrl} breadcrumbs={schemaBreadcrumbs} />
       </Suspense>
     </div>
   )
