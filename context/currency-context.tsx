@@ -11,8 +11,9 @@ interface CurrencyContextType {
   currency: string
   setCurrency: (currency: string) => void
   exchangeRates: Record<string, number>
+  rates: Record<string, number> // Añadir esta línea
   loading: boolean
-  refreshExchangeRates: () => Promise<void>
+  refreshExchangeRates: () => Promise<Record<string, number>>
   formatCurrency: (amount: number, fromCurrency: string, toCurrency: string) => string
   convertCurrency: (amount: number, fromCurrency: string, toCurrency: string) => number
 }
@@ -23,7 +24,17 @@ export function CurrencyProvider({ children }: { children: ReactNode }) {
   const { country, loading: geoLoading } = useGeolocation()
   const { user } = useAuth()
   const [currency, setCurrency] = useState<string>("USD")
-  const [exchangeRates, setExchangeRates] = useState<Record<string, number>>({})
+  const [exchangeRates, setExchangeRates] = useState<Record<string, number>>({
+    USD: 1,
+    PEN: 3.7,
+    CLP: 900,
+    MXN: 17.5,
+    ARS: 350,
+    BRL: 5.2,
+    COP: 4000,
+    EUR: 0.92,
+    GBP: 0.79,
+  })
   const [loading, setLoading] = useState(true)
   const [initialLoadDone, setInitialLoadDone] = useState(false)
   const [forceUpdate, setForceUpdate] = useState(0)
@@ -34,14 +45,16 @@ export function CurrencyProvider({ children }: { children: ReactNode }) {
       console.log("Refrescando tasas de cambio...")
       setLoading(true)
       const rates = await getExchangeRates()
+      console.log("Tasas obtenidas:", rates)
       setExchangeRates(rates)
       console.log("Tasas de cambio actualizadas:", rates)
       // Forzar actualización de componentes
       setForceUpdate((prev) => prev + 1)
+      return rates
     } catch (error) {
       console.error("Error al refrescar tasas de cambio:", error)
-      // Default to 1:1 exchange rate if API fails
-      setExchangeRates({
+      // Default to predefined exchange rates if API fails
+      const defaultRates = {
         USD: 1,
         PEN: 3.7,
         CLP: 900,
@@ -49,7 +62,11 @@ export function CurrencyProvider({ children }: { children: ReactNode }) {
         ARS: 350,
         BRL: 5.2,
         COP: 4000,
-      })
+        EUR: 0.92,
+        GBP: 0.79,
+      }
+      setExchangeRates(defaultRates)
+      return defaultRates
     } finally {
       setLoading(false)
     }
@@ -218,6 +235,7 @@ export function CurrencyProvider({ children }: { children: ReactNode }) {
     currency,
     setCurrency: setCurrencyWithUpdate,
     exchangeRates,
+    rates: exchangeRates, // Añadir esta línea para asegurar compatibilidad
     loading: loading || (geoLoading && !initialLoadDone),
     refreshExchangeRates,
     formatCurrency,

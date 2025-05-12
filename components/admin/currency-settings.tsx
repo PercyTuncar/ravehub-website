@@ -16,7 +16,9 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Skeleton } from "@/components/ui/skeleton"
 
 export default function CurrencySettings() {
-  const { refreshExchangeRates, rates } = useCurrency()
+  const { refreshExchangeRates, rates, exchangeRates } = useCurrency()
+  // Usar exchangeRates como respaldo si rates no está disponible
+  const displayRates = rates || exchangeRates || {}
   const [exchangeRateApiKey, setExchangeRateApiKey] = useState("")
   const [openExchangeRatesApiKey, setOpenExchangeRatesApiKey] = useState("")
   const [currencyApiKey, setCurrencyApiKey] = useState("")
@@ -57,6 +59,14 @@ export default function CurrencySettings() {
           // Si no existe, usar valores predeterminados
           setAvailableCurrencies(getDefaultCurrencies())
         }
+
+        // Intentar cargar las tasas de cambio al iniciar
+        try {
+          console.log("Intentando cargar tasas de cambio al iniciar...")
+          await refreshExchangeRates()
+        } catch (ratesError) {
+          console.error("Error al cargar tasas de cambio iniciales:", ratesError)
+        }
       } catch (error) {
         console.error("Error al cargar configuración:", error)
         setStatus({
@@ -67,7 +77,7 @@ export default function CurrencySettings() {
     }
 
     loadSettings()
-  }, [])
+  }, [refreshExchangeRates])
 
   // Guardar las API keys
   const saveApiKeys = async () => {
@@ -75,19 +85,29 @@ export default function CurrencySettings() {
     setStatus({ type: "info", message: "Guardando API keys..." })
 
     try {
-      await setDoc(doc(db, "config", "apiKeys"), {
-        exchangeRateApiKey,
-        openExchangeRatesApiKey,
-        currencyApiKey,
-        updatedAt: new Date(),
-      })
+      await setDoc(
+        doc(db, "config", "apiKeys"),
+        {
+          exchangeRateApiKey,
+          openExchangeRatesApiKey,
+          currencyApiKey,
+          updatedAt: new Date(),
+          lastUpdated: lastUpdated || new Date(), // Preserve lastUpdated or set to now
+        },
+        { merge: true },
+      ) // Use merge to preserve other fields
 
       setStatus({ type: "success", message: "API keys guardadas correctamente." })
+
+      // Refresh the page after 1.5 seconds to show updated data
+      setTimeout(() => {
+        setStatus({ type: null, message: "" })
+      }, 1500)
     } catch (error) {
       console.error("Error al guardar API keys:", error)
       setStatus({
         type: "error",
-        message: "Error al guardar API keys. Inténtalo de nuevo.",
+        message: `Error al guardar API keys: ${error instanceof Error ? error.message : "Error desconocido"}`,
       })
     } finally {
       setIsLoading(false)
@@ -109,11 +129,16 @@ export default function CurrencySettings() {
 
       setLastUpdated(new Date())
       setStatus({ type: "success", message: "Tasas de cambio actualizadas correctamente." })
+
+      // Clear status after 1.5 seconds
+      setTimeout(() => {
+        setStatus({ type: null, message: "" })
+      }, 1500)
     } catch (error) {
       console.error("Error al actualizar tasas de cambio:", error)
       setStatus({
         type: "error",
-        message: "Error al actualizar tasas de cambio. Inténtalo de nuevo.",
+        message: `Error al actualizar tasas de cambio: ${error instanceof Error ? error.message : "Error desconocido"}`,
       })
     } finally {
       setIsRefreshing(false)
@@ -126,17 +151,26 @@ export default function CurrencySettings() {
     setStatus({ type: "info", message: "Guardando configuración de monedas..." })
 
     try {
-      await setDoc(doc(db, "config", "currencies"), {
-        availableCurrencies,
-        updatedAt: new Date(),
-      })
+      await setDoc(
+        doc(db, "config", "currencies"),
+        {
+          availableCurrencies,
+          updatedAt: new Date(),
+        },
+        { merge: true },
+      ) // Use merge to preserve other fields
 
       setStatus({ type: "success", message: "Configuración de monedas guardada correctamente." })
+
+      // Clear status after 1.5 seconds
+      setTimeout(() => {
+        setStatus({ type: null, message: "" })
+      }, 1500)
     } catch (error) {
       console.error("Error al guardar configuración de monedas:", error)
       setStatus({
         type: "error",
-        message: "Error al guardar configuración de monedas. Inténtalo de nuevo.",
+        message: `Error al guardar configuración de monedas: ${error instanceof Error ? error.message : "Error desconocido"}`,
       })
     } finally {
       setIsLoading(false)
@@ -309,18 +343,22 @@ export default function CurrencySettings() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {rates
-                  ? Object.entries(rates)
+                {/* Renderizar datos o skeleton loader */}
+                {displayRates && typeof displayRates === "object" && Object.keys(displayRates).length > 0
+                  ? // Intentar renderizar los datos disponibles
+                    Object.entries(displayRates)
                       .filter(([code]) => code !== "USD") // Excluir USD
                       .sort(([codeA], [codeB]) => codeA.localeCompare(codeB)) // Ordenar alfabéticamente
                       .map(([code, rate]) => (
                         <TableRow key={code}>
                           <TableCell>{availableCurrencies.find((c) => c.code === code)?.name || code}</TableCell>
                           <TableCell>{code}</TableCell>
-                          <TableCell className="text-right font-mono">{rate.toFixed(4)}</TableCell>
+                          <TableCell className="text-right font-mono">
+                            {typeof rate === "number" ? rate.toFixed(4) : String(rate)}
+                          </TableCell>
                         </TableRow>
                       ))
-                  : // Skeleton loader mientras se cargan las tasas
+                  : // Mostrar skeleton loader mientras se cargan los datos
                     Array(8)
                       .fill(0)
                       .map((_, i) => (
@@ -339,6 +377,33 @@ export default function CurrencySettings() {
               </TableBody>
             </Table>
           </div>
+
+          {/* Mensaje de depuración y estado */}
+          {!rates || Object.keys(rates).length === 0 ? (
+            <div className="mt-4 p-4 bg-amber-50 border border-amber-200 rounded-md">
+              <h4 className="text-sm font-medium text-amber-800">No hay tasas de cambio disponibles</h4>
+              <p className="text-xs text-amber-700 mt-1">
+                Posibles razones:
+                <ul className="list-disc pl-5 mt-1">
+                  <li>No se ha configurado ninguna API key de tipo de cambio</li>
+                  <li>Las API keys configuradas no son válidas</li>
+                  <li>No se han actualizado las tasas de cambio recientemente</li>
+                </ul>
+              </p>
+              <div className="mt-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleRefreshRates}
+                  disabled={isRefreshing}
+                  className="text-xs"
+                >
+                  <RefreshCw className={`h-3 w-3 mr-1 ${isRefreshing ? "animate-spin" : ""}`} />
+                  Intentar actualizar ahora
+                </Button>
+              </div>
+            </div>
+          ) : null}
         </CardContent>
       </Card>
 

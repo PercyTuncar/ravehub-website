@@ -20,13 +20,10 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
-import { getAllCategories, deletePost } from "@/lib/firebase/blog"
+import { getAllCategories, deletePost, getAllPosts } from "@/lib/firebase/blog"
 import type { BlogPost, BlogCategory } from "@/types"
 import { toast } from "@/components/ui/use-toast"
 import { formatDate } from "@/lib/utils"
-
-import { collection, query, getDocs } from "firebase/firestore"
-import { db } from "@/lib/firebase/config"
 
 export function AdminPostsList() {
   const router = useRouter()
@@ -37,6 +34,8 @@ export function AdminPostsList() {
   const [categories, setCategories] = useState<BlogCategory[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [currentPage, setCurrentPage] = useState(1)
+  const postsPerPage = 10
 
   // Delete confirmation dialog
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
@@ -49,46 +48,22 @@ export function AdminPostsList() {
       setLoading(true)
       setError(null)
 
-      console.log("Iniciando la carga de posts y categorías...")
-
-      // Intentar obtener los posts directamente de Firestore para depurar
-      try {
-        const postsRef = collection(db, "blog")
-        const q = query(postsRef)
-        const querySnapshot = await getDocs(q)
-
-        console.log(`Firestore query devolvió ${querySnapshot.size} documentos`)
-
-        if (querySnapshot.size > 0) {
-          // Mostrar el primer documento para depuración
-          console.log("Ejemplo de documento:", querySnapshot.docs[0].data())
-        }
-
-        const postsData = []
-        querySnapshot.forEach((doc) => {
-          postsData.push({
-            id: doc.id,
-            ...doc.data(),
-          })
-        })
-
-        console.log(`Procesados ${postsData.length} posts directamente de Firestore`)
+      // Get posts data
+      const postsData = await getAllPosts()
+      // Check if postsData is an object with a posts property (the new format)
+      if (postsData && typeof postsData === "object" && "posts" in postsData) {
+        setPosts(postsData.posts)
+      } else {
+        // Handle the case where getAllPosts returns an array directly (old format)
         setPosts(postsData)
-      } catch (firestoreError) {
-        console.error("Error al consultar Firestore directamente:", firestoreError)
       }
 
-      // Obtener categorías
-      try {
-        const categoriesData = await getAllCategories()
-        console.log(`Obtenidas ${categoriesData.length} categorías`)
-        setCategories(categoriesData)
-      } catch (categoriesError) {
-        console.error("Error al obtener categorías:", categoriesError)
-      }
+      // Get categories
+      const categoriesData = await getAllCategories()
+      setCategories(categoriesData)
     } catch (err) {
-      console.error("Error detallado al cargar los datos:", err)
-      setError("Ocurrió un error al cargar los artículos. Revisa la consola para más detalles.")
+      console.error("Error al cargar los datos:", err)
+      setError("Ocurrió un error al cargar los artículos. Por favor, inténtalo de nuevo.")
     } finally {
       setLoading(false)
     }
@@ -106,6 +81,12 @@ export function AdminPostsList() {
 
     return matchesSearch && matchesStatus && matchesCategory
   })
+
+  // Calcular los posts para la página actual
+  const indexOfLastPost = currentPage * postsPerPage
+  const indexOfFirstPost = indexOfLastPost - postsPerPage
+  const currentPosts = filteredPosts.slice(indexOfFirstPost, indexOfLastPost)
+  const totalPages = Math.ceil(filteredPosts.length / postsPerPage)
 
   // Handle delete post
   const handleDeleteClick = (post: BlogPost) => {
@@ -241,8 +222,8 @@ export function AdminPostsList() {
                     </div>
                   </TableCell>
                 </TableRow>
-              ) : filteredPosts.length > 0 ? (
-                filteredPosts.map((post) => (
+              ) : currentPosts.length > 0 ? (
+                currentPosts.map((post) => (
                   <TableRow key={post.id}>
                     <TableCell className="font-medium">{post.title}</TableCell>
                     <TableCell>{getCategoryName(post.categoryId)}</TableCell>
@@ -278,12 +259,7 @@ export function AdminPostsList() {
                       "No se encontraron artículos con los filtros aplicados"
                     ) : (
                       <div className="flex flex-col items-center gap-2">
-                        <p>No se están mostrando los artículos. Esto puede deberse a:</p>
-                        <ul className="list-disc text-left mx-auto my-2">
-                          <li>La función getPostsForAdmin() no está recuperando correctamente los datos</li>
-                          <li>Los posts en Firestore no tienen la estructura esperada</li>
-                          <li>Hay un problema con el campo "updatedAt" en la consulta</li>
-                        </ul>
+                        <p>No hay artículos disponibles</p>
                         <Button
                           variant="outline"
                           size="sm"
@@ -293,7 +269,7 @@ export function AdminPostsList() {
                           }}
                           className="mt-2"
                         >
-                          Reintentar carga directa
+                          Reintentar
                         </Button>
                       </div>
                     )}
@@ -302,6 +278,30 @@ export function AdminPostsList() {
               )}
             </TableBody>
           </Table>
+        </div>
+        <div className="flex justify-between items-center mt-4">
+          <div className="text-sm text-muted-foreground">
+            Mostrando {indexOfFirstPost + 1}-{Math.min(indexOfLastPost, filteredPosts.length)} de {filteredPosts.length}{" "}
+            artículos
+          </div>
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+              disabled={currentPage === 1}
+            >
+              Anterior
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+              disabled={currentPage === totalPages || totalPages === 0}
+            >
+              Siguiente
+            </Button>
+          </div>
         </div>
       </CardContent>
 

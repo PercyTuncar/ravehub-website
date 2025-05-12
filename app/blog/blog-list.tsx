@@ -3,10 +3,10 @@
 import { useSearchParams } from "next/navigation"
 import { useEffect, useState } from "react"
 import { getAllPosts } from "@/lib/firebase/blog"
-import BlogCard from "@/components/blog/blog-card"
-import type { BlogPost } from "@/types"
+import { BlogCard } from "@/components/blog/blog-card"
+import type { BlogPost } from "@/types/blog"
 
-export default function BlogList() {
+export default function BlogListPage() {
   const searchParams = useSearchParams()
   const [posts, setPosts] = useState<BlogPost[]>([])
   const [loading, setLoading] = useState(true)

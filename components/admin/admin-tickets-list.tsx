@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useMemo } from "react"
 import { useAuth } from "@/context/auth-context"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -13,10 +13,6 @@ import {
   getPendingTicketTransactions,
   rejectTicketTransaction,
   getPaidTicketTransactions,
-  getPendingTicketTransactionsCount,
-  getPaidTicketTransactionsCount,
-  getPendingTicketTransactionsPaginated,
-  getPaidTicketTransactionsPaginated,
 } from "@/lib/firebase/tickets"
 import type { TicketTransaction } from "@/types"
 import { toast } from "@/components/ui/use-toast"
@@ -62,183 +58,187 @@ export function AdminTicketsList() {
   const [totalPages, setTotalPages] = useState(1)
   const ITEMS_PER_PAGE = 10
 
-  // Fetch pending transactions
+  // Estados para la caché en memoria
+  const [cachedPendingTransactions, setCachedPendingTransactions] = useState<TicketTransaction[]>([])
+  const [cachedPaidTransactions, setCachedPaidTransactions] = useState<TicketTransaction[]>([])
+  const [lastCacheUpdate, setLastCacheUpdate] = useState<Date | null>(null)
+  const [isCacheExpired, setIsCacheExpired] = useState(false)
+  const CACHE_EXPIRATION_TIME = 5 * 60 * 1000 // 5 minutos en milisegundos
+
+  // Fetch transactions and implement memory caching
   useEffect(() => {
     const fetchTransactions = async () => {
       try {
         setLoading(true)
         setError(null)
 
-        // Obtener el total de transacciones para calcular las páginas
-        let pendingTxCount = 0
-        let paidTxCount = 0
+        // Verificar si hay datos en caché y si la caché no ha expirado
+        const now = new Date()
+        const cacheIsValid =
+          lastCacheUpdate && now.getTime() - lastCacheUpdate.getTime() < CACHE_EXPIRATION_TIME && !isCacheExpired
 
-        try {
-          pendingTxCount = await getPendingTicketTransactionsCount()
-          paidTxCount = await getPaidTicketTransactionsCount()
-        } catch (countError) {
-          console.error("Error obteniendo conteo de transacciones:", countError)
-          // Continuar con valores predeterminados si hay error en el conteo
+        if (cacheIsValid) {
+          console.log("Usando datos en caché")
+
+          // Usar datos en caché
+          if (statusFilter === "paid") {
+            setTransactions([])
+            setPaidTransactions(cachedPaidTransactions)
+          } else if (statusFilter === "all") {
+            setTransactions(cachedPendingTransactions)
+            setPaidTransactions(cachedPaidTransactions)
+          } else {
+            // Filtrar por estado específico (pending, approved, rejected)
+            const filteredTx = cachedPendingTransactions.filter((tx) => tx.paymentStatus === statusFilter)
+            setTransactions(filteredTx)
+            setPaidTransactions([])
+          }
+
+          setLoading(false)
+          return
         }
 
-        const totalItems = pendingTxCount + paidTxCount
-        const calculatedTotalPages = Math.max(1, Math.ceil(totalItems / ITEMS_PER_PAGE))
-        setTotalPages(calculatedTotalPages)
+        // Si no hay caché válida, cargar desde Firebase con límites
+        console.log("Cargando datos desde Firebase")
 
-        // Cargar datos de la primera página
-        loadPageData()
-      } catch (err) {
-        console.error("Error general al cargar transacciones:", err)
-        setError("Ocurrió un error al cargar las transacciones. Por favor, intente nuevamente.")
-        setLoading(false)
-      }
-    }
+        // Cargar solo los datos necesarios según el filtro actual
+        // Limitar a 100 registros por consulta para mejorar rendimiento
+        const QUERY_LIMIT = 100
 
-    const loadPageData = async () => {
-      if (currentPage < 1) return
+        let pendingTx: TicketTransaction[] = []
+        let paidTx: TicketTransaction[] = []
 
-      setLoading(true)
-      try {
+        // Cargar solo los datos necesarios según el filtro actual
         if (statusFilter === "paid" || statusFilter === "all") {
-          try {
-            const paidTx = await getPaidTicketTransactionsPaginated(currentPage, ITEMS_PER_PAGE)
-            setPaidTransactions(paidTx)
-          } catch (error) {
-            console.error("Error cargando transacciones pagadas:", error)
-            toast({
-              title: "Error",
-              description: "No se pudieron cargar los tickets pagados",
-              variant: "destructive",
-            })
-          }
+          paidTx = await getPaidTicketTransactions(QUERY_LIMIT)
         }
 
-        if (
-          statusFilter === "pending" ||
-          statusFilter === "approved" ||
-          statusFilter === "rejected" ||
-          statusFilter === "all"
-        ) {
-          try {
-            const pendingTx = await getPendingTicketTransactionsPaginated(currentPage, ITEMS_PER_PAGE)
-            setTransactions(pendingTx)
-          } catch (error) {
-            console.error("Error cargando transacciones pendientes:", error)
-            toast({
-              title: "Error",
-              description: "No se pudieron cargar los tickets pendientes",
-              variant: "destructive",
-            })
-          }
+        if (statusFilter !== "paid") {
+          pendingTx = await getPendingTicketTransactions(QUERY_LIMIT)
         }
+
+        // Guardar en caché
+        setCachedPendingTransactions(pendingTx)
+        setCachedPaidTransactions(paidTx)
+        setLastCacheUpdate(new Date())
+        setIsCacheExpired(false)
+
+        // Establecer datos actuales según el filtro
+        if (statusFilter === "paid") {
+          setTransactions([])
+          setPaidTransactions(paidTx)
+        } else if (statusFilter === "all") {
+          setTransactions(pendingTx)
+          setPaidTransactions(paidTx)
+        } else {
+          // Filtrar por estado específico (pending, approved, rejected)
+          const filteredTx = pendingTx.filter((tx) => tx.paymentStatus === statusFilter)
+          setTransactions(filteredTx)
+          setPaidTransactions([])
+        }
+
+        // Calcular paginación
+        const totalItems =
+          statusFilter === "paid"
+            ? paidTx.length
+            : statusFilter === "all"
+              ? pendingTx.length + paidTx.length
+              : pendingTx.filter((tx) => tx.paymentStatus === statusFilter).length
+
+        setTotalPages(Math.max(1, Math.ceil(totalItems / ITEMS_PER_PAGE)))
       } catch (err) {
-        console.error("Error general al cambiar de página:", err)
-        toast({
-          title: "Error",
-          description: "No se pudieron cargar más tickets",
-          variant: "destructive",
-        })
+        console.error("Error al cargar transacciones:", err)
+        setError("Ocurrió un error al cargar las transacciones. Por favor, intente nuevamente.")
       } finally {
         setLoading(false)
       }
     }
 
     fetchTransactions()
-  }, [])
+  }, [isCacheExpired, statusFilter])
 
-  // Recargar cuando cambie la página
+  // Manejar cambio de página y filtros usando datos en caché
   useEffect(() => {
-    const loadPageData = async () => {
-      if (currentPage < 1) return
+    if (!lastCacheUpdate) return // Esperar a que se carguen los datos iniciales
 
-      setLoading(true)
-      try {
-        if (statusFilter === "paid" || statusFilter === "all") {
-          try {
-            const paidTx = await getPaidTicketTransactionsPaginated(currentPage, ITEMS_PER_PAGE)
-            setPaidTransactions(paidTx)
-          } catch (error) {
-            console.error("Error cargando transacciones pagadas:", error)
-            toast({
-              title: "Error",
-              description: "No se pudieron cargar los tickets pagados",
-              variant: "destructive",
-            })
-          }
-        }
+    setLoading(true)
 
-        if (
-          statusFilter === "pending" ||
-          statusFilter === "approved" ||
-          statusFilter === "rejected" ||
-          statusFilter === "all"
-        ) {
-          try {
-            const pendingTx = await getPendingTicketTransactionsPaginated(currentPage, ITEMS_PER_PAGE)
-            setTransactions(pendingTx)
-          } catch (error) {
-            console.error("Error cargando transacciones pendientes:", error)
-            toast({
-              title: "Error",
-              description: "No se pudieron cargar los tickets pendientes",
-              variant: "destructive",
-            })
-          }
-        }
-      } catch (err) {
-        console.error("Error general al cambiar de página:", err)
-        toast({
-          title: "Error",
-          description: "No se pudieron cargar más tickets",
-          variant: "destructive",
-        })
-      } finally {
-        setLoading(false)
+    try {
+      // Filtrar datos según el estado seleccionado
+      if (statusFilter === "paid") {
+        // Mostrar solo transacciones pagadas
+        setTransactions([])
+        setPaidTransactions(cachedPaidTransactions)
+        setTotalPages(Math.max(1, Math.ceil(cachedPaidTransactions.length / ITEMS_PER_PAGE)))
+      } else if (statusFilter === "all") {
+        // Mostrar todas las transacciones
+        setTransactions(cachedPendingTransactions)
+        setPaidTransactions(cachedPaidTransactions)
+        const totalItems = cachedPendingTransactions.length + cachedPaidTransactions.length
+        setTotalPages(Math.max(1, Math.ceil(totalItems / ITEMS_PER_PAGE)))
+      } else {
+        // Filtrar por estado específico (pending, approved, rejected)
+        const filteredTx = cachedPendingTransactions.filter((tx) => tx.paymentStatus === statusFilter)
+        setTransactions(filteredTx)
+        setPaidTransactions([])
+        setTotalPages(Math.max(1, Math.ceil(filteredTx.length / ITEMS_PER_PAGE)))
       }
+    } catch (err) {
+      console.error("Error al filtrar transacciones:", err)
+      toast({
+        title: "Error",
+        description: "No se pudieron filtrar los tickets",
+        variant: "destructive",
+      })
+    } finally {
+      setLoading(false)
+    }
+  }, [statusFilter, lastCacheUpdate, cachedPendingTransactions, cachedPaidTransactions])
+
+  // Función para forzar la recarga de datos desde Firebase
+  const refreshData = () => {
+    setIsCacheExpired(true)
+  }
+
+  // Filter and paginate transactions in memory
+  const filteredTransactions = useMemo(() => {
+    let result: TicketTransaction[] = []
+
+    // Seleccionar el conjunto de datos correcto según el filtro
+    if (statusFilter === "paid") {
+      result = paidTransactions
+    } else if (statusFilter === "all") {
+      result = [...transactions, ...paidTransactions]
+    } else {
+      result = transactions
     }
 
-    loadPageData()
-  }, [currentPage, statusFilter])
-
-  // Filter transactions based on search term and status
-  const filteredTransactions = (() => {
-    // Si el filtro es "all", mostrar todas las transacciones (pendientes y pagadas)
-    if (statusFilter === "all") {
-      // Combinar los arrays de transacciones regulares y pagadas
-      const allTransactions = [...transactions, ...paidTransactions]
-
-      // Filtrar solo por término de búsqueda, no por estado
-      return allTransactions.filter(
+    // Aplicar filtro de búsqueda solo si hay un término
+    if (searchTerm.trim() !== "") {
+      const searchTermLower = searchTerm.toLowerCase()
+      result = result.filter(
         (transaction) =>
-          (transaction.user?.firstName?.toLowerCase() || "").includes(searchTerm.toLowerCase()) ||
-          (transaction.user?.lastName?.toLowerCase() || "").includes(searchTerm.toLowerCase()) ||
-          (transaction.event?.name?.toLowerCase() || "").includes(searchTerm.toLowerCase()),
+          (transaction.user?.firstName?.toLowerCase() || "").includes(searchTermLower) ||
+          (transaction.user?.lastName?.toLowerCase() || "").includes(searchTermLower) ||
+          (transaction.event?.name?.toLowerCase() || "").includes(searchTermLower),
       )
     }
 
-    // Si el filtro es "paid", mostrar las transacciones pagadas completamente
-    if (statusFilter === "paid") {
-      return paidTransactions.filter((transaction) => {
-        return (
-          (transaction.user?.firstName?.toLowerCase() || "").includes(searchTerm.toLowerCase()) ||
-          (transaction.user?.lastName?.toLowerCase() || "").includes(searchTerm.toLowerCase()) ||
-          (transaction.event?.name?.toLowerCase() || "").includes(searchTerm.toLowerCase())
-        )
-      })
+    // Actualizar el total de páginas basado en los resultados filtrados
+    const totalFilteredItems = result.length
+    const newTotalPages = Math.max(1, Math.ceil(totalFilteredItems / ITEMS_PER_PAGE))
+
+    // Solo actualizar si es diferente para evitar re-renders
+    if (newTotalPages !== totalPages) {
+      setTotalPages(newTotalPages)
     }
 
-    // Para otros filtros, usar las transacciones pendientes/normales
-    return transactions.filter((transaction) => {
-      const matchesSearch =
-        (transaction.user?.firstName?.toLowerCase() || "").includes(searchTerm.toLowerCase()) ||
-        (transaction.user?.lastName?.toLowerCase() || "").includes(searchTerm.toLowerCase()) ||
-        (transaction.event?.name?.toLowerCase() || "").includes(searchTerm.toLowerCase())
+    // Aplicar paginación en memoria
+    const startIndex = (currentPage - 1) * ITEMS_PER_PAGE
+    const endIndex = startIndex + ITEMS_PER_PAGE
 
-      const matchesStatus = transaction.paymentStatus === statusFilter
-
-      return matchesSearch && matchesStatus
-    })
-  })()
+    return result.slice(startIndex, endIndex)
+  }, [transactions, paidTransactions, statusFilter, searchTerm, currentPage, ITEMS_PER_PAGE, totalPages])
 
   // Handle view details
   const handleViewDetails = (transaction: TicketTransaction) => {
@@ -278,9 +278,8 @@ export function AdminTicketsList() {
         description: "La transacción ha sido rechazada exitosamente.",
       })
 
-      // Refresh transactions
-      const updatedTransactions = await getPendingTicketTransactions()
-      setTransactions(updatedTransactions)
+      // Forzar recarga de datos
+      refreshData()
     } catch (error) {
       console.error("Error rejecting transaction:", error)
       toast({
@@ -330,6 +329,10 @@ export function AdminTicketsList() {
             />
           </div>
           <div className="flex items-center gap-2">
+            <Button variant="outline" onClick={refreshData} className="whitespace-nowrap">
+              <Loader2 className={`h-4 w-4 mr-2 ${loading ? "animate-spin" : ""}`} />
+              Actualizar
+            </Button>
             <Button variant="default" onClick={() => setIsAssignModalOpen(true)} className="whitespace-nowrap">
               Asignar Tickets
             </Button>
@@ -347,6 +350,19 @@ export function AdminTicketsList() {
             </Select>
           </div>
         </div>
+
+        {loading && (
+          <div className="flex justify-center items-center p-4 mb-4 bg-blue-50 rounded-md">
+            <Loader2 className="h-5 w-5 animate-spin mr-2 text-blue-500" />
+            <p className="text-blue-700">Optimizando carga de datos...</p>
+          </div>
+        )}
+
+        {lastCacheUpdate && !loading && (
+          <div className="text-xs text-muted-foreground mb-4 text-right">
+            Última actualización: {new Date(lastCacheUpdate).toLocaleTimeString()}
+          </div>
+        )}
 
         <div className="rounded-md border overflow-hidden">
           <Table>
@@ -514,14 +530,8 @@ export function AdminTicketsList() {
           onClose={() => setIsApproveModalOpen(false)}
           transaction={selectedTransaction}
           onSuccess={async () => {
-            // Refresh transactions
-            const [updatedTransactions, updatedPaidTransactions] = await Promise.all([
-              getPendingTicketTransactions(),
-              getPaidTicketTransactions(),
-            ])
-
-            setTransactions(updatedTransactions)
-            setPaidTransactions(updatedPaidTransactions)
+            // Forzar recarga de datos
+            refreshData()
 
             toast({
               title: "Transacción aprobada",
@@ -536,14 +546,8 @@ export function AdminTicketsList() {
         isOpen={isAssignModalOpen}
         onClose={() => setIsAssignModalOpen(false)}
         onSuccess={async () => {
-          // Refresh transactions after assigning tickets
-          const [updatedTransactions, updatedPaidTransactions] = await Promise.all([
-            getPendingTicketTransactions(),
-            getPaidTicketTransactions(),
-          ])
-
-          setTransactions(updatedTransactions)
-          setPaidTransactions(updatedPaidTransactions)
+          // Forzar recarga de datos
+          refreshData()
 
           toast({
             title: "Tickets asignados",

@@ -211,9 +211,11 @@ export function AssignTicketModal({ isOpen, onClose, onSuccess }: AssignTicketMo
       const ticketPdfUrls: string[] = []
       for (let i = 0; i < ticketFiles.length; i++) {
         const file = ticketFiles[i]
+        // Generar un ID único para cada archivo PDF
+        const uniqueFileId = crypto.randomUUID()
         const url = await uploadPaymentProof(
           file,
-          `tickets/admin-assigned/${formData.userId}/${formData.eventId}/${i + 1}.pdf`,
+          `tickets/admin-assigned/${formData.userId}/${formData.eventId}/${uniqueFileId}.pdf`,
         )
         ticketPdfUrls.push(url)
         console.log(`Ticket PDF ${i + 1} uploaded to: ${url}`)

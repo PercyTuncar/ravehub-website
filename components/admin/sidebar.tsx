@@ -1,5 +1,5 @@
 import Link from "next/link"
-import { ShieldAlert } from "lucide-react"
+import { Settings, ShieldAlert } from "lucide-react"
 
 const Sidebar = () => {
   // Declare the missing variables.  The types and initial values are guesses and should be adjusted based on the actual code.
@@ -69,7 +69,8 @@ const Sidebar = () => {
             </a>
           </li>
           <li>
-            <a href="/admin/settings" className="flex items-center p-2 rounded-md hover:bg-muted">
+            <a href="/admin/settings/currency-settings" className="flex items-center p-2 rounded-md hover:bg-muted">
+              <Settings className="h-4 w-4 mr-2" />
               Configuración
             </a>
           </li>

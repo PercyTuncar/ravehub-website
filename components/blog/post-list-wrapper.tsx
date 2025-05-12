@@ -1,8 +1,8 @@
 "use client"
 
 import { Suspense } from "react"
-import { PostList } from "./post-list"
-import type { BlogPost } from "@/types"
+import { BlogList } from "./blog-list"
+import type { BlogPost } from "@/types/blog"
 
 interface PostListWrapperProps {
   initialPosts?: BlogPost[]
@@ -14,7 +14,7 @@ interface PostListWrapperProps {
 export function PostListWrapper(props: PostListWrapperProps) {
   return (
     <Suspense fallback={<PostListSkeleton />}>
-      <PostList {...props} />
+      <BlogList {...props} />
     </Suspense>
   )
 }

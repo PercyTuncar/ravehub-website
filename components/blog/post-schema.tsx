@@ -16,6 +16,40 @@ function extractTagNames(tags: any[]): string[] {
     .filter(Boolean)
 }
 
+// Función para formatear fechas de manera segura
+function safeISOString(date: any): string | undefined {
+  if (!date) return undefined
+
+  try {
+    // Si es una cadena, intentar convertirla a Date
+    if (typeof date === "string") {
+      const parsedDate = new Date(date)
+      // Verificar si la fecha es válida
+      return !isNaN(parsedDate.getTime()) ? parsedDate.toISOString() : undefined
+    }
+
+    // Si es un objeto Date
+    if (date instanceof Date) {
+      // Verificar si la fecha es válida
+      return !isNaN(date.getTime()) ? date.toISOString() : undefined
+    }
+
+    // Si es un Timestamp de Firebase (tiene seconds y nanoseconds)
+    if (date && typeof date === "object" && "seconds" in date && "nanoseconds" in date) {
+      const milliseconds = date.seconds * 1000 + date.nanoseconds / 1000000
+      const parsedDate = new Date(milliseconds)
+      return !isNaN(parsedDate.getTime()) ? parsedDate.toISOString() : undefined
+    }
+
+    // Último intento: convertir a Date si es un número o una cadena válida
+    const parsedDate = new Date(date)
+    return !isNaN(parsedDate.getTime()) ? parsedDate.toISOString() : undefined
+  } catch (e) {
+    console.error("Error al convertir fecha a ISO string:", e)
+    return undefined
+  }
+}
+
 // Update the PostSchemaProps interface to include comments and reactions
 interface PostSchemaProps {
   post: BlogPost
@@ -36,16 +70,12 @@ interface PostReaction {
 }
 
 export function PostSchema({ post, category, url, comments = [], reactions = [] }: PostSchemaProps) {
-  // Format dates for schema
-  const publishDate = new Date(post.publishDate).toISOString()
-  const modifiedDate = post.updatedAt
-    ? new Date(post.updatedAt).toISOString()
-    : post.updatedDate
-      ? new Date(post.updatedDate).toISOString()
-      : publishDate
+  // Format dates for schema - usar la función segura
+  const publishDate = safeISOString(post.publishDate) || new Date().toISOString()
+  const modifiedDate = safeISOString(post.updatedAt) || safeISOString(post.updatedDate) || publishDate
 
-  // Determine schema type
-  const schemaType = post.schemaType || "NewsArticle"
+  // Determine schema type - use Article for blog posts
+  const schemaType = post.schemaType || "BlogPosting"
 
   // Create base schema data
   const schemaData: any = {
@@ -100,10 +130,11 @@ export function PostSchema({ post, category, url, comments = [], reactions = [] 
   if (post.averageRating && post.ratingCount) {
     schemaData.aggregateRating = {
       "@type": "AggregateRating",
-      ratingValue: post.averageRating.toFixed(1),
+      ratingValue: Number.parseFloat(post.averageRating.toFixed(1)),
       reviewCount: post.ratingCount,
-      bestRating: "5",
-      worstRating: "1",
+      bestRating: 5,
+      worstRating: 1,
+      ratingCount: post.ratingCount,
     }
   }
 
@@ -118,8 +149,32 @@ export function PostSchema({ post, category, url, comments = [], reactions = [] 
           name: comment.name,
           ...(comment.email && { email: comment.email }),
         },
-        datePublished: comment.createdAt ? new Date(comment.createdAt).toISOString() : new Date().toISOString(),
+        datePublished: safeISOString(comment.createdAt) || new Date().toISOString(),
         text: comment.content,
+      }))
+    }
+  }
+
+  // Add reviews if there are ratings with comments
+  if (post.averageRating && post.ratingCount) {
+    // Check if we have any ratings with comments in the comments array
+    const ratingComments = comments.filter((comment) => comment.isRating && comment.rating)
+
+    if (ratingComments.length > 0) {
+      schemaData.review = ratingComments.map((comment) => ({
+        "@type": "Review",
+        reviewRating: {
+          "@type": "Rating",
+          ratingValue: comment.rating,
+          bestRating: 5,
+          worstRating: 1,
+        },
+        author: {
+          "@type": "Person",
+          name: comment.name || "Usuario",
+        },
+        datePublished: safeISOString(comment.createdAt) || new Date().toISOString(),
+        reviewBody: comment.content,
       }))
     }
   }
@@ -161,7 +216,6 @@ export function PostSchema({ post, category, url, comments = [], reactions = [] 
     }
   }
 
-  // Add social shares if available
   // Add social shares if available
   if (post.socialShares) {
     const totalShares = Object.values(post.socialShares).reduce((sum: number, count: any) => sum + (count || 0), 0)

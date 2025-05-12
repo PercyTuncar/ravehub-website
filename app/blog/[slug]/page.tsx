@@ -21,22 +21,32 @@ interface BlogPostPageProps {
 function safeISOString(date: any): string | undefined {
   if (!date) return undefined
 
-  // If it's already a string, return it
-  if (typeof date === "string") return date
-
-  // If it's a Date object, convert to ISO string
-  if (date instanceof Date) return date.toISOString()
-
-  // If it's a Timestamp or has seconds/nanoseconds (Firebase Timestamp structure)
-  if (date.seconds !== undefined && date.nanoseconds !== undefined) {
-    return new Date(date.seconds * 1000 + date.nanoseconds / 1000000).toISOString()
-  }
-
-  // Try to convert to Date if it's a number or valid date string
   try {
-    return new Date(date).toISOString()
+    // Si es una cadena, intentar convertirla a Date
+    if (typeof date === "string") {
+      const parsedDate = new Date(date)
+      // Verificar si la fecha es válida
+      return !isNaN(parsedDate.getTime()) ? parsedDate.toISOString() : undefined
+    }
+
+    // Si es un objeto Date
+    if (date instanceof Date) {
+      // Verificar si la fecha es válida
+      return !isNaN(date.getTime()) ? date.toISOString() : undefined
+    }
+
+    // Si es un Timestamp de Firebase (tiene seconds y nanoseconds)
+    if (date && typeof date === "object" && "seconds" in date && "nanoseconds" in date) {
+      const milliseconds = date.seconds * 1000 + date.nanoseconds / 1000000
+      const parsedDate = new Date(milliseconds)
+      return !isNaN(parsedDate.getTime()) ? parsedDate.toISOString() : undefined
+    }
+
+    // Último intento: convertir a Date si es un número o una cadena válida
+    const parsedDate = new Date(date)
+    return !isNaN(parsedDate.getTime()) ? parsedDate.toISOString() : undefined
   } catch (e) {
-    console.error("Failed to convert date to ISO string:", e)
+    console.error("Error al convertir fecha a ISO string:", e)
     return undefined
   }
 }
@@ -134,7 +144,7 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
       </div>
 
       {/* Datos estructurados para SEO */}
-      <PostSchema post={post} url={fullUrl} />
+      <PostSchema post={post} url={fullUrl} category={post.category} />
     </div>
   )
 }

@@ -7,23 +7,33 @@ import { getAllPosts } from "@/lib/firebase/blog"
 import { BlogCard, BlogCardSkeleton } from "./blog-card"
 import { Loader2 } from "lucide-react"
 
-interface PostListProps {
-  initialPosts: BlogPost[]
-  initialLastVisible: string | null
-  initialHasMore: boolean
+interface BlogListProps {
+  initialPosts?: BlogPost[]
+  initialLastVisible?: string | null
+  initialHasMore?: boolean
+  categoryId?: string
+  tagSlug?: string
+  showLoadMore?: boolean
 }
 
-export function PostList({ initialPosts, initialLastVisible, initialHasMore }: PostListProps) {
+export function BlogList({
+  initialPosts = [],
+  initialLastVisible = null,
+  initialHasMore = true,
+  categoryId,
+  tagSlug,
+  showLoadMore = true,
+}: BlogListProps) {
   const searchParams = useSearchParams()
-  const categoryParam = searchParams.get("categoria")
-  const tagParam = searchParams.get("etiqueta")
+  const categoryParam = searchParams.get("categoria") || categoryId
+  const tagParam = searchParams.get("etiqueta") || tagSlug
 
   const [posts, setPosts] = useState<BlogPost[]>(initialPosts)
   const [lastVisible, setLastVisible] = useState<string | null>(initialLastVisible)
   const [hasMore, setHasMore] = useState<boolean>(initialHasMore)
   const [page, setPage] = useState<number>(1)
   const [loading, setLoading] = useState<boolean>(false)
-  const [initialLoad, setInitialLoad] = useState<boolean>(true)
+  const [initialLoad, setInitialLoad] = useState<boolean>(initialPosts.length === 0)
   const loaderRef = useRef<HTMLDivElement>(null)
 
   // Cuando cambian los parámetros de búsqueda, reiniciamos la lista de posts
@@ -31,14 +41,12 @@ export function PostList({ initialPosts, initialLastVisible, initialHasMore }: P
     const fetchPosts = async () => {
       setLoading(true)
       try {
-        console.log("Fetching posts with params:", { categoryParam, tagParam })
         const {
           posts: newPosts,
           lastVisible: newLastVisible,
           hasMore: newHasMore,
         } = await getAllPosts(1, 6, categoryParam || undefined, tagParam || undefined)
 
-        console.log("Received posts:", newPosts)
         setPosts(newPosts)
         setLastVisible(newLastVisible)
         setHasMore(newHasMore)
@@ -51,8 +59,12 @@ export function PostList({ initialPosts, initialLastVisible, initialHasMore }: P
       }
     }
 
-    fetchPosts()
-  }, [categoryParam, tagParam])
+    if (initialPosts.length === 0 || categoryParam || tagParam) {
+      fetchPosts()
+    } else {
+      setInitialLoad(false)
+    }
+  }, [categoryParam, tagParam, initialPosts.length])
 
   const loadMorePosts = async () => {
     if (!hasMore || loading) return
@@ -79,6 +91,8 @@ export function PostList({ initialPosts, initialLastVisible, initialHasMore }: P
 
   // Configurar el observador de intersección para el infinite scroll
   useEffect(() => {
+    if (!showLoadMore) return
+
     const observer = new IntersectionObserver(
       (entries) => {
         const [entry] = entries
@@ -99,7 +113,7 @@ export function PostList({ initialPosts, initialLastVisible, initialHasMore }: P
         observer.unobserve(currentLoaderRef)
       }
     }
-  }, [hasMore, loading, initialLoad])
+  }, [hasMore, loading, initialLoad, showLoadMore])
 
   if (posts.length === 0 && !loading && !initialLoad) {
     return (
@@ -122,7 +136,7 @@ export function PostList({ initialPosts, initialLastVisible, initialHasMore }: P
       </div>
 
       {/* Loader invisible que detecta cuando el usuario llega al final */}
-      {hasMore && (
+      {showLoadMore && hasMore && (
         <div ref={loaderRef} className="mt-8 text-center">
           {loading && (
             <div className="flex justify-center items-center py-4">
@@ -140,3 +154,6 @@ export function PostList({ initialPosts, initialLastVisible, initialHasMore }: P
     </div>
   )
 }
+
+// También exportar como default para mantener compatibilidad
+export default BlogList

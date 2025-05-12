@@ -49,6 +49,23 @@ export function EnhancedPostSchema({ post, category, url }: EnhancedPostSchemaPr
           ...doc.data(),
         })) as PostReaction[]
 
+        // Fetch ratings if not already included in post data
+        if (!post.averageRating || !post.ratingCount) {
+          const ratingsQuery = query(collection(db, "blogRatings"), where("postId", "==", post.id))
+          const ratingsSnapshot = await getDocs(ratingsQuery)
+
+          if (ratingsSnapshot.size > 0) {
+            let totalRating = 0
+            ratingsSnapshot.docs.forEach((doc) => {
+              totalRating += doc.data().rating || 0
+            })
+
+            const averageRating = totalRating / ratingsSnapshot.size
+            post.averageRating = averageRating
+            post.ratingCount = ratingsSnapshot.size
+          }
+        }
+
         setComments(commentsData)
         setReactions(reactionsData)
       } catch (error) {
@@ -61,7 +78,7 @@ export function EnhancedPostSchema({ post, category, url }: EnhancedPostSchemaPr
     if (post.id) {
       fetchPostInteractions()
     }
-  }, [post.id])
+  }, [post])
 
   // Don't render anything while loading to avoid flashing
   if (isLoading) return null

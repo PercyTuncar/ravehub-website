@@ -298,9 +298,11 @@ export function TicketDetailsModal({ isOpen, onClose, transaction }: TicketDetai
         })
       }, 300)
 
+      // Generar un ID único para el archivo PDF
+      const uniqueFileId = crypto.randomUUID()
       const ticketPdfUrl = await uploadTicketPdf(
         ticketFile,
-        `tickets/${transaction.userId}/${transaction.id}/${ticketItemId}.pdf`,
+        `tickets/${transaction.userId}/${transaction.id}/${ticketItemId}_${uniqueFileId}.pdf`,
       )
 
       // Actualizar el ticketPdfUrl en la base de datos

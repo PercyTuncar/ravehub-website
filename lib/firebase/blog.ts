@@ -98,6 +98,31 @@ function convertTimestamps(data: any): any {
   return result
 }
 
+/**
+ * Obtiene todos los posts para administración
+ * @returns {Promise<BlogPost[]>} Lista de posts
+ */
+export async function getAllPostsForAdmin(): Promise<BlogPost[]> {
+  try {
+    const postsRef = collection(db, "blog")
+    const q = query(postsRef, orderBy("updatedAt", "desc"))
+    const querySnapshot = await getDocs(q)
+
+    const posts: BlogPost[] = []
+    querySnapshot.forEach((doc) => {
+      posts.push({
+        id: doc.id,
+        ...doc.data(),
+      } as BlogPost)
+    })
+
+    return posts
+  } catch (error) {
+    console.error("Error al obtener todos los posts:", error)
+    throw new Error("No se pudieron cargar los artículos")
+  }
+}
+
 // Función para obtener todos los posts (con paginación)
 export async function getAllPosts(page = 1, pageSize = 9, categoryId?: string, tagName?: string) {
   try {
@@ -535,7 +560,13 @@ export async function getPostBySlug(slug: string): Promise<BlogPost | null> {
       }
     }
 
-    const post = { id: postId, ...docData, category } as BlogPost
+    const post = {
+      id: postId,
+      ...docData,
+      category,
+      averageRating: docData.averageRating || 0,
+      ratingCount: docData.ratingCount || 0,
+    } as BlogPost
 
     // Guardar en caché con timestamp
     if (!globalThis.__POST_CACHE) {
