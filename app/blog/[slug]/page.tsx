@@ -3,13 +3,13 @@ import { Suspense } from "react"
 import { notFound, redirect } from "next/navigation"
 import { getPostBySlug } from "@/lib/firebase/blog"
 import { Breadcrumbs } from "@/components/blog/breadcrumbs"
-import { PostSchema } from "@/components/blog/post-schema"
 import { PostDetailSkeleton } from "@/components/blog/post-detail-skeleton"
 import { BlogSidebarSkeleton } from "@/components/blog/blog-sidebar-skeleton"
 import { PostDetailWrapper } from "@/components/blog/post-detail-wrapper"
 import { BlogSidebarWrapper } from "@/components/blog/blog-sidebar-wrapper"
 // Importar la función getRedirectedSlug y redirect de Next.js
 import { getRedirectedSlug } from "@/lib/firebase/slug-redirects"
+import { EnhancedPostSchema } from "@/components/blog/enhanced-post-schema"
 
 interface BlogPostPageProps {
   params: {
@@ -144,7 +144,9 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
       </div>
 
       {/* Datos estructurados para SEO */}
-      <PostSchema post={post} url={fullUrl} category={post.category} />
+      <Suspense fallback={null}>
+        <EnhancedPostSchema post={post} category={post.category} url={fullUrl} />
+      </Suspense>
     </div>
   )
 }

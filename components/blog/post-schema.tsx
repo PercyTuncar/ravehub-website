@@ -110,6 +110,18 @@ export function PostSchema({ post, category, url, comments = [], reactions = [] 
     inLanguage: "es",
   }
 
+  // Add ratings if available - asegúrate de que estén dentro del objeto principal
+  if (post.averageRating && post.ratingCount) {
+    schemaData.aggregateRating = {
+      "@type": "AggregateRating",
+      ratingValue: Number(post.averageRating.toFixed(1)),
+      reviewCount: post.ratingCount,
+      bestRating: 5,
+      worstRating: 1,
+      ratingCount: post.ratingCount,
+    }
+  }
+
   // Add location if available
   if (post.location) {
     schemaData.locationCreated = {
@@ -123,18 +135,6 @@ export function PostSchema({ post, category, url, comments = [], reactions = [] 
           name: post.location.country,
         },
       },
-    }
-  }
-
-  // Add ratings if available
-  if (post.averageRating && post.ratingCount) {
-    schemaData.aggregateRating = {
-      "@type": "AggregateRating",
-      ratingValue: Number.parseFloat(post.averageRating.toFixed(1)),
-      reviewCount: post.ratingCount,
-      bestRating: 5,
-      worstRating: 1,
-      ratingCount: post.ratingCount,
     }
   }
 

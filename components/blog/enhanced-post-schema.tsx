@@ -57,13 +57,18 @@ export function EnhancedPostSchema({ post, category, url }: EnhancedPostSchemaPr
           if (ratingsSnapshot.size > 0) {
             let totalRating = 0
             ratingsSnapshot.docs.forEach((doc) => {
-              totalRating += doc.data().rating || 0
+              const rating = doc.data().rating || 0
+              totalRating += Number(rating)
             })
 
             const averageRating = totalRating / ratingsSnapshot.size
             post.averageRating = averageRating
             post.ratingCount = ratingsSnapshot.size
           }
+        } else {
+          // Asegúrate de que los valores existentes sean números
+          post.averageRating = Number(post.averageRating)
+          post.ratingCount = Number(post.ratingCount)
         }
 
         setComments(commentsData)
