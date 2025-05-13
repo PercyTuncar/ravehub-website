@@ -74,45 +74,145 @@ export function PostSchema({ post, category, url, comments = [], reactions = [] 
   const publishDate = safeISOString(post.publishDate) || new Date().toISOString()
   const modifiedDate = safeISOString(post.updatedAt) || safeISOString(post.updatedDate) || publishDate
 
-  // Determine schema type - use Article for blog posts
-  const schemaType = post.schemaType || "BlogPosting"
+  // Get the base URL for the website
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://www.ravehublatam.com"
 
-  // Create base schema data
-  const schemaData: any = {
+  // Generate multiple schemas for better SEO coverage
+  const schemas = []
+
+  // 1. Website schema (define the website the article belongs to)
+  const websiteSchema = {
     "@context": "https://schema.org",
-    "@type": schemaType,
+    "@type": "WebSite",
+    "@id": `${baseUrl}/#website`,
+    url: baseUrl,
+    name: "RaveHub",
+    description: "La plataforma líder en eventos de música electrónica en Latinoamérica",
+    publisher: {
+      "@type": "Organization",
+      "@id": `${baseUrl}/#organization`,
+      name: "RaveHub",
+      logo: {
+        "@type": "ImageObject",
+        url: `${baseUrl}/images/logo-full.png`,
+        width: 330,
+        height: 60,
+      },
+    },
+  }
+  schemas.push(websiteSchema)
+
+  // 2. Organization schema (enhance the existing one)
+  const organizationSchema = {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    "@id": `${baseUrl}/#organization`,
+    name: "RaveHub",
+    url: baseUrl,
+    logo: {
+      "@type": "ImageObject",
+      url: `${baseUrl}/images/logo-full.png`,
+      width: 330,
+      height: 60,
+    },
+    sameAs: [
+      "https://www.facebook.com/ravehublatam",
+      "https://www.instagram.com/ravehublatam",
+      "https://twitter.com/ravehublatam",
+      "https://www.tiktok.com/@ravehublatam",
+    ],
+    contactPoint: {
+      "@type": "ContactPoint",
+      telephone: "+51 944 784 488",
+      contactType: "customer support",
+      availableLanguage: ["Spanish", "English"],
+    },
+  }
+  schemas.push(organizationSchema)
+
+  // 3. BreadcrumbList schema
+  const breadcrumbSchema = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      {
+        "@type": "ListItem",
+        position: 1,
+        name: "Inicio",
+        item: baseUrl,
+      },
+      {
+        "@type": "ListItem",
+        position: 2,
+        name: "Blog",
+        item: `${baseUrl}/blog`,
+      },
+      {
+        "@type": "ListItem",
+        position: 3,
+        name: category?.name || "Artículo",
+        item: category?.slug ? `${baseUrl}/blog/categorias/${category.slug}` : `${baseUrl}/blog`,
+      },
+      {
+        "@type": "ListItem",
+        position: 4,
+        name: post.title,
+        item: url,
+      },
+    ],
+  }
+  schemas.push(breadcrumbSchema)
+
+  // 4. Main Article/BlogPosting schema (comprehensive version)
+  const articleSchema: any = {
+    "@context": "https://schema.org",
+    "@type": post.schemaType || "BlogPosting",
+    "@id": `${url}#article`,
+    mainEntityOfPage: {
+      "@type": "WebPage",
+      "@id": url,
+    },
     headline: post.title,
     name: post.title,
     description: post.seoDescription || post.shortDescription || post.excerpt || "",
-    image: [post.mainImageUrl || post.featuredImageUrl].filter(Boolean),
     datePublished: publishDate,
     dateModified: modifiedDate,
     author: {
       "@type": "Person",
-      name: post.authorName || post.author,
+      name: post.authorName || post.author || "RaveHub Team",
       ...(post.authorImageUrl && { image: post.authorImageUrl }),
+      ...(post.authorUrl && { url: post.authorUrl }),
       ...(post.authorEmail && { email: post.authorEmail }),
     },
     publisher: {
       "@type": "Organization",
+      "@id": `${baseUrl}/#organization`,
       name: "RaveHub",
       logo: {
         "@type": "ImageObject",
-        url: "https://www.ravehublatam.com/images/logo-full.png",
+        url: `${baseUrl}/images/logo-full.png`,
       },
-    },
-    mainEntityOfPage: {
-      "@type": "WebPage",
-      "@id": url,
     },
     articleSection: post.categoryName || category?.name || "Blog",
     keywords: (post.seoKeywords || extractTagNames(post.tags || []) || []).join(", "),
     inLanguage: "es",
   }
 
-  // Add ratings if available - asegúrate de que estén dentro del objeto principal
+  // Add images with proper formatting
+  if (post.mainImageUrl || post.featuredImageUrl) {
+    articleSchema.image = [
+      {
+        "@type": "ImageObject",
+        url: post.mainImageUrl || post.featuredImageUrl,
+        width: 1200,
+        height: 630,
+      },
+    ]
+  }
+
+  // Add ratings if available
   if (post.averageRating && post.ratingCount) {
-    schemaData.aggregateRating = {
+    articleSchema.aggregateRating = {
       "@type": "AggregateRating",
       ratingValue: Number(post.averageRating.toFixed(1)),
       reviewCount: post.ratingCount,
@@ -124,7 +224,7 @@ export function PostSchema({ post, category, url, comments = [], reactions = [] 
 
   // Add location if available
   if (post.location) {
-    schemaData.locationCreated = {
+    articleSchema.locationCreated = {
       "@type": "Place",
       name: post.location.venueName,
       address: {
@@ -142,7 +242,7 @@ export function PostSchema({ post, category, url, comments = [], reactions = [] 
   if (comments && comments.length > 0) {
     const approvedComments = comments.filter((comment) => comment.isApproved)
     if (approvedComments.length > 0) {
-      schemaData.comment = approvedComments.map((comment) => ({
+      articleSchema.comment = approvedComments.map((comment) => ({
         "@type": "Comment",
         author: {
           "@type": "Person",
@@ -161,7 +261,7 @@ export function PostSchema({ post, category, url, comments = [], reactions = [] 
     const ratingComments = comments.filter((comment) => comment.isRating && comment.rating)
 
     if (ratingComments.length > 0) {
-      schemaData.review = ratingComments.map((comment) => ({
+      articleSchema.review = ratingComments.map((comment) => ({
         "@type": "Review",
         reviewRating: {
           "@type": "Rating",
@@ -181,7 +281,7 @@ export function PostSchema({ post, category, url, comments = [], reactions = [] 
 
   // Add reactions if available
   if (reactions && reactions.length > 0) {
-    schemaData.interactionStatistic = reactions.reduce((stats: any[], reaction) => {
+    articleSchema.interactionStatistic = reactions.reduce((stats: any[], reaction) => {
       // Find if we already have a counter for this reaction type
       const existingIndex = stats.findIndex(
         (stat) => stat.interactionType === `https://schema.org/${reaction.reactionType}Action`,
@@ -207,7 +307,7 @@ export function PostSchema({ post, category, url, comments = [], reactions = [] 
   if (post.tags && post.tags.length > 0) {
     const tagObjects = post.tags.filter((tag) => typeof tag === "object" && tag !== null)
     if (tagObjects.length > 0) {
-      schemaData.about = tagObjects.map((tag) => ({
+      articleSchema.about = tagObjects.map((tag) => ({
         "@type": "Thing",
         name: tag.name,
         ...(tag.description && { description: tag.description }),
@@ -220,7 +320,7 @@ export function PostSchema({ post, category, url, comments = [], reactions = [] 
   if (post.socialShares) {
     const totalShares = Object.values(post.socialShares).reduce((sum: number, count: any) => sum + (count || 0), 0)
     if (totalShares > 0) {
-      schemaData.interactionStatistic = {
+      articleSchema.interactionStatistic = {
         "@type": "InteractionCounter",
         interactionType: {
           "@type": "ShareAction",
@@ -230,12 +330,122 @@ export function PostSchema({ post, category, url, comments = [], reactions = [] 
     }
   }
 
+  schemas.push(articleSchema)
+
+  // 5. VideoObject schema if post has video
+  if (post.videoUrl) {
+    const videoSchema = {
+      "@context": "https://schema.org",
+      "@type": "VideoObject",
+      name: post.videoTitle || post.title,
+      description: post.videoDescription || post.shortDescription || post.excerpt || "",
+      thumbnailUrl: post.videoThumbnail || post.mainImageUrl || post.featuredImageUrl,
+      uploadDate: publishDate,
+      contentUrl: post.videoUrl,
+      embedUrl: post.videoEmbedUrl || post.videoUrl,
+      duration: post.videoDuration || "PT2M30S", // Default 2min 30sec in ISO 8601 duration format
+      publisher: {
+        "@type": "Organization",
+        name: "RaveHub",
+        logo: {
+          "@type": "ImageObject",
+          url: `${baseUrl}/images/logo-full.png`,
+        },
+      },
+    }
+    schemas.push(videoSchema)
+  }
+
+  // 6. FAQPage schema if post has FAQ sections
+  if (post.faqItems && post.faqItems.length > 0) {
+    const faqSchema = {
+      "@context": "https://schema.org",
+      "@type": "FAQPage",
+      mainEntity: post.faqItems.map((faq: any) => ({
+        "@type": "Question",
+        name: faq.question,
+        acceptedAnswer: {
+          "@type": "Answer",
+          text: faq.answer,
+        },
+      })),
+    }
+    schemas.push(faqSchema)
+  }
+
+  // 7. Event schema if post is about an event
+  if (post.isEventPost && post.eventDetails) {
+    const eventSchema = {
+      "@context": "https://schema.org",
+      "@type": "Event",
+      name: post.eventDetails.name || post.title,
+      description: post.eventDetails.description || post.shortDescription || "",
+      startDate: safeISOString(post.eventDetails.startDate) || publishDate,
+      endDate: safeISOString(post.eventDetails.endDate),
+      location: {
+        "@type": "Place",
+        name: post.eventDetails.venueName,
+        address: {
+          "@type": "PostalAddress",
+          addressLocality: post.eventDetails.city,
+          addressRegion: post.eventDetails.region,
+          addressCountry: post.eventDetails.country,
+        },
+      },
+      image: post.eventDetails.imageUrl || post.mainImageUrl || post.featuredImageUrl,
+      performer: {
+        "@type": "PerformingGroup",
+        name: post.eventDetails.performer || "Various Artists",
+      },
+      organizer: {
+        "@type": "Organization",
+        name: post.eventDetails.organizer || "RaveHub",
+        url: post.eventDetails.organizerUrl || baseUrl,
+      },
+      offers: {
+        "@type": "Offer",
+        price: post.eventDetails.price || "0",
+        priceCurrency: post.eventDetails.currency || "USD",
+        availability: "https://schema.org/InStock",
+        url: post.eventDetails.ticketUrl || url,
+        validFrom: safeISOString(post.eventDetails.ticketSaleDate) || publishDate,
+      },
+    }
+    schemas.push(eventSchema)
+  }
+
+  // 8. Person schema for author
+  if (post.authorName) {
+    const personSchema = {
+      "@context": "https://schema.org",
+      "@type": "Person",
+      "@id": `${baseUrl}/autores/${post.authorSlug || "equipo"}#person`,
+      name: post.authorName,
+      url: post.authorUrl || `${baseUrl}/autores/${post.authorSlug || "equipo"}`,
+      ...(post.authorImageUrl && { image: post.authorImageUrl }),
+      ...(post.authorEmail && { email: post.authorEmail }),
+      jobTitle: post.authorJobTitle || "Escritor",
+      worksFor: {
+        "@type": "Organization",
+        "@id": `${baseUrl}/#organization`,
+        name: "RaveHub",
+      },
+    }
+    schemas.push(personSchema)
+  }
+
+  // Return the schemas as a <script> element
   return (
-    <Script
-      id="post-schema"
-      type="application/ld+json"
-      dangerouslySetInnerHTML={{ __html: JSON.stringify(schemaData, null, 2) }}
-      strategy="afterInteractive"
-    />
+    <>
+      {schemas.map((schema, index) => (
+        <Script
+          key={`schema-${index}`}
+          id={`post-schema-${index}`}
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(schema, null, 2) }}
+          strategy="afterInteractive"
+        />
+      ))}
+    </>
   )
 }

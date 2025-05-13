@@ -17,7 +17,6 @@ import { UpdatePrompt } from "@/components/pwa/update-prompt"
 import GoogleAnalytics from "@/components/analytics/google-analytics"
 import { Suspense } from "react"
 import { FontOptimization } from "@/components/font-optimization"
-import { GlobalSchema } from "@/components/seo/global-schema"
 
 // Optimizar la carga de fuentes
 const inter = Inter({
@@ -158,7 +157,6 @@ export default function RootLayout({
           </GeolocationProvider>
         </ThemeProvider>
         <RegisterSW />
-        <GlobalSchema />
       </body>
     </html>
   )

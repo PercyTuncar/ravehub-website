@@ -7,6 +7,7 @@ import { PostDetailSkeleton } from "@/components/blog/post-detail-skeleton"
 import { BlogSidebarSkeleton } from "@/components/blog/blog-sidebar-skeleton"
 import { PostDetailWrapper } from "@/components/blog/post-detail-wrapper"
 import { BlogSidebarWrapper } from "@/components/blog/blog-sidebar-wrapper"
+// Importar la función getRedirectedSlug y redirect de Next.js
 import { getRedirectedSlug } from "@/lib/firebase/slug-redirects"
 import { EnhancedPostSchema } from "@/components/blog/enhanced-post-schema"
 
@@ -21,48 +22,36 @@ function safeISOString(date: any): string | undefined {
   if (!date) return undefined
 
   try {
-    // If it's a string, try to convert to Date
+    // Si es una cadena, intentar convertirla a Date
     if (typeof date === "string") {
       const parsedDate = new Date(date)
-      // Check if date is valid
+      // Verificar si la fecha es válida
       return !isNaN(parsedDate.getTime()) ? parsedDate.toISOString() : undefined
     }
 
-    // If it's a Date object
+    // Si es un objeto Date
     if (date instanceof Date) {
-      // Check if date is valid
+      // Verificar si la fecha es válida
       return !isNaN(date.getTime()) ? date.toISOString() : undefined
     }
 
-    // If it's a Firebase Timestamp (has seconds and nanoseconds)
+    // Si es un Timestamp de Firebase (tiene seconds y nanoseconds)
     if (date && typeof date === "object" && "seconds" in date && "nanoseconds" in date) {
       const milliseconds = date.seconds * 1000 + date.nanoseconds / 1000000
       const parsedDate = new Date(milliseconds)
       return !isNaN(parsedDate.getTime()) ? parsedDate.toISOString() : undefined
     }
 
-    // Last attempt: convert to Date if it's a number or valid string
+    // Último intento: convertir a Date si es un número o una cadena válida
     const parsedDate = new Date(date)
     return !isNaN(parsedDate.getTime()) ? parsedDate.toISOString() : undefined
   } catch (e) {
-    console.error("Error converting date to ISO string:", e)
+    console.error("Error al convertir fecha a ISO string:", e)
     return undefined
   }
 }
 
-// Function to extract tag names from various tag formats
-function extractTagNames(tags: any[]): string[] {
-  if (!tags || !Array.isArray(tags)) return []
-
-  return tags
-    .map((tag) => {
-      if (typeof tag === "string") return tag
-      if (typeof tag === "object" && tag !== null && "name" in tag) return tag.name
-      return ""
-    })
-    .filter(Boolean)
-}
-
+// Enhance generateMetadata to add more metadata for SEO
 export async function generateMetadata({ params }: BlogPostPageProps): Promise<Metadata> {
   const post = await getPostBySlug(params.slug)
 
@@ -73,61 +62,91 @@ export async function generateMetadata({ params }: BlogPostPageProps): Promise<M
     }
   }
 
-  // Extract tag names if they are objects
-  const tagNames = extractTagNames(post.tags || [])
+  // Extraer los nombres de las etiquetas si son objetos
+  const tagNames = post.tags ? post.tags.map((tag) => (typeof tag === "string" ? tag : tag.name)) : []
+
+  // Build basic metadata
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://www.ravehublatam.com"
+  const postUrl = `${baseUrl}/blog/${post.slug}`
+
+  // Get the main image URL
+  const imageUrl = post.mainImageUrl || post.featuredImageUrl || `${baseUrl}/images/placeholder-blog.jpg`
 
   return {
     title: post.seoTitle || `${post.title} | RaveHub Blog`,
     description: post.seoDescription || post.shortDescription || post.excerpt || "",
     keywords: post.seoKeywords || tagNames || [],
+    authors: post.author ? [{ name: post.author }] : undefined,
+    category: post.categoryName || "Blog",
     openGraph: {
       title: post.seoTitle || post.title,
       description: post.seoDescription || post.shortDescription || post.excerpt || "",
-      images:
-        post.mainImageUrl || post.featuredImageUrl
-          ? [{ url: post.mainImageUrl || post.featuredImageUrl || "" }]
-          : undefined,
+      url: postUrl,
+      siteName: "RaveHub",
+      images: [
+        {
+          url: imageUrl,
+          width: 1200,
+          height: 630,
+          alt: post.title,
+        },
+      ],
+      locale: "es_ES",
       type: "article",
       publishedTime: safeISOString(post.publishDate),
       modifiedTime: safeISOString(post.updatedAt || post.updatedDate),
       authors: post.author ? [post.author] : undefined,
       tags: tagNames,
-      section: post.categoryName,
     },
     twitter: {
       card: post.twitterCardType || "summary_large_image",
       title: post.seoTitle || post.title,
       description: post.seoDescription || post.shortDescription || post.excerpt || "",
-      images:
-        post.mainImageUrl || post.featuredImageUrl ? [post.mainImageUrl || post.featuredImageUrl || ""] : undefined,
+      images: imageUrl ? [imageUrl] : undefined,
+      creator: post.twitterCreator || "@ravehublatam",
+      site: "@ravehublatam",
     },
     alternates: {
-      canonical: post.canonicalUrl || `/blog/${post.slug}`,
+      canonical: post.canonicalUrl || postUrl,
+    },
+    robots: {
+      index: true,
+      follow: true,
+      nocache: false,
+      googleBot: {
+        index: true,
+        follow: true,
+        "max-image-preview": "large",
+        "max-snippet": -1,
+        "max-video-preview": -1,
+      },
     },
   }
 }
 
+// Modificar la función principal para manejar redirecciones
 export default async function BlogPostPage({ params }: BlogPostPageProps) {
-  // Check if current slug is the final one or needs redirection
+  // Verificar si el slug actual es el definitivo o necesita redirección
   const finalSlug = await getRedirectedSlug(params.slug)
 
-  // If final slug is different from original, redirect
+  // Si el slug final es diferente al original, redirigir
   if (finalSlug !== params.slug) {
     redirect(`/blog/${finalSlug}`)
   }
 
-  // Continue with existing logic using final slug
+  // Continuar con la lógica existente usando el slug final
   const post = await getPostBySlug(finalSlug)
 
   if (!post) {
-    console.log(`Post not found for slug: ${finalSlug}`)
+    console.log(`Post no encontrado para slug: ${finalSlug}`)
     notFound()
   }
 
-  // Full URL for schema
-  const fullUrl = `${process.env.NEXT_PUBLIC_BASE_URL || "https://ravehublatam.com"}/blog/${post.slug}`
+  // URL completa para el schema
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://www.ravehublatam.com"
+  const fullUrl = `${baseUrl}/blog/${post.slug}`
 
-  // Build basic navigation path (without category that will be loaded later)
+  // Construir la ruta de navegación básica (sin categoría que se cargará después)
   const breadcrumbItems = [
     { label: "Inicio", href: "/" },
     { label: "Blog", href: "/blog" },
@@ -145,7 +164,7 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
           </Suspense>
         </div>
 
-        {/* Sidebar */}
+        {/* Barra lateral */}
         <div className="lg:col-span-1">
           <Suspense fallback={<BlogSidebarSkeleton />}>
             <BlogSidebarWrapper postId={post.id} />
@@ -153,10 +172,32 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
         </div>
       </div>
 
-      {/* Structured data for SEO */}
+      {/* Datos estructurados para SEO */}
       <Suspense fallback={null}>
         <EnhancedPostSchema post={post} category={post.category} url={fullUrl} />
       </Suspense>
+
+      {/* Add WebPage schema inline for critical path render */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "WebPage",
+            "@id": fullUrl,
+            url: fullUrl,
+            name: post.title,
+            description: post.seoDescription || post.shortDescription || post.excerpt || "",
+            isPartOf: {
+              "@type": "WebSite",
+              "@id": `${baseUrl}/#website`,
+              url: baseUrl,
+              name: "RaveHub",
+              description: "La plataforma líder en eventos de música electrónica en Latinoamérica",
+            },
+          }),
+        }}
+      />
     </div>
   )
 }
