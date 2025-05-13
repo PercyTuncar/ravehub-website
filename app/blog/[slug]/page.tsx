@@ -195,6 +195,31 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
               name: "RaveHub",
               description: "La plataforma líder en eventos de música electrónica en Latinoamérica",
             },
+            inLanguage: "es",
+            primaryImageOfPage:
+              post.mainImageUrl || post.featuredImageUrl
+                ? {
+                    "@type": "ImageObject",
+                    url: post.mainImageUrl || post.featuredImageUrl,
+                    width: 1200,
+                    height: 630,
+                  }
+                : undefined,
+            datePublished: safeISOString(post.publishDate),
+            dateModified: safeISOString(post.updatedAt || post.updatedDate),
+            breadcrumb: {
+              "@type": "BreadcrumbList",
+              itemListElement: breadcrumbItems.map((item, index) => ({
+                "@type": "ListItem",
+                position: index + 1,
+                name: item.label,
+                item: item.href.startsWith("/") ? `${baseUrl}${item.href}` : item.href,
+              })),
+            },
+            potentialAction: {
+              "@type": "ReadAction",
+              target: [fullUrl],
+            },
           }),
         }}
       />

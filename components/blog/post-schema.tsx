@@ -99,6 +99,14 @@ export function PostSchema({ post, category, url, comments = [], reactions = [] 
         height: 60,
       },
     },
+    potentialAction: {
+      "@type": "SearchAction",
+      target: {
+        "@type": "EntryPoint",
+        urlTemplate: `${baseUrl}/search?q={search_term_string}`,
+      },
+      "query-input": "required name=search_term_string",
+    },
   }
   schemas.push(websiteSchema)
 
@@ -127,6 +135,19 @@ export function PostSchema({ post, category, url, comments = [], reactions = [] 
       contactType: "customer support",
       availableLanguage: ["Spanish", "English"],
     },
+    address: {
+      "@type": "PostalAddress",
+      addressCountry: "Peru",
+      addressLocality: "Lima",
+    },
+    foundingDate: "2020",
+    founders: [
+      {
+        "@type": "Person",
+        name: "RaveHub Founder",
+      },
+    ],
+    description: "La plataforma líder en eventos de música electrónica en Latinoamérica",
   }
   schemas.push(organizationSchema)
 
@@ -191,11 +212,20 @@ export function PostSchema({ post, category, url, comments = [], reactions = [] 
       logo: {
         "@type": "ImageObject",
         url: `${baseUrl}/images/logo-full.png`,
+        width: 330,
+        height: 60,
       },
     },
     articleSection: post.categoryName || category?.name || "Blog",
     keywords: (post.seoKeywords || extractTagNames(post.tags || []) || []).join(", "),
     inLanguage: "es",
+    wordCount: post.content ? post.content.split(/\s+/).length : undefined,
+    isAccessibleForFree: true,
+    copyrightYear: new Date(publishDate).getFullYear(),
+    copyrightHolder: {
+      "@type": "Organization",
+      name: "RaveHub",
+    },
   }
 
   // Add images with proper formatting
@@ -206,6 +236,7 @@ export function PostSchema({ post, category, url, comments = [], reactions = [] 
         url: post.mainImageUrl || post.featuredImageUrl,
         width: 1200,
         height: 630,
+        caption: post.imageCaption || post.title,
       },
     ]
   }
@@ -350,6 +381,16 @@ export function PostSchema({ post, category, url, comments = [], reactions = [] 
         logo: {
           "@type": "ImageObject",
           url: `${baseUrl}/images/logo-full.png`,
+          width: 330,
+          height: 60,
+        },
+      },
+      inLanguage: "es",
+      potentialAction: {
+        "@type": "WatchAction",
+        target: {
+          "@type": "EntryPoint",
+          urlTemplate: post.videoUrl,
         },
       },
     }
@@ -391,6 +432,13 @@ export function PostSchema({ post, category, url, comments = [], reactions = [] 
           addressRegion: post.eventDetails.region,
           addressCountry: post.eventDetails.country,
         },
+        geo: post.eventDetails.coordinates
+          ? {
+              "@type": "GeoCoordinates",
+              latitude: post.eventDetails.coordinates.latitude,
+              longitude: post.eventDetails.coordinates.longitude,
+            }
+          : undefined,
       },
       image: post.eventDetails.imageUrl || post.mainImageUrl || post.featuredImageUrl,
       performer: {
@@ -410,6 +458,8 @@ export function PostSchema({ post, category, url, comments = [], reactions = [] 
         url: post.eventDetails.ticketUrl || url,
         validFrom: safeISOString(post.eventDetails.ticketSaleDate) || publishDate,
       },
+      eventStatus: "https://schema.org/EventScheduled",
+      eventAttendanceMode: "https://schema.org/OfflineEventAttendanceMode",
     }
     schemas.push(eventSchema)
   }
@@ -430,9 +480,51 @@ export function PostSchema({ post, category, url, comments = [], reactions = [] 
         "@id": `${baseUrl}/#organization`,
         name: "RaveHub",
       },
+      description: post.authorBio || `Autor en RaveHub especializado en música electrónica y eventos.`,
+      sameAs: post.authorSocialLinks || [],
     }
     schemas.push(personSchema)
   }
+
+  // 9. WebPage schema
+  const webPageSchema = {
+    "@context": "https://schema.org",
+    "@type": "WebPage",
+    "@id": url,
+    url: url,
+    name: post.title,
+    description: post.seoDescription || post.shortDescription || post.excerpt || "",
+    isPartOf: {
+      "@type": "WebSite",
+      "@id": `${baseUrl}/#website`,
+      url: baseUrl,
+      name: "RaveHub",
+      description: "La plataforma líder en eventos de música electrónica en Latinoamérica",
+    },
+    inLanguage: "es",
+    primaryImageOfPage:
+      post.mainImageUrl || post.featuredImageUrl
+        ? {
+            "@type": "ImageObject",
+            url: post.mainImageUrl || post.featuredImageUrl,
+            width: 1200,
+            height: 630,
+          }
+        : undefined,
+    datePublished: publishDate,
+    dateModified: modifiedDate,
+    potentialAction: {
+      "@type": "ReadAction",
+      target: [url],
+    },
+    breadcrumb: {
+      "@id": `${url}#breadcrumb`,
+    },
+    mainEntity: {
+      "@id": `${url}#article`,
+    },
+  }
+  schemas.push(webPageSchema)
 
   // Return the schemas as a <script> element
   return (

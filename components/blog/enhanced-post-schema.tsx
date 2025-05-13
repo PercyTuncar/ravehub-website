@@ -33,7 +33,10 @@ export function EnhancedPostSchema({ post, category, url }: EnhancedPostSchemaPr
         if (
           (post.title && post.title.toLowerCase().includes("dldk")) ||
           post.title?.toLowerCase().includes("festival") ||
-          post.content?.includes("evento")
+          post.content?.includes("evento") ||
+          post.content?.includes("concierto") ||
+          post.content?.includes("fiesta") ||
+          post.categoryName?.toLowerCase().includes("evento")
         ) {
           // This post might be about an event, let's add event schema data
           if (!post.isEventPost) {
@@ -51,6 +54,8 @@ export function EnhancedPostSchema({ post, category, url }: EnhancedPostSchemaPr
 
         // Extract FAQ items from content if possible
         if (!post.faqItems && post.content) {
+          // Try to find FAQ patterns in the content
+          // Pattern 1: H2 followed by paragraph
           const faqMatches = post.content.match(/<h2[^>]*>(.*?)<\/h2>\s*<p[^>]*>(.*?)<\/p>/gs)
           if (faqMatches && faqMatches.length > 0) {
             post.faqItems = faqMatches.slice(0, 5).map((match) => {
@@ -61,6 +66,24 @@ export function EnhancedPostSchema({ post, category, url }: EnhancedPostSchemaPr
                 answer: answerMatch ? answerMatch[1].replace(/<[^>]*>/g, "") : "",
               }
             })
+          }
+
+          // Pattern 2: Strong/Bold text followed by normal text
+          if (!post.faqItems || post.faqItems.length === 0) {
+            const boldFaqMatches = post.content.match(/<(strong|b)[^>]*>(.*?)<\/(strong|b)>\s*(.*?)(?=<(strong|b)|$)/gs)
+            if (boldFaqMatches && boldFaqMatches.length > 0) {
+              post.faqItems = boldFaqMatches
+                .slice(0, 5)
+                .map((match) => {
+                  const questionMatch = match.match(/<(strong|b)[^>]*>(.*?)<\/(strong|b)>/)
+                  const answerText = match.replace(/<(strong|b)[^>]*>(.*?)<\/(strong|b)>/, "").trim()
+                  return {
+                    question: questionMatch ? questionMatch[2].replace(/<[^>]*>/g, "") : "",
+                    answer: answerText.replace(/<[^>]*>/g, ""),
+                  }
+                })
+                .filter((item) => item.question && item.answer)
+            }
           }
         }
 
@@ -118,7 +141,29 @@ export function EnhancedPostSchema({ post, category, url }: EnhancedPostSchemaPr
             post.videoTitle = post.title
             post.videoDescription = post.shortDescription || post.excerpt
             post.videoThumbnail = post.mainImageUrl || post.featuredImageUrl
+
+            // Try to estimate video duration (default to 2:30 if unknown)
+            post.videoDuration = "PT2M30S"
           }
+
+          // Check for Vimeo embeds
+          const vimeoRegex = /<iframe[^>]*src=["'].*vimeo\.com\/video\/([^"'?]+)[^>]*>/i
+          const vimeoMatch = post.content.match(vimeoRegex)
+
+          if (!post.videoUrl && vimeoMatch && vimeoMatch[1]) {
+            post.videoUrl = `https://vimeo.com/${vimeoMatch[1]}`
+            post.videoEmbedUrl = `https://player.vimeo.com/video/${vimeoMatch[1]}`
+            post.videoTitle = post.title
+            post.videoDescription = post.shortDescription || post.excerpt
+            post.videoThumbnail = post.mainImageUrl || post.featuredImageUrl
+          }
+        }
+
+        // Extract author information if available
+        if (post.author && !post.authorUrl) {
+          // Try to construct author URL
+          const authorSlug = post.authorSlug || post.author.toLowerCase().replace(/\s+/g, "-")
+          post.authorUrl = `${process.env.NEXT_PUBLIC_BASE_URL || "https://www.ravehublatam.com"}/autores/${authorSlug}`
         }
 
         setComments(commentsData)
