@@ -7,7 +7,6 @@ import { PostDetailSkeleton } from "@/components/blog/post-detail-skeleton"
 import { BlogSidebarSkeleton } from "@/components/blog/blog-sidebar-skeleton"
 import { PostDetailWrapper } from "@/components/blog/post-detail-wrapper"
 import { BlogSidebarWrapper } from "@/components/blog/blog-sidebar-wrapper"
-// Import the function getRedirectedSlug and redirect from Next.js
 import { getRedirectedSlug } from "@/lib/firebase/slug-redirects"
 import { EnhancedPostSchema } from "@/components/blog/enhanced-post-schema"
 
@@ -22,36 +21,48 @@ function safeISOString(date: any): string | undefined {
   if (!date) return undefined
 
   try {
-    // Si es una cadena, intentar convertirla a Date
+    // If it's a string, try to convert to Date
     if (typeof date === "string") {
       const parsedDate = new Date(date)
-      // Verificar si la fecha es válida
+      // Check if date is valid
       return !isNaN(parsedDate.getTime()) ? parsedDate.toISOString() : undefined
     }
 
-    // Si es un objeto Date
+    // If it's a Date object
     if (date instanceof Date) {
-      // Verificar si la fecha es válida
+      // Check if date is valid
       return !isNaN(date.getTime()) ? date.toISOString() : undefined
     }
 
-    // Si es un Timestamp de Firebase (tiene seconds y nanoseconds)
+    // If it's a Firebase Timestamp (has seconds and nanoseconds)
     if (date && typeof date === "object" && "seconds" in date && "nanoseconds" in date) {
       const milliseconds = date.seconds * 1000 + date.nanoseconds / 1000000
       const parsedDate = new Date(milliseconds)
       return !isNaN(parsedDate.getTime()) ? parsedDate.toISOString() : undefined
     }
 
-    // Último intento: convertir a Date si es un número o una cadena válida
+    // Last attempt: convert to Date if it's a number or valid string
     const parsedDate = new Date(date)
     return !isNaN(parsedDate.getTime()) ? parsedDate.toISOString() : undefined
   } catch (e) {
-    console.error("Error al convertir fecha a ISO string:", e)
+    console.error("Error converting date to ISO string:", e)
     return undefined
   }
 }
 
-// Modificar la función generateMetadata para manejar correctamente las etiquetas que son objetos
+// Function to extract tag names from various tag formats
+function extractTagNames(tags: any[]): string[] {
+  if (!tags || !Array.isArray(tags)) return []
+
+  return tags
+    .map((tag) => {
+      if (typeof tag === "string") return tag
+      if (typeof tag === "object" && tag !== null && "name" in tag) return tag.name
+      return ""
+    })
+    .filter(Boolean)
+}
+
 export async function generateMetadata({ params }: BlogPostPageProps): Promise<Metadata> {
   const post = await getPostBySlug(params.slug)
 
@@ -62,8 +73,8 @@ export async function generateMetadata({ params }: BlogPostPageProps): Promise<M
     }
   }
 
-  // Extraer los nombres de las etiquetas si son objetos
-  const tagNames = post.tags ? post.tags.map((tag) => (typeof tag === "string" ? tag : tag.name)) : []
+  // Extract tag names if they are objects
+  const tagNames = extractTagNames(post.tags || [])
 
   return {
     title: post.seoTitle || `${post.title} | RaveHub Blog`,
@@ -96,17 +107,16 @@ export async function generateMetadata({ params }: BlogPostPageProps): Promise<M
   }
 }
 
-// Update the page component to include breadcrumbs in the schema
 export default async function BlogPostPage({ params }: BlogPostPageProps) {
-  // Verify if the current slug is the definitive one or needs redirection
+  // Check if current slug is the final one or needs redirection
   const finalSlug = await getRedirectedSlug(params.slug)
 
-  // If the final slug is different from the original, redirect
+  // If final slug is different from original, redirect
   if (finalSlug !== params.slug) {
     redirect(`/blog/${finalSlug}`)
   }
 
-  // Continue with existing logic using the final slug
+  // Continue with existing logic using final slug
   const post = await getPostBySlug(finalSlug)
 
   if (!post) {
@@ -114,33 +124,15 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
     notFound()
   }
 
-  // Full URL for the schema
-  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://www.ravehublatam.com"
-  const fullUrl = `${baseUrl}/blog/${post.slug}`
+  // Full URL for schema
+  const fullUrl = `${process.env.NEXT_PUBLIC_BASE_URL || "https://ravehublatam.com"}/blog/${post.slug}`
 
-  // Build the basic navigation path (without category that will be loaded later)
+  // Build basic navigation path (without category that will be loaded later)
   const breadcrumbItems = [
     { label: "Inicio", href: "/" },
     { label: "Blog", href: "/blog" },
     { label: post.title, href: `/blog/${post.slug}`, current: true },
   ]
-
-  // Create breadcrumbs for schema
-  const schemaBreadcrumbs = [
-    { name: "Inicio", item: baseUrl },
-    { name: "Blog", item: `${baseUrl}/blog` },
-  ]
-
-  // Add category to breadcrumbs if available
-  if (post.category && post.category.name && post.category.slug) {
-    schemaBreadcrumbs.push({
-      name: post.category.name,
-      item: `${baseUrl}/blog/categorias/${post.category.slug}`,
-    })
-  }
-
-  // Add current post to breadcrumbs
-  schemaBreadcrumbs.push({ name: post.title, item: fullUrl })
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -163,7 +155,7 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
 
       {/* Structured data for SEO */}
       <Suspense fallback={null}>
-        <EnhancedPostSchema post={post} category={post.category} url={fullUrl} breadcrumbs={schemaBreadcrumbs} />
+        <EnhancedPostSchema post={post} category={post.category} url={fullUrl} />
       </Suspense>
     </div>
   )

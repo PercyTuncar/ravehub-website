@@ -1,42 +1,36 @@
-import type { Metadata } from "next"
 import { Suspense } from "react"
-import BlogList from "./blog-list"
-import BlogListFallback from "./blog-list-fallback"
-import FeaturedBlogBanner from "@/components/blog/featured-blog-banner"
-import { Breadcrumbs } from "@/components/breadcrumbs"
+import { BlogList } from "./blog-list"
+import { BlogListFallback } from "./blog-list-fallback"
+import { BlogListSchema } from "@/components/blog/blog-list-schema"
+import { getAllPosts } from "@/lib/firebase/blog"
 
-export const metadata: Metadata = {
-  title: "Blog | RaveHub",
-  description: "Explora nuestro blog sobre música electrónica, festivales, cultura rave y más.",
-  openGraph: {
-    title: "Blog | RaveHub",
-    description: "Explora nuestro blog sobre música electrónica, festivales, cultura rave y más.",
-    type: "website",
-  },
-  twitter: {
-    card: "summary_large_image",
-    title: "Blog | RaveHub",
-    description: "Explora nuestro blog sobre música electrónica, festivales, cultura rave y más.",
-  },
-  alternates: {
-    canonical: "/blog",
-  },
+export const metadata = {
+  title: "Blog | RaveHub - Noticias y artículos sobre música electrónica",
+  description:
+    "Explora nuestro blog con las últimas noticias, reseñas de eventos, entrevistas con DJs y todo sobre la escena de música electrónica en Latinoamérica.",
+  keywords: ["blog música electrónica", "noticias EDM", "eventos electrónicos", "DJs latinoamérica", "festivales"],
 }
 
-export const viewport = {
-  themeColor: "#000000",
-}
+export default async function BlogPage() {
+  // Fetch initial posts for SEO
+  const initialPostsData = await getAllPosts(1, 12)
+  const url = `${process.env.NEXT_PUBLIC_BASE_URL || "https://ravehublatam.com"}/blog`
 
-export default function BlogPage() {
   return (
     <div className="container mx-auto px-4 py-8">
-      <FeaturedBlogBanner />
-      <Breadcrumbs className="my-4" />
-      <h1 className="text-3xl font-bold mb-8">Blog</h1>
+      <h1 className="text-3xl font-bold mb-8">Blog de RaveHub</h1>
 
       <Suspense fallback={<BlogListFallback />}>
         <BlogList />
       </Suspense>
+
+      {/* Add structured data */}
+      <BlogListSchema
+        posts={initialPostsData.posts}
+        url={url}
+        title="Blog | RaveHub - Noticias y artículos sobre música electrónica"
+        description="Explora nuestro blog con las últimas noticias, reseñas de eventos, entrevistas con DJs y todo sobre la escena de música electrónica en Latinoamérica."
+      />
     </div>
   )
 }

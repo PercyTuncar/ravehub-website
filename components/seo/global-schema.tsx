@@ -2,11 +2,35 @@
 
 import Script from "next/script"
 
-interface GlobalSchemaProps {
-  baseUrl?: string
-}
+export function GlobalSchema() {
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://ravehublatam.com"
 
-export function GlobalSchema({ baseUrl = "https://www.ravehublatam.com" }: GlobalSchemaProps) {
+  // WebSite schema
+  const websiteSchema = {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    "@id": `${baseUrl}/#website`,
+    url: baseUrl,
+    name: "RaveHub",
+    description: "La plataforma líder en eventos de música electrónica en Latinoamérica",
+    publisher: {
+      "@type": "Organization",
+      "@id": `${baseUrl}/#organization`,
+    },
+    potentialAction: [
+      {
+        "@type": "SearchAction",
+        target: {
+          "@type": "EntryPoint",
+          urlTemplate: `${baseUrl}/search?q={search_term_string}`,
+        },
+        "query-input": "required name=search_term_string",
+      },
+    ],
+    inLanguage: "es",
+  }
+
+  // Organization schema
   const organizationSchema = {
     "@context": "https://schema.org",
     "@type": "Organization",
@@ -29,54 +53,24 @@ export function GlobalSchema({ baseUrl = "https://www.ravehublatam.com" }: Globa
         "@type": "ContactPoint",
         telephone: "+51 944 784 488",
         contactType: "customer service",
-        areaServed: "PE",
-        availableLanguage: "Spanish",
-      },
-      {
-        "@type": "ContactPoint",
-        telephone: "+56 944 324 385",
-        contactType: "customer service",
-        areaServed: "CL",
-        availableLanguage: "Spanish",
+        areaServed: ["PE", "CL"],
+        availableLanguage: ["Spanish"],
       },
     ],
-  }
-
-  const websiteSchema = {
-    "@context": "https://schema.org",
-    "@type": "WebSite",
-    "@id": `${baseUrl}/#website`,
-    url: baseUrl,
-    name: "RaveHub",
-    description: "La plataforma líder en eventos de música electrónica en Latinoamérica",
-    publisher: {
-      "@id": `${baseUrl}/#organization`,
-    },
-    potentialAction: [
-      {
-        "@type": "SearchAction",
-        target: {
-          "@type": "EntryPoint",
-          urlTemplate: `${baseUrl}/search?q={search_term_string}`,
-        },
-        "query-input": "required name=search_term_string",
-      },
-    ],
-    inLanguage: "es",
   }
 
   return (
     <>
       <Script
-        id="organization-schema"
+        id="website-schema"
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationSchema, null, 2) }}
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteSchema) }}
         strategy="afterInteractive"
       />
       <Script
-        id="website-schema"
+        id="organization-schema"
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteSchema, null, 2) }}
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationSchema) }}
         strategy="afterInteractive"
       />
     </>

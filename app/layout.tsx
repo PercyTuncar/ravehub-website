@@ -1,5 +1,6 @@
 import type React from "react"
 import { ThemeProvider } from "@/components/theme-provider"
+import { Toaster } from "@/components/ui/toaster"
 import { AuthProvider } from "@/context/auth-context"
 import { CurrencyProvider } from "@/context/currency-context"
 import { GeolocationProvider } from "@/context/geolocation-context"
@@ -16,10 +17,7 @@ import { UpdatePrompt } from "@/components/pwa/update-prompt"
 import GoogleAnalytics from "@/components/analytics/google-analytics"
 import { Suspense } from "react"
 import { FontOptimization } from "@/components/font-optimization"
-// Add the import for GlobalSchema
 import { GlobalSchema } from "@/components/seo/global-schema"
-import { CartDrawer } from "@/components/cart/cart-drawer"
-import { ScriptOptimization } from "@/components/script-optimization"
 
 // Optimizar la carga de fuentes
 const inter = Inter({
@@ -109,8 +107,12 @@ export const viewport = {
   userScalable: true,
 }
 
-// Inside the RootLayout component, add the GlobalSchema component before the closing body tag
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+// En el componente RootLayout, añadir los componentes PWA
+export default function RootLayout({
+  children,
+}: Readonly<{
+  children: React.ReactNode
+}>) {
   return (
     <html lang="es" suppressHydrationWarning className={inter.variable}>
       <head>
@@ -133,33 +135,30 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <FontOptimization />
       </head>
       <body className={inter.className}>
-        {/* Existing components */}
-        <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
-          <CurrencyProvider>
-            <CartProvider>
-              <GeolocationProvider>
-                <AuthProvider>
-                  <RegisterSW />
-                  <Navbar />
-                  <main className="flex-1 w-full pb-safe bg-gray-50">{children}</main>
-                  <Footer />
-                  <CartDrawer />
-                  <InstallPrompt />
+        <ThemeProvider attribute="class" defaultTheme="light" enableSystem disableTransitionOnChange>
+          <GeolocationProvider>
+            <AuthProvider>
+              <CurrencyProvider>
+                <CartProvider>
                   <UpdatePrompt />
+                  <div className="flex min-h-screen flex-col">
+                    <Navbar />
+                    <main className="flex-1 w-full pb-safe bg-gray-50">{children}</main>
+                    <Footer />
+                  </div>
+                  <Toaster />
+                  <InstallPrompt />
                   {/* Wrap GoogleAnalytics in Suspense */}
                   <Suspense fallback={null}>
                     <GoogleAnalytics />
                   </Suspense>
-                  <FontOptimization />
-                  <ScriptOptimization />
-                </AuthProvider>
-              </GeolocationProvider>
-            </CartProvider>
-          </CurrencyProvider>
+                </CartProvider>
+              </CurrencyProvider>
+            </AuthProvider>
+          </GeolocationProvider>
         </ThemeProvider>
-
-        {/* Add the GlobalSchema component */}
-        <GlobalSchema baseUrl={process.env.NEXT_PUBLIC_BASE_URL || "https://www.ravehublatam.com"} />
+        <RegisterSW />
+        <GlobalSchema />
       </body>
     </html>
   )
