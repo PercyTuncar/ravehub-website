@@ -21,7 +21,6 @@ import {
   generateFakeComments,
   generateFakeRatings,
   generateFakeSocialShares,
-  generateFakePostReactions,
 } from "@/lib/firebase/fake-data"
 import { REACTION_TYPES, REACTION_EMOJIS } from "@/lib/fake-data/constants"
 import type { BlogPost } from "@/types/blog"
@@ -75,14 +74,6 @@ const sharesFormSchema = z.object({
       whatsapp: z.coerce.number().int().min(0, "El número debe ser positivo o cero").optional(),
     })
     .optional(),
-})
-
-// Esquema para el formulario de reacciones al post
-const postReactionsFormSchema = z.object({
-  postId: z.string().min(1, "Debes seleccionar un post"),
-  totalReactions: z.coerce.number().int().positive("El número debe ser positivo"),
-  distributionMethod: z.enum(["equal", "random", "custom"]),
-  customDistribution: z.record(z.coerce.number().int().min(0, "El número debe ser positivo o cero")).optional(),
 })
 
 export function BlogFakeData() {
@@ -154,16 +145,6 @@ export function BlogFakeData() {
         linkedin: 0,
         whatsapp: 0,
       },
-    },
-  })
-
-  const postReactionsForm = useForm<z.infer<typeof postReactionsFormSchema>>({
-    resolver: zodResolver(postReactionsFormSchema),
-    defaultValues: {
-      postId: "",
-      totalReactions: 20,
-      distributionMethod: "random",
-      customDistribution: REACTION_TYPES.reduce((acc, type) => ({ ...acc, [type]: 0 }), {}),
     },
   })
 
@@ -239,14 +220,24 @@ export function BlogFakeData() {
       setConfirmDialogOpen(false)
 
       const data = reactionsForm.getValues()
+
+      // Crear un objeto con solo los tipos de reacciones seleccionados y sus cantidades
       const reactionData = data.reactionTypes.reduce(
         (acc, type) => ({
           ...acc,
-          [type]: data.reactionCounts[type] || 0,
+          [type]: Number.parseInt(data.reactionCounts[type] || "0", 10),
         }),
         {},
       )
 
+      // Verificar que todas las cantidades sean números válidos
+      for (const [type, count] of Object.entries(reactionData)) {
+        if (isNaN(count) || count < 0) {
+          throw new Error(`Cantidad inválida para ${type}: ${count}`)
+        }
+      }
+
+      console.log("Enviando datos de reacciones:", reactionData)
       await generateFakeReactions(data.postId, reactionData)
 
       toast({
@@ -259,7 +250,8 @@ export function BlogFakeData() {
       console.error("Error generating reactions:", error)
       toast({
         title: "Error",
-        description: "No se pudieron generar las reacciones",
+        description:
+          "No se pudieron generar las reacciones: " + (error instanceof Error ? error.message : "Error desconocido"),
         variant: "destructive",
       })
     } finally {
@@ -298,6 +290,53 @@ export function BlogFakeData() {
 
     // Abrir el modal de previsualización
     setPreviewOpen(true)
+  }
+
+  // También vamos a mejorar la función handleReactionTypesChange para asegurar que los valores se manejen correctamente
+
+  // Reemplazar la función handleReactionTypesChange con esta versión mejorada:
+  const handleReactionTypesChange = (checked: boolean, value: string) => {
+    const currentTypes = reactionsForm.getValues("reactionTypes") || []
+    let updatedTypes
+
+    if (checked) {
+      // Añadir el tipo si no existe
+      if (!currentTypes.includes(value)) {
+        updatedTypes = [...currentTypes, value]
+      } else {
+        updatedTypes = currentTypes
+      }
+    } else {
+      // Eliminar el tipo
+      updatedTypes = currentTypes.filter((type) => type !== value)
+    }
+
+    // Actualizar los tipos de reacción
+    reactionsForm.setValue("reactionTypes", updatedTypes, { shouldValidate: true })
+
+    // Si se deselecciona un tipo, establecer su contador a 0
+    if (!checked) {
+      const counts = reactionsForm.getValues("reactionCounts") || {}
+      reactionsForm.setValue(
+        "reactionCounts",
+        {
+          ...counts,
+          [value]: 0,
+        },
+        { shouldValidate: true },
+      )
+    } else if (checked && !reactionsForm.getValues("reactionCounts")?.[value]) {
+      // Si se selecciona un tipo y no tiene contador, inicializarlo a 0
+      const counts = reactionsForm.getValues("reactionCounts") || {}
+      reactionsForm.setValue(
+        "reactionCounts",
+        {
+          ...counts,
+          [value]: 0,
+        },
+        { shouldValidate: true },
+      )
+    }
   }
 
   // Manejar envío del formulario de comentarios
@@ -401,63 +440,6 @@ export function BlogFakeData() {
     }
   }
 
-  // Manejar envío del formulario de reacciones al post
-  const onSubmitPostReactions = async (data: z.infer<typeof postReactionsFormSchema>) => {
-    try {
-      setGenerating(true)
-
-      let distribution: Record<string, number> = {}
-
-      if (data.distributionMethod === "custom" && data.customDistribution) {
-        distribution = data.customDistribution
-
-        // Validar que la suma de la distribución personalizada sea igual al total
-        const sum = Object.values(distribution).reduce((acc, val) => acc + val, 0)
-        if (sum !== data.totalReactions) {
-          toast({
-            title: "Error de validación",
-            description: "La suma de la distribución personalizada debe ser igual al total de reacciones.",
-            variant: "destructive",
-          })
-          return
-        }
-      }
-
-      await generateFakePostReactions(data.postId, data.totalReactions, data.distributionMethod, distribution)
-      toast({
-        title: "Reacciones generadas",
-        description: `Se han generado ${data.totalReactions} reacciones para el post seleccionado.`,
-      })
-      postReactionsForm.reset({ ...data })
-    } catch (error) {
-      console.error("Error generating post reactions:", error)
-      toast({
-        title: "Error",
-        description: "No se pudieron generar las reacciones",
-        variant: "destructive",
-      })
-    } finally {
-      setGenerating(false)
-    }
-  }
-
-  // Manejar cambio en los tipos de reacción seleccionados
-  const handleReactionTypesChange = (checked: boolean, value: string) => {
-    const currentTypes = reactionsForm.getValues("reactionTypes")
-    const updatedTypes = checked ? [...currentTypes, value] : currentTypes.filter((type) => type !== value)
-
-    reactionsForm.setValue("reactionTypes", updatedTypes)
-
-    // Si se deselecciona un tipo, establecer su contador a 0
-    if (!checked) {
-      const counts = reactionsForm.getValues("reactionCounts")
-      reactionsForm.setValue("reactionCounts", {
-        ...counts,
-        [value]: 0,
-      })
-    }
-  }
-
   // Actualizar distribución personalizada de shares cuando cambia el método
   useEffect(() => {
     const method = sharesForm.watch("distributionMethod")
@@ -475,27 +457,6 @@ export function BlogFakeData() {
       })
     }
   }, [sharesForm.watch("distributionMethod"), sharesForm.watch("totalShares"), sharesForm])
-
-  // Actualizar distribución personalizada de reacciones al post cuando cambia el método
-  useEffect(() => {
-    const method = postReactionsForm.watch("distributionMethod")
-    const totalReactions = postReactionsForm.watch("totalReactions")
-
-    if (method === "equal") {
-      const reactionPerType = Math.floor(totalReactions / REACTION_TYPES.length)
-      const remainder = totalReactions % REACTION_TYPES.length
-
-      const distribution = REACTION_TYPES.reduce(
-        (acc, type, index) => ({
-          ...acc,
-          [type]: reactionPerType + (index < remainder ? 1 : 0),
-        }),
-        {},
-      )
-
-      postReactionsForm.setValue("customDistribution", distribution)
-    }
-  }, [postReactionsForm.watch("distributionMethod"), postReactionsForm.watch("totalReactions"), postReactionsForm])
 
   // Validar que la suma de reseñas de 4 y 5 estrellas sea igual al total
   useEffect(() => {
@@ -524,13 +485,12 @@ export function BlogFakeData() {
   return (
     <div className="space-y-6">
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="grid grid-cols-6">
+        <TabsList className="grid grid-cols-5">
           <TabsTrigger value="views">Vistas</TabsTrigger>
           <TabsTrigger value="reactions">Reacciones</TabsTrigger>
           <TabsTrigger value="comments">Comentarios</TabsTrigger>
           <TabsTrigger value="ratings">Reseñas</TabsTrigger>
           <TabsTrigger value="shares">Shares</TabsTrigger>
-          <TabsTrigger value="postReactions">Reacciones al Post</TabsTrigger>
         </TabsList>
 
         {/* Formulario de Vistas */}
@@ -632,34 +592,27 @@ export function BlogFakeData() {
                   <FormField
                     control={reactionsForm.control}
                     name="reactionTypes"
-                    render={() => (
+                    render={({ field }) => (
                       <FormItem>
                         <FormLabel>Tipos de reacciones</FormLabel>
                         <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                           {REACTION_TYPES.map((type) => (
-                            <FormField
-                              key={type}
-                              control={reactionsForm.control}
-                              name="reactionTypes"
-                              render={({ field }) => {
-                                return (
-                                  <FormItem key={type} className="flex flex-row items-start space-x-3 space-y-0">
-                                    <FormControl>
-                                      <Checkbox
-                                        checked={field.value?.includes(type)}
-                                        onCheckedChange={(checked) => {
-                                          handleReactionTypesChange(!!checked, type)
-                                        }}
-                                      />
-                                    </FormControl>
-                                    <FormLabel className="flex items-center space-x-2 cursor-pointer">
-                                      <span>{REACTION_EMOJIS[type]}</span>
-                                      <span>{type.charAt(0).toUpperCase() + type.slice(1)}</span>
-                                    </FormLabel>
-                                  </FormItem>
-                                )
-                              }}
-                            />
+                            <div key={type} className="flex flex-row items-start space-x-3 space-y-0">
+                              <Checkbox
+                                id={`reaction-${type}`}
+                                checked={field.value?.includes(type)}
+                                onCheckedChange={(checked) => {
+                                  handleReactionTypesChange(!!checked, type)
+                                }}
+                              />
+                              <label
+                                htmlFor={`reaction-${type}`}
+                                className="flex items-center space-x-2 cursor-pointer text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                              >
+                                <span>{REACTION_EMOJIS[type]}</span>
+                                <span>{type.charAt(0).toUpperCase() + type.slice(1)}</span>
+                              </label>
+                            </div>
                           ))}
                         </div>
                         <FormMessage />
@@ -1112,168 +1065,6 @@ export function BlogFakeData() {
                       <>
                         <RefreshCw className="mr-2 h-4 w-4" />
                         Generar Shares
-                      </>
-                    )}
-                  </Button>
-                </form>
-              </Form>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        {/* Formulario de Reacciones al Post */}
-        <TabsContent value="postReactions">
-          <Card>
-            <CardContent className="pt-6">
-              <Form {...postReactionsForm}>
-                <form onSubmit={postReactionsForm.handleSubmit(onSubmitPostReactions)} className="space-y-6">
-                  <FormField
-                    control={postReactionsForm.control}
-                    name="postId"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Selecciona un post</FormLabel>
-                        <Select onValueChange={field.onChange} defaultValue={field.value} disabled={loading}>
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Selecciona un post" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            {posts.map((post) => (
-                              <SelectItem key={post.id} value={post.id}>
-                                {post.title}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={postReactionsForm.control}
-                    name="totalReactions"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Número total de reacciones</FormLabel>
-                        <FormControl>
-                          <Input type="number" min="1" {...field} />
-                        </FormControl>
-                        <FormDescription>Ingresa el número total de reacciones que deseas generar.</FormDescription>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={postReactionsForm.control}
-                    name="distributionMethod"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Método de distribución</FormLabel>
-                        <FormControl>
-                          <RadioGroup
-                            onValueChange={field.onChange}
-                            defaultValue={field.value}
-                            className="flex flex-col space-y-1"
-                          >
-                            <FormItem className="flex items-center space-x-3 space-y-0">
-                              <FormControl>
-                                <RadioGroupItem value="equal" />
-                              </FormControl>
-                              <FormLabel className="font-normal">Distribución equitativa</FormLabel>
-                            </FormItem>
-                            <FormItem className="flex items-center space-x-3 space-y-0">
-                              <FormControl>
-                                <RadioGroupItem value="random" />
-                              </FormControl>
-                              <FormLabel className="font-normal">Distribución aleatoria</FormLabel>
-                            </FormItem>
-                            <FormItem className="flex items-center space-x-3 space-y-0">
-                              <FormControl>
-                                <RadioGroupItem value="custom" />
-                              </FormControl>
-                              <FormLabel className="font-normal">Distribución personalizada</FormLabel>
-                            </FormItem>
-                          </RadioGroup>
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  {postReactionsForm.watch("distributionMethod") === "custom" && (
-                    <div className="space-y-4">
-                      <FormLabel>Distribución personalizada</FormLabel>
-                      <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                        {REACTION_TYPES.map((type) => (
-                          <FormField
-                            key={type}
-                            control={postReactionsForm.control}
-                            name={`customDistribution.${type}`}
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel className="flex items-center space-x-2">
-                                  <span>{REACTION_EMOJIS[type]}</span>
-                                  <span>{type.charAt(0).toUpperCase() + type.slice(1)}</span>
-                                </FormLabel>
-                                <FormControl>
-                                  <Input
-                                    type="number"
-                                    min="0"
-                                    {...field}
-                                    onChange={(e) => field.onChange(Number.parseInt(e.target.value) || 0)}
-                                    value={field.value || 0}
-                                  />
-                                </FormControl>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
-                        ))}
-                      </div>
-
-                      {postReactionsForm.watch("distributionMethod") === "custom" && (
-                        <div className="text-sm">
-                          Total:{" "}
-                          {Object.values(postReactionsForm.watch("customDistribution") || {}).reduce(
-                            (acc, val) => acc + (val || 0),
-                            0,
-                          )}{" "}
-                          / {postReactionsForm.watch("totalReactions")}
-                          {Object.values(postReactionsForm.watch("customDistribution") || {}).reduce(
-                            (acc, val) => acc + (val || 0),
-                            0,
-                          ) !== postReactionsForm.watch("totalReactions") && (
-                            <span className="text-red-500 ml-2">La suma debe ser igual al total de reacciones.</span>
-                          )}
-                        </div>
-                      )}
-                    </div>
-                  )}
-
-                  <Button
-                    type="submit"
-                    disabled={
-                      generating ||
-                      (postReactionsForm.watch("distributionMethod") === "custom" &&
-                        Object.values(postReactionsForm.watch("customDistribution") || {}).reduce(
-                          (acc, val) => acc + (val || 0),
-                          0,
-                        ) !== postReactionsForm.watch("totalReactions"))
-                    }
-                  >
-                    {generating ? (
-                      <>
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Generando...
-                      </>
-                    ) : (
-                      <>
-                        <RefreshCw className="mr-2 h-4 w-4" />
-                        Generar Reacciones
                       </>
                     )}
                   </Button>

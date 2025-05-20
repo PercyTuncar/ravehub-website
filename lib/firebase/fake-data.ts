@@ -49,6 +49,9 @@ export async function generateFakeReactions(postId: string, reactionCounts: Reco
       types: { ...currentReactions.types },
     }
 
+    console.log("Reacciones actuales:", currentReactions)
+    console.log("Reacciones a generar:", reactionCounts)
+
     // Generar reacciones para cada tipo
     for (const [type, count] of Object.entries(reactionCounts)) {
       if (count <= 0) continue
@@ -58,10 +61,11 @@ export async function generateFakeReactions(postId: string, reactionCounts: Reco
       updatedReactions.types[type] = (updatedReactions.types[type] || 0) + count
 
       // Generar reacciones individuales
+      const batch = []
       for (let i = 0; i < count; i++) {
         const fakeUser = getRandomFakeUser()
 
-        await addDoc(collection(db, "blogReactions"), {
+        batch.push({
           postId,
           userId: fakeUser.id,
           userName: `${fakeUser.firstName} ${fakeUser.lastName}`,
@@ -69,8 +73,21 @@ export async function generateFakeReactions(postId: string, reactionCounts: Reco
           reactionType: type,
           createdAt: new Date(Date.now() - Math.floor(Math.random() * 30 * 24 * 60 * 60 * 1000)), // Random date in the last 30 days
         })
+
+        // Procesar en lotes de 20 para evitar sobrecarga
+        if (batch.length >= 20) {
+          await Promise.all(batch.map((reaction) => addDoc(collection(db, "blogReactions"), reaction)))
+          batch.length = 0
+        }
+      }
+
+      // Procesar el lote restante
+      if (batch.length > 0) {
+        await Promise.all(batch.map((reaction) => addDoc(collection(db, "blogReactions"), reaction)))
       }
     }
+
+    console.log("Reacciones actualizadas:", updatedReactions)
 
     // Actualizar el post con las nuevas reacciones
     await updateDoc(postRef, {

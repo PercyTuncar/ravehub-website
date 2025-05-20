@@ -137,8 +137,21 @@ export function AdminPostsList() {
   }
 
   // Get category name by ID
-  const getCategoryName = (categoryId: string) => {
-    // Si el post usa categories (array) en lugar de categoryId
+  const getCategoryName = (categoryId: string, post: any) => {
+    // Si no hay categoryId, verificar si el post usa categories (array)
+    if (!categoryId && post.categories && post.categories.length > 0) {
+      // Si es un array de strings (IDs)
+      if (typeof post.categories[0] === "string") {
+        const category = categories.find((cat) => cat.id === post.categories[0])
+        return category ? category.name : "Sin categoría"
+      }
+      // Si es un array de objetos con propiedades id y name
+      else if (typeof post.categories[0] === "object" && post.categories[0]?.id) {
+        return post.categories[0].name || "Sin categoría"
+      }
+    }
+
+    // Caso original: buscar por categoryId
     const category = categories.find((cat) => cat.id === categoryId)
     return category ? category.name : "Sin categoría"
   }
@@ -226,7 +239,7 @@ export function AdminPostsList() {
                 currentPosts.map((post) => (
                   <TableRow key={post.id}>
                     <TableCell className="font-medium">{post.title}</TableCell>
-                    <TableCell>{getCategoryName(post.categoryId)}</TableCell>
+                    <TableCell>{getCategoryName(post.categoryId, post)}</TableCell>
                     <TableCell>{formatDate(post.publishDate)}</TableCell>
                     <TableCell>{getStatusBadge(post.status)}</TableCell>
                     <TableCell>{post.viewCount}</TableCell>

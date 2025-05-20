@@ -512,8 +512,7 @@ export function BlogCard({ post }: BlogCardProps) {
             )}
             {reactions.total > 0 && (
               <span className="ml-2">
-                {reactions.lastReactor && `${reactions.lastReactor}`}
-                {reactions.total > 1 && ` y ${reactions.total - 1} más`}
+                {reactions.total} 
               </span>
             )}
           </div>
