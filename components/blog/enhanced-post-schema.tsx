@@ -29,6 +29,119 @@ export function EnhancedPostSchema({ post, category, url }: EnhancedPostSchemaPr
   useEffect(() => {
     async function fetchPostInteractions() {
       try {
+        // Enhance content type detection
+        const determineContentType = () => {
+          // Check if we already have a defined content type
+          if (post.contentType) {
+            return post.contentType
+          }
+
+          // Check if we have a defined schema type
+          if (post.schemaType) {
+            if (post.schemaType === "NewsArticle") return "news"
+            if (post.schemaType === "Event") return "event"
+            if (post.schemaType === "Review") return "review"
+            if (post.schemaType === "HowTo") return "guide"
+            return "blog"
+          }
+
+          // Try to determine from content and metadata
+          const isNewsArticle =
+            post.isNewsArticle ||
+            post.categoryName?.toLowerCase().includes("noticia") ||
+            post.categoryName?.toLowerCase().includes("news") ||
+            post.tags?.some((tag) => {
+              const tagName = typeof tag === "string" ? tag : tag.name
+              return (
+                tagName?.toLowerCase().includes("noticia") ||
+                tagName?.toLowerCase().includes("news") ||
+                tagName?.toLowerCase().includes("actualidad")
+              )
+            }) ||
+            // Check if content has news-like patterns
+            (post.content &&
+              (post.content.includes("última hora") ||
+                post.content.includes("breaking news") ||
+                post.content.includes("comunicado oficial") ||
+                post.content.includes("anunció hoy") ||
+                post.content.includes("ha confirmado") ||
+                post.content.includes("según fuentes")))
+
+          if (isNewsArticle) return "news"
+
+          // Check if it's an event
+          const isEvent =
+            post.isEventPost ||
+            post.title?.toLowerCase().includes("evento") ||
+            post.title?.toLowerCase().includes("festival") ||
+            post.title?.toLowerCase().includes("concierto") ||
+            post.categoryName?.toLowerCase().includes("evento") ||
+            post.tags?.some((tag) => {
+              const tagName = typeof tag === "string" ? tag : tag.name
+              return (
+                tagName?.toLowerCase().includes("evento") ||
+                tagName?.toLowerCase().includes("festival") ||
+                tagName?.toLowerCase().includes("concierto")
+              )
+            })
+
+          if (isEvent) return "event"
+
+          // Check if it's a review
+          const isReview =
+            post.title?.toLowerCase().includes("review") ||
+            post.title?.toLowerCase().includes("reseña") ||
+            post.categoryName?.toLowerCase().includes("review") ||
+            post.categoryName?.toLowerCase().includes("reseña") ||
+            post.tags?.some((tag) => {
+              const tagName = typeof tag === "string" ? tag : tag.name
+              return tagName?.toLowerCase().includes("review") || tagName?.toLowerCase().includes("reseña")
+            })
+
+          if (isReview) return "review"
+
+          // Check if it's a guide
+          const isGuide =
+            post.title?.toLowerCase().includes("guía") ||
+            post.title?.toLowerCase().includes("tutorial") ||
+            post.title?.toLowerCase().includes("cómo") ||
+            post.categoryName?.toLowerCase().includes("guía") ||
+            post.tags?.some((tag) => {
+              const tagName = typeof tag === "string" ? tag : tag.name
+              return (
+                tagName?.toLowerCase().includes("guía") ||
+                tagName?.toLowerCase().includes("tutorial") ||
+                tagName?.toLowerCase().includes("how to")
+              )
+            })
+
+          if (isGuide) return "guide"
+
+          // Default to blog
+          return "blog"
+        }
+
+        // Use the determined content type to set schema type
+        const contentType = determineContentType()
+        if (contentType === "news" && !post.schemaType) {
+          post.schemaType = "NewsArticle"
+        } else if (contentType === "event" && !post.schemaType) {
+          post.schemaType = "Event"
+        } else if (contentType === "review" && !post.schemaType) {
+          post.schemaType = "Review"
+        } else if (contentType === "guide" && !post.schemaType) {
+          post.schemaType = "HowTo"
+        } else if (!post.schemaType) {
+          post.schemaType = "BlogPosting"
+        }
+
+        // Set Open Graph type based on content type
+        if (contentType === "event" && !post.ogType) {
+          post.ogType = "event"
+        } else if (!post.ogType) {
+          post.ogType = "article" // Default OG type for most content
+        }
+
         // Enhance post data with event details if it's an event-related post
         if (
           (post.title && post.title.toLowerCase().includes("dldk")) ||
@@ -180,8 +293,11 @@ export function EnhancedPostSchema({ post, category, url }: EnhancedPostSchemaPr
     }
   }, [post])
 
-  // Don't render anything while loading to avoid flashing
-  if (isLoading) return null
+  // Always render basic schema even if we're still loading the full data
+  if (isLoading) {
+    // Return a minimal schema with the essential post data we already have
+    return <PostSchema post={post} category={category} url={url} comments={[]} reactions={[]} />
+  }
 
   return <PostSchema post={post} category={category} url={url} comments={comments} reactions={reactions} />
 }

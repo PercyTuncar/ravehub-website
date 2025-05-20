@@ -535,6 +535,14 @@ export default function BlogFormPage({ postId, isEditing }: BlogFormPageProps) {
 
     if (!validateForm()) return
 
+    // Validar configuración SEO
+    if (!validateSeoSettings()) {
+      // Mostrar advertencia pero permitir continuar
+      if (!confirm("Hay problemas con la configuración SEO. ¿Desea continuar de todos modos?")) {
+        return
+      }
+    }
+
     setSaving(true)
     setShowProgress(true)
     setProgress(0)
@@ -632,18 +640,28 @@ export default function BlogFormPage({ postId, isEditing }: BlogFormPageProps) {
     const baseUrl = "https://ravehub.es"
     const postUrl = `${baseUrl}/blog/${post.slug}`
 
+    // Determinar el tipo de contenido y schema
+    const contentType = post.contentType || "blog"
+    const schemaType = post.schemaType || (contentType === "news" ? "NewsArticle" : "BlogPosting")
+
+    // Extraer los nombres de las etiquetas si son objetos
+    const tagNames = post.tags ? post.tags.map((tag) => (typeof tag === "string" ? tag : tag.name)).filter(Boolean) : []
+
     // Estructura básica del JSON-LD
     const jsonLd: any = {
       "@context": "https://schema.org",
       "@graph": [
         {
-          "@type": post.schemaType || "NewsArticle",
+          "@type": schemaType,
+          "@id": `${postUrl}#content`,
           headline: post.seoTitle || post.title || "",
+          name: post.title || "",
           description: post.seoDescription || post.excerpt || "",
           author: {
             "@type": "Person",
             name: post.author || "",
             email: post.authorEmail || "",
+            url: post.authorUrl || `${baseUrl}/autores/${post.authorSlug || "equipo"}`,
           },
           datePublished: post.publishDate || new Date().toISOString(),
           dateModified: post.updatedDate || new Date().toISOString(),
@@ -651,52 +669,236 @@ export default function BlogFormPage({ postId, isEditing }: BlogFormPageProps) {
             "@type": "WebPage",
             "@id": post.canonicalUrl || postUrl,
           },
-          image: post.featuredImageUrl,
+          image: {
+            "@type": "ImageObject",
+            url: post.featuredImageUrl || "",
+            width: 1200,
+            height: 630,
+            caption: post.imageAltTexts?.featuredImage || post.title || "",
+          },
           publisher: {
             "@type": "Organization",
             name: "RaveHub",
             logo: {
               "@type": "ImageObject",
-              url: `${baseUrl}/logo.png`,
+              url: `${baseUrl}/images/logo-full.png`,
+              width: 330,
+              height: 60,
             },
           },
-          keywords: post.seoKeywords ? post.seoKeywords.join(", ") : "",
+          keywords: post.seoKeywords ? post.seoKeywords.join(", ") : tagNames.join(", "),
           isAccessibleForFree: post.isAccessibleForFree !== false,
-          // Agregar articleSection basado en la primera categoría
           articleSection: post.categories && post.categories.length > 0 ? post.categories[0] : "",
+          inLanguage: "es",
         },
-        ...(post.faq && post.faq.length > 0
-          ? [
-              {
-                "@type": "FAQPage",
-                mainEntity: post.faq.map((faq) => ({
-                  "@type": "Question",
-                  name: faq.question,
-                  acceptedAnswer: {
-                    "@type": "Answer",
-                    text: faq.answer,
-                  },
-                })),
-              },
-            ]
-          : []),
-        // Agregar VideoObject si hay un video embebido
-        ...(post.videoEmbedUrl
-          ? [
-              {
-                "@type": "VideoObject",
-                name: post.title || "",
-                description: post.excerpt || "",
-                thumbnailUrl: post.featuredImageUrl || "",
-                uploadDate: post.publishDate || new Date().toISOString(),
-                contentUrl: post.videoEmbedUrl,
-              },
-            ]
-          : []),
+        {
+          "@type": "WebSite",
+          "@id": `${baseUrl}/#website`,
+          url: baseUrl,
+          name: "RaveHub",
+          description: "La plataforma líder en eventos de música electrónica en Latinoamérica",
+          publisher: {
+            "@type": "Organization",
+            "@id": `${baseUrl}/#organization`,
+          },
+          inLanguage: "es",
+        },
+        {
+          "@type": "Organization",
+          "@id": `${baseUrl}/#organization`,
+          name: "RaveHub",
+          url: baseUrl,
+          logo: {
+            "@type": "ImageObject",
+            url: `${baseUrl}/images/logo-full.png`,
+            width: 330,
+            height: 60,
+          },
+          sameAs: [
+            "https://www.facebook.com/ravehublatam",
+            "https://www.instagram.com/ravehublatam",
+            "https://twitter.com/ravehublatam",
+            "https://www.tiktok.com/@ravehublatam",
+          ],
+        },
+        {
+          "@type": "BreadcrumbList",
+          "@id": `${postUrl}#breadcrumb`,
+          itemListElement: [
+            {
+              "@type": "ListItem",
+              position: 1,
+              name: "Inicio",
+              item: baseUrl,
+            },
+            {
+              "@type": "ListItem",
+              position: 2,
+              name: "Blog",
+              item: `${baseUrl}/blog`,
+            },
+            {
+              "@type": "ListItem",
+              position: 3,
+              name: post.title || "",
+              item: postUrl,
+            },
+          ],
+        },
       ],
     }
 
+    // Añadir propiedades específicas según el tipo de contenido
+    if (schemaType === "NewsArticle") {
+      // Propiedades específicas para noticias
+      jsonLd["@graph"][0] = {
+        ...jsonLd["@graph"][0],
+        dateline:
+          post.location?.city && post.location?.country ? `${post.location.city}, ${post.location.country}` : undefined,
+        printSection: post.categories && post.categories.length > 0 ? post.categories[0] : "Noticias",
+        printEdition: "Edición Digital",
+        newUpdates: post.updatedDate ? "Actualizado con la información más reciente" : undefined,
+      }
+    } else if (schemaType === "Event") {
+      // Propiedades específicas para eventos
+      jsonLd["@graph"][0] = {
+        "@type": "Event",
+        "@id": `${postUrl}#event`,
+        name: post.title || "",
+        description: post.excerpt || "",
+        startDate: post.eventDate || post.publishDate || new Date().toISOString(),
+        endDate: post.eventEndDate,
+        location: {
+          "@type": "Place",
+          name: post.location?.venueName || "",
+          address: {
+            "@type": "PostalAddress",
+            addressLocality: post.location?.city || "",
+            addressCountry: post.location?.country || "",
+          },
+        },
+        image: post.featuredImageUrl || "",
+        organizer: {
+          "@type": "Organization",
+          name: "RaveHub",
+          url: baseUrl,
+        },
+      }
+    } else if (schemaType === "Review") {
+      // Propiedades específicas para reseñas
+      jsonLd["@graph"][0] = {
+        "@type": "Review",
+        "@id": `${postUrl}#review`,
+        name: post.title || "",
+        description: post.excerpt || "",
+        author: {
+          "@type": "Person",
+          name: post.author || "",
+        },
+        datePublished: post.publishDate || new Date().toISOString(),
+        reviewRating: {
+          "@type": "Rating",
+          ratingValue: post.rating || 5,
+          bestRating: 5,
+          worstRating: 1,
+        },
+        itemReviewed: {
+          "@type": post.reviewType || "Product",
+          name: post.reviewItemName || post.title || "",
+        },
+      }
+    } else if (schemaType === "HowTo") {
+      // Propiedades específicas para guías/tutoriales
+      jsonLd["@graph"][0] = {
+        "@type": "HowTo",
+        "@id": `${postUrl}#howto`,
+        name: post.title || "",
+        description: post.excerpt || "",
+        step: post.howToSteps || [],
+        tool: post.howToTools || [],
+        supply: post.howToSupplies || [],
+        totalTime: post.howToDuration || "PT30M",
+      }
+    }
+
+    // Añadir FAQ si existe
+    if (post.faq && post.faq.length > 0) {
+      jsonLd["@graph"].push({
+        "@type": "FAQPage",
+        "@id": `${postUrl}#faq`,
+        mainEntity: post.faq.map((faq) => ({
+          "@type": "Question",
+          name: faq.question,
+          acceptedAnswer: {
+            "@type": "Answer",
+            text: faq.answer,
+          },
+        })),
+      })
+    }
+
+    // Añadir VideoObject si hay un video embebido
+    if (post.videoEmbedUrl) {
+      jsonLd["@graph"].push({
+        "@type": "VideoObject",
+        "@id": `${postUrl}#video`,
+        name: post.title || "",
+        description: post.excerpt || "",
+        thumbnailUrl: post.featuredImageUrl || "",
+        uploadDate: post.publishDate || new Date().toISOString(),
+        contentUrl: post.videoEmbedUrl,
+        embedUrl: post.videoEmbedUrl,
+      })
+    }
+
     return JSON.stringify(jsonLd, null, 2)
+  }
+
+  // Añadir esta función después de validateForm
+  const validateSeoSettings = () => {
+    const issues = []
+
+    // Validar título SEO
+    if (!post.seoTitle) {
+      issues.push("El título SEO está vacío")
+    } else if (post.seoTitle.length > 60) {
+      issues.push("El título SEO es demasiado largo (máximo 60 caracteres)")
+    }
+
+    // Validar descripción SEO
+    if (!post.seoDescription) {
+      issues.push("La descripción SEO está vacía")
+    } else if (post.seoDescription.length > 160) {
+      issues.push("La descripción SEO es demasiado larga (máximo 160 caracteres)")
+    }
+
+    // Validar coherencia entre tipos
+    if (post.schemaType === "NewsArticle" && post.ogType !== "article") {
+      issues.push("Para noticias, el tipo Open Graph debería ser 'article'")
+    }
+
+    if (post.schemaType === "Event" && post.ogType !== "event") {
+      issues.push("Para eventos, el tipo Open Graph debería ser 'event'")
+    }
+
+    // Validar imagen para redes sociales
+    if (!post.socialImageUrl && !post.featuredImageUrl) {
+      issues.push("No hay imagen para redes sociales")
+    }
+
+    // Validar palabras clave
+    if (!post.seoKeywords || post.seoKeywords.length === 0) {
+      issues.push("No hay palabras clave SEO definidas")
+    }
+
+    // Mostrar resultados
+    if (issues.length > 0) {
+      toast.error(`Problemas SEO encontrados: ${issues.join(", ")}`)
+      return false
+    }
+
+    toast.success("Configuración SEO validada correctamente")
+    return true
   }
 
   // Synchronize the editor mode with the post's contentFormat
@@ -1666,6 +1868,45 @@ export default function BlogFormPage({ postId, isEditing }: BlogFormPageProps) {
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
+                  <Label htmlFor="contentType">Tipo de contenido</Label>
+                  <Select
+                    value={post.contentType || "blog"}
+                    onValueChange={(value) => {
+                      // Sincronizar el tipo de contenido con los tipos de OG y Schema
+                      let ogType = "article"
+                      let schemaType = "BlogPosting"
+
+                      if (value === "news") {
+                        ogType = "article"
+                        schemaType = "NewsArticle"
+                      } else if (value === "event") {
+                        ogType = "event"
+                        schemaType = "Event"
+                      }
+
+                      setPost((prev) => ({
+                        ...prev,
+                        contentType: value,
+                        ogType,
+                        schemaType,
+                      }))
+                    }}
+                  >
+                    <SelectTrigger id="contentType">
+                      <SelectValue placeholder="Selecciona tipo" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="blog">Entrada de blog</SelectItem>
+                      <SelectItem value="news">Noticia</SelectItem>
+                      <SelectItem value="event">Evento</SelectItem>
+                      <SelectItem value="review">Reseña</SelectItem>
+                      <SelectItem value="guide">Guía</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <p className="text-xs text-gray-500 mt-1">Afecta a los tipos de OG y Schema</p>
+                </div>
+
+                <div>
                   <Label htmlFor="ogType">Tipo Open Graph</Label>
                   <Select
                     value={post.ogType || "article"}
@@ -1678,8 +1919,53 @@ export default function BlogFormPage({ postId, isEditing }: BlogFormPageProps) {
                       <SelectItem value="article">Artículo</SelectItem>
                       <SelectItem value="website">Sitio web</SelectItem>
                       <SelectItem value="blog">Blog</SelectItem>
+                      <SelectItem value="event">Evento</SelectItem>
+                      <SelectItem value="profile">Perfil</SelectItem>
                     </SelectContent>
                   </Select>
+                  <p className="text-xs text-gray-500 mt-1">Tipo de contenido para redes sociales</p>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="schemaType">Tipo de Schema.org</Label>
+                  <Select
+                    value={post.schemaType || "BlogPosting"}
+                    onValueChange={(value) => {
+                      // Actualizar el tipo de contenido si es necesario
+                      let contentType = post.contentType || "blog"
+
+                      if (value === "NewsArticle") {
+                        contentType = "news"
+                      } else if (value === "Event") {
+                        contentType = "event"
+                      } else if (value === "Review") {
+                        contentType = "review"
+                      } else if (value === "HowTo") {
+                        contentType = "guide"
+                      }
+
+                      setPost((prev) => ({
+                        ...prev,
+                        schemaType: value,
+                        contentType,
+                      }))
+                    }}
+                  >
+                    <SelectTrigger id="schemaType">
+                      <SelectValue placeholder="Selecciona tipo" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="BlogPosting">Publicación de blog</SelectItem>
+                      <SelectItem value="NewsArticle">Artículo de noticias</SelectItem>
+                      <SelectItem value="Article">Artículo genérico</SelectItem>
+                      <SelectItem value="Event">Evento</SelectItem>
+                      <SelectItem value="Review">Reseña</SelectItem>
+                      <SelectItem value="HowTo">Guía / Tutorial</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <p className="text-xs text-gray-500 mt-1">Tipo de datos estructurados para motores de búsqueda</p>
                 </div>
 
                 <div>
@@ -1699,25 +1985,6 @@ export default function BlogFormPage({ postId, isEditing }: BlogFormPageProps) {
                     </SelectContent>
                   </Select>
                 </div>
-              </div>
-
-              <div>
-                <Label htmlFor="schemaType">Tipo de Schema.org</Label>
-                <Select
-                  value={post.schemaType || "BlogPosting"}
-                  onValueChange={(value) =>
-                    setPost((prev) => ({ ...prev, schemaType: value as "BlogPosting" | "NewsArticle" }))
-                  }
-                >
-                  <SelectTrigger id="schemaType">
-                    <SelectValue placeholder="Selecciona tipo" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="BlogPosting">Publicación de blog</SelectItem>
-                    <SelectItem value="NewsArticle">Artículo de noticias</SelectItem>
-                  </SelectContent>
-                </Select>
-                <p className="text-xs text-gray-500 mt-1">Tipo de datos estructurados para motores de búsqueda</p>
               </div>
 
               <div className="space-y-4">
@@ -1776,8 +2043,44 @@ export default function BlogFormPage({ postId, isEditing }: BlogFormPageProps) {
                   url={`https://ravehub.es/blog/${post.slug || "titulo-del-articulo"}`}
                 />
               </div>
+
+              <div className="mt-6 p-4 bg-blue-50 rounded-md">
+                <h4 className="text-sm font-medium text-blue-800 mb-2">Recomendaciones SEO</h4>
+                <ul className="text-xs text-blue-700 space-y-1">
+                  <li className="flex items-start">
+                    <span className="mr-1">•</span>
+                    <span>
+                      Para noticias, usa <strong>NewsArticle</strong> como tipo de Schema.org
+                    </span>
+                  </li>
+                  <li className="flex items-start">
+                    <span className="mr-1">•</span>
+                    <span>
+                      Para entradas de blog, usa <strong>BlogPosting</strong> como tipo de Schema.org
+                    </span>
+                  </li>
+                  <li className="flex items-start">
+                    <span className="mr-1">•</span>
+                    <span>
+                      Para eventos, usa <strong>Event</strong> como tipo de Schema.org y <strong>event</strong> como
+                      tipo de Open Graph
+                    </span>
+                  </li>
+                  <li className="flex items-start">
+                    <span className="mr-1">•</span>
+                    <span>Incluye siempre una imagen destacada optimizada para redes sociales</span>
+                  </li>
+                  <li className="flex items-start">
+                    <span className="mr-1">•</span>
+                    <span>Usa palabras clave relevantes en el título y descripción SEO</span>
+                  </li>
+                </ul>
+              </div>
             </div>
           </div>
+          <Button type="button" variant="outline" onClick={validateSeoSettings} className="mt-4">
+            Validar configuración SEO
+          </Button>
         </TabsContent>
 
         {/* AVANZADO */}

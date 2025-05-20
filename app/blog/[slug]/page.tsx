@@ -10,6 +10,7 @@ import { BlogSidebarWrapper } from "@/components/blog/blog-sidebar-wrapper"
 // Importar la función getRedirectedSlug y redirect de Next.js
 import { getRedirectedSlug } from "@/lib/firebase/slug-redirects"
 import { EnhancedPostSchema } from "@/components/blog/enhanced-post-schema"
+import Script from "next/script"
 
 interface BlogPostPageProps {
   params: {
@@ -72,6 +73,22 @@ export async function generateMetadata({ params }: BlogPostPageProps): Promise<M
   // Get the main image URL
   const imageUrl = post.mainImageUrl || post.featuredImageUrl || `${baseUrl}/images/placeholder-blog.jpg`
 
+  // Determine content type for appropriate metadata
+  const contentType =
+    post.contentType ||
+    (post.schemaType === "NewsArticle"
+      ? "news"
+      : post.schemaType === "Event"
+        ? "event"
+        : post.schemaType === "Review"
+          ? "review"
+          : post.schemaType === "HowTo"
+            ? "guide"
+            : "blog")
+
+  // Set appropriate Open Graph type
+  const ogType = post.ogType || (contentType === "event" ? "event" : "article")
+
   return {
     title: post.seoTitle || `${post.title} | RaveHub Blog`,
     description: post.seoDescription || post.shortDescription || post.excerpt || "",
@@ -92,7 +109,7 @@ export async function generateMetadata({ params }: BlogPostPageProps): Promise<M
         },
       ],
       locale: "es_ES",
-      type: "article",
+      type: ogType,
       publishedTime: safeISOString(post.publishDate),
       modifiedTime: safeISOString(post.updatedAt || post.updatedDate),
       authors: post.author ? [post.author] : undefined,
@@ -153,6 +170,19 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
     { label: post.title, href: `/blog/${post.slug}`, current: true },
   ]
 
+  // Determine if this is a news article or a blog post
+  const isNewsArticle =
+    post.isNewsArticle ||
+    post.categoryName?.toLowerCase().includes("noticia") ||
+    post.categoryName?.toLowerCase().includes("news") ||
+    post.tags?.some((tag) => {
+      const tagName = typeof tag === "string" ? tag : tag.name
+      return tagName?.toLowerCase().includes("noticia") || tagName?.toLowerCase().includes("news")
+    })
+
+  // Choose the appropriate schema type
+  const schemaType = isNewsArticle ? "NewsArticle" : "BlogPosting"
+
   return (
     <div className="container mx-auto px-4 py-8">
       <Breadcrumbs items={breadcrumbItems} />
@@ -174,55 +204,336 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
 
       {/* Datos estructurados para SEO */}
       <Suspense fallback={null}>
-        <EnhancedPostSchema post={post} category={post.category} url={fullUrl} />
+        <EnhancedPostSchema post={{ ...post, schemaType }} category={post.category} url={fullUrl} />
       </Suspense>
 
-      {/* Add WebPage schema inline for critical path render */}
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{
-          __html: JSON.stringify({
-            "@context": "https://schema.org",
+      {/* Add WebSite schema */}
+      <Script id="website-schema" type="application/ld+json" strategy="beforeInteractive">
+        {`
+        {
+          "@context": "https://schema.org",
+          "@type": "WebSite",
+          "@id": "${baseUrl}/#website",
+          "url": "${baseUrl}",
+          "name": "RaveHub",
+          "description": "La plataforma líder en eventos de música electrónica en Latinoamérica",
+          "publisher": {
+            "@type": "Organization",
+            "@id": "${baseUrl}/#organization",
+            "name": "RaveHub",
+            "logo": {
+              "@type": "ImageObject",
+              "url": "${baseUrl}/images/logo-full.png",
+              "width": 330,
+              "height": 60
+            }
+          },
+          "potentialAction": {
+            "@type": "SearchAction",
+            "target": {
+              "@type": "EntryPoint",
+              "urlTemplate": "${baseUrl}/search?q={search_term_string}"
+            },
+            "query-input": "required name=search_term_string"
+          }
+        }
+        `}
+      </Script>
+
+      {/* Add Organization schema */}
+      <Script id="organization-schema" type="application/ld+json" strategy="beforeInteractive">
+        {`
+        {
+          "@context": "https://schema.org",
+          "@type": "Organization",
+          "@id": "${baseUrl}/#organization",
+          "name": "RaveHub",
+          "url": "${baseUrl}",
+          "logo": {
+            "@type": "ImageObject",
+            "url": "${baseUrl}/images/logo-full.png",
+            "width": 330,
+            "height": 60
+          },
+          "sameAs": [
+            "https://www.facebook.com/ravehublatam",
+            "https://www.instagram.com/ravehublatam",
+            "https://twitter.com/ravehublatam",
+            "https://www.tiktok.com/@ravehublatam"
+          ],
+          "contactPoint": {
+            "@type": "ContactPoint",
+            "telephone": "+51 944 784 488",
+            "contactType": "customer support",
+            "availableLanguage": ["Spanish", "English"]
+          },
+          "address": {
+            "@type": "PostalAddress",
+            "addressCountry": "Peru",
+            "addressLocality": "Lima"
+          }
+        }
+        `}
+      </Script>
+
+      {/* Add BreadcrumbList schema */}
+      <Script id="breadcrumb-schema" type="application/ld+json" strategy="beforeInteractive">
+        {`
+        {
+          "@context": "https://schema.org",
+          "@type": "BreadcrumbList",
+          "@id": "${fullUrl}#breadcrumb",
+          "itemListElement": [
+            {
+              "@type": "ListItem",
+              "position": 1,
+              "name": "Inicio",
+              "item": "${baseUrl}"
+            },
+            {
+              "@type": "ListItem",
+              "position": 2,
+              "name": "Blog",
+              "item": "${baseUrl}/blog"
+            },
+            ${
+              post.category?.name
+                ? `
+            {
+              "@type": "ListItem",
+              "position": 3,
+              "name": "${post.category.name.replace(/"/g, '\\"')}",
+              "item": "${baseUrl}/blog/categorias/${post.category.slug}"
+            },
+            {
+              "@type": "ListItem",
+              "position": 4,
+              "name": "${post.title.replace(/"/g, '\\"')}",
+              "item": "${fullUrl}"
+            }`
+                : `
+            {
+              "@type": "ListItem",
+              "position": 3,
+              "name": "${post.title.replace(/"/g, '\\"')}",
+              "item": "${fullUrl}"
+            }`
+            }
+          ]
+        }
+        `}
+      </Script>
+
+      {/* Add WebPage schema */}
+      <Script id="webpage-schema" type="application/ld+json" strategy="beforeInteractive">
+        {`
+        {
+          "@context": "https://schema.org",
+          "@type": "WebPage",
+          "@id": "${fullUrl}",
+          "url": "${fullUrl}",
+          "name": "${post.title.replace(/"/g, '\\"')}",
+          "description": "${(post.seoDescription || post.shortDescription || post.excerpt || "").replace(/"/g, '\\"')}",
+          "isPartOf": {
+            "@type": "WebSite",
+            "@id": "${baseUrl}/#website",
+            "url": "${baseUrl}",
+            "name": "RaveHub",
+            "description": "La plataforma líder en eventos de música electrónica en Latinoamérica"
+          },
+          "inLanguage": "es",
+          ${
+            post.mainImageUrl || post.featuredImageUrl
+              ? `"primaryImageOfPage": {
+                  "@type": "ImageObject",
+                  "url": "${post.mainImageUrl || post.featuredImageUrl}",
+                  "width": 1200,
+                  "height": 630
+                },`
+              : ""
+          }
+          "datePublished": "${safeISOString(post.publishDate) || new Date().toISOString()}",
+          "dateModified": "${safeISOString(post.updatedAt || post.updatedDate) || safeISOString(post.publishDate) || new Date().toISOString()}",
+          "breadcrumb": {
+            "@id": "${fullUrl}#breadcrumb"
+          },
+          "potentialAction": {
+            "@type": "ReadAction",
+            "target": ["${fullUrl}"]
+          }
+        }
+        `}
+      </Script>
+
+      {/* Add Article/BlogPosting/NewsArticle schema */}
+      <Script id="article-schema" type="application/ld+json" strategy="beforeInteractive">
+        {`
+        {
+          "@context": "https://schema.org",
+          "@type": "${schemaType}",
+          "@id": "${fullUrl}#article",
+          "headline": "${post.title.replace(/"/g, '\\"')}",
+          "name": "${post.title.replace(/"/g, '\\"')}",
+          "description": "${(post.seoDescription || post.shortDescription || post.excerpt || "").replace(/"/g, '\\"')}",
+          "datePublished": "${safeISOString(post.publishDate) || new Date().toISOString()}",
+          "dateModified": "${safeISOString(post.updatedAt || post.updatedDate) || safeISOString(post.publishDate) || new Date().toISOString()}",
+          "author": {
+            "@type": "Person",
+            "name": "${post.authorName || post.author || "RaveHub Team"}"
+          },
+          "publisher": {
+            "@type": "Organization",
+            "@id": "${baseUrl}/#organization",
+            "name": "RaveHub",
+            "logo": {
+              "@type": "ImageObject",
+              "url": "${baseUrl}/images/logo-full.png",
+              "width": 330,
+              "height": 60
+            }
+          },
+          "mainEntityOfPage": {
             "@type": "WebPage",
-            "@id": fullUrl,
-            url: fullUrl,
-            name: post.title,
-            description: post.seoDescription || post.shortDescription || post.excerpt || "",
-            isPartOf: {
-              "@type": "WebSite",
-              "@id": `${baseUrl}/#website`,
-              url: baseUrl,
-              name: "RaveHub",
-              description: "La plataforma líder en eventos de música electrónica en Latinoamérica",
+            "@id": "${fullUrl}"
+          },
+          "articleSection": "${post.categoryName || post.category?.name || "Blog"}",
+          "keywords": "${(post.seoKeywords || (post.tags ? post.tags.map((tag) => (typeof tag === "string" ? tag : tag.name)).filter(Boolean) : [])).join(", ")}",
+          "inLanguage": "es",
+          "isAccessibleForFree": true
+          ${
+            post.mainImageUrl || post.featuredImageUrl
+              ? `,
+          "image": {
+            "@type": "ImageObject",
+            "url": "${post.mainImageUrl || post.featuredImageUrl}",
+            "width": 1200,
+            "height": 630
+          }`
+              : ""
+          }
+        }
+        `}
+      </Script>
+
+      {/* Add Person schema for author if available */}
+      {post.authorName && (
+        <Script id="person-schema" type="application/ld+json" strategy="beforeInteractive">
+          {`
+          {
+            "@context": "https://schema.org",
+            "@type": "Person",
+            "@id": "${baseUrl}/autores/${post.authorSlug || "equipo"}#person",
+            "name": "${post.authorName.replace(/"/g, '\\"')}",
+            "url": "${post.authorUrl || `${baseUrl}/autores/${post.authorSlug || "equipo"}`}",
+            ${post.authorImageUrl ? `"image": "${post.authorImageUrl}",` : ""}
+            "jobTitle": "${post.authorJobTitle || "Escritor"}",
+            "worksFor": {
+              "@type": "Organization",
+              "@id": "${baseUrl}/#organization",
+              "name": "RaveHub"
+            }
+          }
+          `}
+        </Script>
+      )}
+
+      {/* Add FAQPage schema if FAQs are detected */}
+      {post.faqItems && post.faqItems.length > 0 && (
+        <Script id="faq-schema" type="application/ld+json" strategy="beforeInteractive">
+          {`
+          {
+            "@context": "https://schema.org",
+            "@type": "FAQPage",
+            "mainEntity": [
+              ${post.faqItems
+                .map(
+                  (faq: any) => `{
+                "@type": "Question",
+                "name": "${faq.question.replace(/"/g, '\\"')}",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "${faq.answer.replace(/"/g, '\\"')}"
+                }
+              }`,
+                )
+                .join(",")}
+            ]
+          }
+          `}
+        </Script>
+      )}
+
+      {/* Add VideoObject schema if video is detected */}
+      {post.videoUrl && (
+        <Script id="video-schema" type="application/ld+json" strategy="beforeInteractive">
+          {`
+          {
+            "@context": "https://schema.org",
+            "@type": "VideoObject",
+            "name": "${(post.videoTitle || post.title).replace(/"/g, '\\"')}",
+            "description": "${(post.videoDescription || post.shortDescription || post.excerpt || "").replace(/"/g, '\\"')}",
+            "thumbnailUrl": "${post.videoThumbnail || post.mainImageUrl || post.featuredImageUrl}",
+            "uploadDate": "${safeISOString(post.publishDate) || new Date().toISOString()}",
+            "contentUrl": "${post.videoUrl}",
+            "embedUrl": "${post.videoEmbedUrl || post.videoUrl}",
+            "duration": "${post.videoDuration || "PT2M30S"}",
+            "publisher": {
+              "@type": "Organization",
+              "name": "RaveHub",
+              "logo": {
+                "@type": "ImageObject",
+                "url": "${baseUrl}/images/logo-full.png"
+              }
+            }
+          }
+          `}
+        </Script>
+      )}
+
+      {/* Add Event schema if event is detected */}
+      {post.isEventPost && post.eventDetails && (
+        <Script id="event-schema" type="application/ld+json" strategy="beforeInteractive">
+          {`
+          {
+            "@context": "https://schema.org",
+            "@type": "Event",
+            "name": "${(post.eventDetails.name || post.title).replace(/"/g, '\\"')}",
+            "description": "${(post.eventDetails.description || post.shortDescription || "").replace(/"/g, '\\"')}",
+            "startDate": "${safeISOString(post.eventDetails.startDate) || safeISOString(post.publishDate) || new Date().toISOString()}",
+            ${post.eventDetails.endDate ? `"endDate": "${safeISOString(post.eventDetails.endDate)}",` : ""}
+            "location": {
+              "@type": "Place",
+              "name": "${post.eventDetails.venueName.replace(/"/g, '\\"')}",
+              "address": {
+                "@type": "PostalAddress",
+                "addressLocality": "${post.eventDetails.city.replace(/"/g, '\\"')}",
+                ${post.eventDetails.region ? `"addressRegion": "${post.eventDetails.region.replace(/"/g, '\\"')}",` : ""}
+                "addressCountry": "${post.eventDetails.country.replace(/"/g, '\\"')}"
+              }
             },
-            inLanguage: "es",
-            primaryImageOfPage:
-              post.mainImageUrl || post.featuredImageUrl
-                ? {
-                    "@type": "ImageObject",
-                    url: post.mainImageUrl || post.featuredImageUrl,
-                    width: 1200,
-                    height: 630,
-                  }
-                : undefined,
-            datePublished: safeISOString(post.publishDate),
-            dateModified: safeISOString(post.updatedAt || post.updatedDate),
-            breadcrumb: {
-              "@type": "BreadcrumbList",
-              itemListElement: breadcrumbItems.map((item, index) => ({
-                "@type": "ListItem",
-                position: index + 1,
-                name: item.label,
-                item: item.href.startsWith("/") ? `${baseUrl}${item.href}` : item.href,
-              })),
+            "image": "${post.eventDetails.imageUrl || post.mainImageUrl || post.featuredImageUrl}",
+            "performer": {
+              "@type": "PerformingGroup",
+              "name": "${(post.eventDetails.performer || "Various Artists").replace(/"/g, '\\"')}"
             },
-            potentialAction: {
-              "@type": "ReadAction",
-              target: [fullUrl],
+            "organizer": {
+              "@type": "Organization",
+              "name": "${(post.eventDetails.organizer || "RaveHub").replace(/"/g, '\\"')}",
+              "url": "${post.eventDetails.organizerUrl || baseUrl}"
             },
-          }),
-        }}
-      />
+            "offers": {
+              "@type": "Offer",
+              "price": "${post.eventDetails.price || "0"}",
+              "priceCurrency": "${post.eventDetails.currency || "USD"}",
+              "availability": "https://schema.org/InStock",
+              "url": "${post.eventDetails.ticketUrl || fullUrl}"
+            },
+            "eventStatus": "https://schema.org/EventScheduled",
+            "eventAttendanceMode": "https://schema.org/OfflineEventAttendanceMode"
+          }
+          `}
+        </Script>
+      )}
     </div>
   )
 }

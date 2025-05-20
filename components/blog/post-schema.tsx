@@ -155,6 +155,7 @@ export function PostSchema({ post, category, url, comments = [], reactions = [] 
   const breadcrumbSchema = {
     "@context": "https://schema.org",
     "@type": "BreadcrumbList",
+    "@id": `${url}#breadcrumb`,
     itemListElement: [
       {
         "@type": "ListItem",
@@ -184,7 +185,7 @@ export function PostSchema({ post, category, url, comments = [], reactions = [] 
   }
   schemas.push(breadcrumbSchema)
 
-  // 4. Main Article/BlogPosting schema (comprehensive version)
+  // 4. Main Article/BlogPosting/NewsArticle schema (comprehensive version)
   const articleSchema: any = {
     "@context": "https://schema.org",
     "@type": post.schemaType || "BlogPosting",
@@ -226,6 +227,93 @@ export function PostSchema({ post, category, url, comments = [], reactions = [] 
       "@type": "Organization",
       name: "RaveHub",
     },
+  }
+
+  // Add NewsArticle specific properties if applicable
+  if (post.schemaType === "NewsArticle") {
+    articleSchema.dateline = post.location?.city ? `${post.location.city}, ${post.location.country}` : undefined
+    articleSchema.printSection = post.categoryName || category?.name || "News"
+    articleSchema.printEdition = "Online Edition"
+    articleSchema.newUpdates = post.updatedAt ? "Updated with latest information" : undefined
+
+    // Add NewsArticle specific properties for better Google News inclusion
+    articleSchema.dateCreated = publishDate
+    articleSchema.datePublished = publishDate
+    articleSchema.dateModified = modifiedDate
+
+    // Add NewsArticle specific properties for better Google News inclusion
+    articleSchema.reportingPrinciples = `${baseUrl}/politica-editorial`
+    articleSchema.diversityPolicy = `${baseUrl}/politica-diversidad`
+    articleSchema.ethicsPolicy = `${baseUrl}/codigo-etico`
+    articleSchema.correctionsPolicy = `${baseUrl}/politica-correcciones`
+
+    // Add NewsArticle specific properties for better Google News inclusion
+    if (post.isBreakingNews) {
+      articleSchema.isBreakingNews = true
+    }
+
+    if (post.isLiveBlogPosting) {
+      articleSchema["@type"] = "LiveBlogPosting"
+      articleSchema.coverageStartTime = publishDate
+      articleSchema.coverageEndTime = modifiedDate
+    }
+  }
+
+  // Add Review specific properties if applicable
+  if (post.schemaType === "Review") {
+    articleSchema.reviewRating = {
+      "@type": "Rating",
+      ratingValue: post.rating || 5,
+      bestRating: 5,
+      worstRating: 1,
+    }
+
+    articleSchema.itemReviewed = {
+      "@type": post.reviewItemType || "Product",
+      name: post.reviewItemName || post.title,
+      ...(post.reviewItemImage && {
+        image: post.reviewItemImage,
+      }),
+    }
+  }
+
+  // Add HowTo specific properties if applicable
+  if (post.schemaType === "HowTo") {
+    articleSchema["@type"] = "HowTo"
+    articleSchema.step = post.howToSteps || []
+    articleSchema.tool = post.howToTools || []
+    articleSchema.supply = post.howToSupplies || []
+    articleSchema.totalTime = post.howToDuration || "PT30M"
+  }
+
+  // Add Event specific properties if applicable
+  if (post.schemaType === "Event") {
+    articleSchema["@type"] = "Event"
+    articleSchema.startDate = post.eventDate || publishDate
+    articleSchema.endDate = post.eventEndDate
+    articleSchema.location = {
+      "@type": "Place",
+      name: post.location?.venueName || "",
+      address: {
+        "@type": "PostalAddress",
+        addressLocality: post.location?.city || "",
+        addressCountry: post.location?.country || "",
+      },
+    }
+    articleSchema.performer = {
+      "@type": "PerformingGroup",
+      name: post.eventPerformer || "Various Artists",
+    }
+    articleSchema.offers = post.eventPrice
+      ? {
+          "@type": "Offer",
+          price: post.eventPrice,
+          priceCurrency: post.eventCurrency || "USD",
+          availability: "https://schema.org/InStock",
+          url: post.eventUrl || url,
+          validFrom: post.eventTicketsDate || publishDate,
+        }
+      : undefined
   }
 
   // Add images with proper formatting
@@ -535,7 +623,7 @@ export function PostSchema({ post, category, url, comments = [], reactions = [] 
           id={`post-schema-${index}`}
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(schema, null, 2) }}
-          strategy="afterInteractive"
+          strategy="beforeInteractive"
         />
       ))}
     </>

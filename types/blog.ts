@@ -68,7 +68,8 @@ export interface BlogPost {
   ogType: string
   twitterCardType: string
   canonicalUrl: string
-  schemaType: "NewsArticle" | "BlogPosting"
+  schemaType: "NewsArticle" | "BlogPosting" | "Article" | "Event" | "Review" | "HowTo"
+  contentType?: "blog" | "news" | "event" | "review" | "guide" // Nuevo campo para tipo de contenido
   focusKeyword?: string
   faq?: {
     question: string
@@ -109,6 +110,79 @@ export interface BlogPost {
       [key in ReactionType]?: number
     }
   }
+
+  // Campos específicos para noticias
+  isNewsArticle?: boolean
+  isBreakingNews?: boolean
+  isLiveBlogPosting?: boolean
+
+  // Campos específicos para eventos
+  isEventPost?: boolean
+  eventDetails?: {
+    name: string
+    description: string
+    startDate: any
+    endDate?: any
+    venueName: string
+    city: string
+    country: string
+    region?: string
+    coordinates?: {
+      latitude: number
+      longitude: number
+    }
+    price?: string
+    currency?: string
+    performer?: string
+    organizer?: string
+    organizerUrl?: string
+    ticketUrl?: string
+    ticketSaleDate?: any
+    imageUrl?: string
+  }
+
+  // Campos específicos para reseñas
+  rating?: number
+  reviewItemType?: string
+  reviewItemName?: string
+  reviewItemImage?: string
+
+  // Campos específicos para guías/tutoriales
+  howToSteps?: Array<{
+    "@type": "HowToStep"
+    name: string
+    text: string
+    image?: string
+    url?: string
+  }>
+  howToTools?: Array<{
+    "@type": "HowToTool"
+    name: string
+  }>
+  howToSupplies?: Array<{
+    "@type": "HowToSupply"
+    name: string
+  }>
+  howToDuration?: string
+
+  // Campos para video
+  videoUrl?: string
+  videoEmbedUrl?: string
+  videoTitle?: string
+  videoDescription?: string
+  videoThumbnail?: string
+  videoDuration?: string
+
+  // Campos para autor
+  authorSlug?: string
+  authorUrl?: string
+  authorBio?: string
+  authorJobTitle?: string
+  authorSocialLinks?: string[]
+  twitterCreator?: string
+
+  // Campos para redirecciones
+  previousSlug?: string
 }
 
 /**
