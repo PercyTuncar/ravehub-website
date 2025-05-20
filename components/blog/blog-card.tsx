@@ -137,6 +137,17 @@ const reactionLabels: Record<ReactionType, string> = {
   angry: "Me enoja",
 }
 
+// Función para formatear números grandes con sufijo "k"
+function formatCount(count: number): string {
+  if (count >= 1000) {
+    const formattedCount = count / 1000
+    // Si es menor a 10k, mostrar un decimal (ej: 1.5k)
+    // Si es 10k o más, mostrar sin decimales (ej: 10k)
+    return formattedCount < 10 ? `${formattedCount.toFixed(1)}k` : `${Math.floor(formattedCount)}k`
+  }
+  return count.toString()
+}
+
 // Star Rating component
 function StarRating({ rating }: { rating: number }) {
   const fullStars = Math.floor(rating)
@@ -484,15 +495,15 @@ export function BlogCard({ post }: BlogCardProps) {
           <div className="flex gap-3">
             <span className="flex items-center gap-1">
               <MessageSquare size={14} />
-              {commentCount}
+              {formatCount(commentCount)}
             </span>
             <span className="flex items-center gap-1">
               <Share size={14} />
-              {shareCount > 0 && ` ${shareCount}`}
+              {shareCount > 0 && ` ${formatCount(shareCount)}`}
             </span>
             <span className="flex items-center gap-1">
               <Eye size={14} />
-              {viewCount}
+              {formatCount(viewCount)}
             </span>
           </div>
         </div>

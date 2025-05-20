@@ -665,11 +665,25 @@ export function PostReactions({ postId }: PostReactionsProps) {
 
   return (
     <div className="space-y-2">
-      <div className="flex items-center justify-between py-2">
-        <div className="flex items-center gap-2">
-          {/* Botón principal de reacción */}
+      <div className="flex items-center justify-between py-3 px-4 bg-muted/30 rounded-lg border border-border/50 hover:border-border/80 transition-colors">
+        <div className="flex items-center gap-3">
+          {/* Botón principal de reacción con diseño mejorado */}
           <Popover open={showReactionPicker} onOpenChange={setShowReactionPicker}>
-            <PopoverTrigger asChild>{renderMainReactionButton()}</PopoverTrigger>
+            <PopoverTrigger asChild>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="flex items-center gap-1.5 touch-none bg-background/80 hover:bg-background shadow-sm border border-border/50 rounded-full px-4 transition-all hover:scale-105"
+                onClick={() => setShowReactionPicker(!showReactionPicker)}
+                disabled={isProcessing}
+                {...longPressProps}
+              >
+                <span className="text-lg select-none">{getReactionInfo(userReaction || "like").emoji}</span>
+                <span className="select-none font-medium">
+                  {userReaction ? getReactionInfo(userReaction).label : "¿Qué te pareció?"}
+                </span>
+              </Button>
+            </PopoverTrigger>
             <PopoverContent className="w-auto p-2" align="start">
               <div className="flex flex-wrap gap-2 max-w-xs">
                 {REACTIONS.map(({ type, emoji, label }) => (
@@ -697,12 +711,15 @@ export function PostReactions({ postId }: PostReactionsProps) {
             </PopoverContent>
           </Popover>
 
-          {/* Separador */}
-          <Separator orientation="vertical" className="h-6" />
+          {/* Separador con estilo mejorado */}
+          <Separator orientation="vertical" className="h-6 bg-border/50" />
 
           {/* Resumen de reacciones */}
           {renderReactionsSummary()}
         </div>
+
+        {/* Texto de ayuda para móviles */}
+        <span className="text-xs text-muted-foreground hidden sm:block">Mantén presionado para más opciones</span>
       </div>
 
       {/* Alerta de estado de autenticación */}

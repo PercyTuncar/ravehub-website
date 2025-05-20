@@ -734,8 +734,23 @@ export function CommentsSection({ postId }: CommentsSectionProps) {
         description: "El comentario ha sido eliminado correctamente",
       })
 
-      // Reload comments to update the list
-      loadComments()
+      // Actualizar el estado local para eliminar el comentario de la UI inmediatamente
+      setComments((prevComments) =>
+        prevComments.filter((comment) => {
+          // Eliminar el comentario si coincide con el ID
+          if (comment.id === commentId) return false
+
+          // Filtrar también las respuestas eliminadas
+          if (comment.replies && comment.replies.length > 0) {
+            comment.replies = comment.replies.filter((reply) => reply.id !== commentId)
+          }
+
+          return true
+        }),
+      )
+
+      // También actualizar los comentarios fijados si es necesario
+      setPinnedComments((prevPinned) => prevPinned.filter((comment) => comment.id !== commentId))
     } catch (error) {
       console.error("Error deleting comment:", error)
       toast({
@@ -876,6 +891,11 @@ export function CommentsSection({ postId }: CommentsSectionProps) {
   // 4. Add functionality to remove reactions
 
   const renderComment = (comment: BlogComment, isReply = false, isPinned = false) => {
+    // Si el comentario está marcado como eliminado, no lo renderizamos
+    if (comment.isDeleted) {
+      return null
+    }
+
     const isEditing = editingId === comment.id
     const isAuthor = user && user.id === comment.userId
     const isAdmin = user && user.role === "admin"
