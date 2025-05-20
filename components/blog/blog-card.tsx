@@ -105,20 +105,20 @@ const reactionEmojis: Record<ReactionType, string> = {
   angry: "😡",
 }
 
-// Reaction color mapping
+// Reaction color mapping - tonos pastel suaves
 const reactionColors: Record<ReactionType, string> = {
-  hot: "bg-red-500",
-  crazy: "bg-purple-500",
-  somos: "bg-green-500",
-  excited: "bg-pink-500",
-  scream: "bg-indigo-500",
-  ono: "bg-pink-300",
-  like: "bg-blue-500",
-  love: "bg-red-500",
-  haha: "bg-yellow-500",
-  wow: "bg-orange-500",
-  sad: "bg-blue-400",
-  angry: "bg-red-600",
+  hot: "bg-red-200",
+  crazy: "bg-purple-200",
+  somos: "bg-green-200",
+  excited: "bg-pink-200",
+  scream: "bg-indigo-200",
+  ono: "bg-pink-100",
+  like: "bg-blue-200",
+  love: "bg-red-100",
+  haha: "bg-yellow-200",
+  wow: "bg-orange-200",
+  sad: "bg-blue-100",
+  angry: "bg-red-200",
 }
 
 // Reaction label mapping
@@ -478,30 +478,34 @@ export function BlogCard({ post }: BlogCardProps) {
         <div className="flex justify-between items-center text-sm text-gray-500 mb-3">
           <div className="flex items-center gap-1">
             {reactions.topReactions.length > 0 && (
-              <div className="flex -space-x-1">
+              <div className="flex -space-x-2">
                 {reactions.topReactions.map((reaction, index) => (
                   <span
                     key={index}
-                    className={`${reactionColors[reaction]} h-5 w-5 flex items-center justify-center text-xs text-white rounded-full`}
-                    title={reaction}
+                    className={`${reactionColors[reaction]} h-6 w-6 flex items-center justify-center text-base rounded-full shadow-sm border border-white transform transition-transform hover:scale-110 hover:-translate-y-1`}
+                    title={reactionLabels[reaction]}
                   >
                     {reactionEmojis[reaction]}
                   </span>
                 ))}
               </div>
             )}
-            {reactions.total > 0 && <span className="ml-2">{reactions.total}</span>}
+            {reactions.total > 0 && (
+              <span className="ml-2 font-medium bg-gray-50 px-2 py-0.5 rounded-full text-gray-600 border border-gray-100">
+                {reactions.total}
+              </span>
+            )}
           </div>
           <div className="flex gap-3">
-            <span className="flex items-center gap-1">
+            <span className="flex items-center gap-1 hover:text-gray-700 transition-colors">
               <MessageSquare size={14} />
               {formatCount(commentCount)}
             </span>
-            <span className="flex items-center gap-1">
+            <span className="flex items-center gap-1 hover:text-gray-700 transition-colors">
               <Share size={14} />
               {shareCount > 0 && ` ${formatCount(shareCount)}`}
             </span>
-            <span className="flex items-center gap-1">
+            <span className="flex items-center gap-1 hover:text-gray-700 transition-colors">
               <Eye size={14} />
               {formatCount(viewCount)}
             </span>

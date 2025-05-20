@@ -25,40 +25,49 @@ export function getAuthStatus() {
   }
 }
 
-// Obtener el usuario actual con promesa y verificación de token
+// Optimizar la función getCurrentUser para reducir operaciones innecesarias
 export function getCurrentUser() {
   return new Promise((resolve, reject) => {
+    // Primero verificar si ya tenemos el usuario en memoria
+    const currentAuth = getAuth()
+    if (currentAuth.currentUser) {
+      resolve(currentAuth.currentUser)
+
+      // Actualizar el timestamp en segundo plano sin bloquear la resolución
+      try {
+        const userRef = doc(db, "users", currentAuth.currentUser.uid)
+        const now = Timestamp.now()
+        updateDoc(userRef, {
+          lastLoginAt: now,
+          lastLogin: now,
+        }).catch((err) => console.error("Error al actualizar timestamp de acceso en segundo plano:", err))
+      } catch (updateError) {
+        console.error("Error al actualizar timestamp de acceso:", updateError)
+      }
+
+      return
+    }
+
+    // Si no tenemos el usuario en memoria, usar onAuthStateChanged
     const unsubscribe = onAuthStateChanged(
       auth,
       async (user) => {
         unsubscribe()
 
         if (user) {
+          // No verificar token aquí, solo resolver con el usuario
+          resolve(user)
+
+          // Actualizar el timestamp en segundo plano
           try {
-            // Verificar que el token sea válido
-            await user.getIdToken(true)
-
-            // Actualizar el timestamp de último acceso en Firestore
-            try {
-              const userRef = doc(db, "users", user.uid)
-              const now = Timestamp.now()
-
-              // Actualizar ambos campos de último acceso y mantener consistencia
-              await updateDoc(userRef, {
-                lastLoginAt: now,
-                lastLogin: now,
-              })
-            } catch (updateError) {
-              console.error("Error al actualizar timestamp de acceso:", updateError)
-              // Continuamos aunque falle la actualización del timestamp
-            }
-
-            resolve(user)
-          } catch (tokenError) {
-            console.error("Error al verificar token:", tokenError)
-            // Si hay error con el token, forzar logout
-            await signOut(auth)
-            resolve(null)
+            const userRef = doc(db, "users", user.uid)
+            const now = Timestamp.now()
+            updateDoc(userRef, {
+              lastLoginAt: now,
+              lastLogin: now,
+            }).catch((err) => console.error("Error al actualizar timestamp de acceso en segundo plano:", err))
+          } catch (updateError) {
+            console.error("Error al actualizar timestamp de acceso:", updateError)
           }
         } else {
           resolve(null)
@@ -84,41 +93,59 @@ export async function signOutUser() {
   }
 }
 
-// Obtener datos completos del usuario actual con reintentos
+// Optimizar getCurrentUserData para usar caché local
 export async function getCurrentUserData(retryCount = 3): Promise<User | null> {
   try {
-    // Eliminado console.log por seguridad
-
-    // Verificar el estado actual de autenticación
-    const authStatus = getAuthStatus()
-    // Eliminado console.log por seguridad
+    // Verificar si tenemos datos en caché local
+    if (typeof window !== "undefined") {
+      const cachedUserData = localStorage.getItem("userData")
+      if (cachedUserData) {
+        try {
+          const userData = JSON.parse(cachedUserData) as User
+          // Verificar si los datos en caché son recientes (menos de 5 minutos)
+          const cacheTime = localStorage.getItem("userDataTimestamp")
+          if (cacheTime && Date.now() - Number.parseInt(cacheTime) < 5 * 60 * 1000) {
+            // Usar datos en caché y actualizar en segundo plano
+            setTimeout(() => refreshUserDataInBackground(), 0)
+            return userData
+          }
+        } catch (e) {
+          console.error("Error al parsear datos de usuario en caché:", e)
+          localStorage.removeItem("userData")
+          localStorage.removeItem("userDataTimestamp")
+        }
+      }
+    }
 
     const user = await getCurrentUser()
     if (!user) {
-      // Eliminado console.log por seguridad
       return null
     }
 
-    // Eliminado console.log por seguridad
-
     let userData = await getUserById(user.uid)
-    // Eliminado console.log por seguridad
 
     // Implementar reintentos si no se encuentra el usuario
     let attempts = 0
     while (!userData && attempts < retryCount) {
-      // Eliminado console.log por seguridad
       await new Promise((resolve) => setTimeout(resolve, 500 * (attempts + 1))) // Esperar con backoff
       userData = await getUserById(user.uid)
       attempts++
     }
 
     if (!userData) {
-      // Eliminado console.log por seguridad
       return null
     }
 
-    // Eliminado console.log por seguridad
+    // Guardar en caché local
+    if (typeof window !== "undefined") {
+      try {
+        localStorage.setItem("userData", JSON.stringify(userData))
+        localStorage.setItem("userDataTimestamp", Date.now().toString())
+      } catch (e) {
+        console.error("Error al guardar datos de usuario en caché:", e)
+      }
+    }
+
     return userData
   } catch (error) {
     console.error("Error al obtener datos del usuario:", error)
@@ -126,13 +153,47 @@ export async function getCurrentUserData(retryCount = 3): Promise<User | null> {
   }
 }
 
-// Verificar si hay inconsistencias entre Firebase Auth y Firestore
+// Función para actualizar datos de usuario en segundo plano
+async function refreshUserDataInBackground() {
+  try {
+    const user = await getCurrentUser()
+    if (!user) return
+
+    const userData = await getUserById(user.uid)
+    if (!userData) return
+
+    // Actualizar caché local
+    if (typeof window !== "undefined") {
+      try {
+        localStorage.setItem("userData", JSON.stringify(userData))
+        localStorage.setItem("userDataTimestamp", Date.now().toString())
+      } catch (e) {
+        console.error("Error al actualizar caché de usuario en segundo plano:", e)
+      }
+    }
+  } catch (error) {
+    console.error("Error al actualizar datos de usuario en segundo plano:", error)
+  }
+}
+
+// Optimizar verifyAuthConsistency para ser más eficiente
 export async function verifyAuthConsistency(): Promise<{
   isAuthenticated: boolean
   hasFirestoreData: boolean
   isConsistent: boolean
 }> {
   try {
+    // Verificar si tenemos resultado en caché
+    if (typeof window !== "undefined") {
+      const cachedResult = localStorage.getItem("authConsistency")
+      const cacheTime = localStorage.getItem("authConsistencyTimestamp")
+
+      if (cachedResult && cacheTime && Date.now() - Number.parseInt(cacheTime) < 30 * 60 * 1000) {
+        // Usar resultado en caché si tiene menos de 30 minutos
+        return JSON.parse(cachedResult)
+      }
+    }
+
     const firebaseUser = await getCurrentUser()
     const isAuthenticated = !!firebaseUser
 
@@ -140,23 +201,24 @@ export async function verifyAuthConsistency(): Promise<{
     let isConsistent = true
 
     if (isAuthenticated && firebaseUser) {
-      // Verificar token antes de continuar
-      try {
-        await firebaseUser.getIdToken(true)
-      } catch (tokenError) {
-        console.error("Error al verificar token en consistencia:", tokenError)
-        return { isAuthenticated: false, hasFirestoreData: false, isConsistent: false }
-      }
-
       const userData = await getUserById(firebaseUser.uid)
       hasFirestoreData = !!userData
       isConsistent = isAuthenticated === hasFirestoreData
-
-      // Log seguro sin exponer datos sensibles
-      // Eliminado console.log por seguridad
     }
 
-    return { isAuthenticated, hasFirestoreData, isConsistent }
+    const result = { isAuthenticated, hasFirestoreData, isConsistent }
+
+    // Guardar resultado en caché
+    if (typeof window !== "undefined") {
+      try {
+        localStorage.setItem("authConsistency", JSON.stringify(result))
+        localStorage.setItem("authConsistencyTimestamp", Date.now().toString())
+      } catch (e) {
+        console.error("Error al guardar consistencia de autenticación en caché:", e)
+      }
+    }
+
+    return result
   } catch (error) {
     console.error("Error verificando consistencia de autenticación:", error)
     return { isAuthenticated: false, hasFirestoreData: false, isConsistent: false }

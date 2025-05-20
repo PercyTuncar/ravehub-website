@@ -80,6 +80,34 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       setLoading(true)
 
+      // Verificar si tenemos datos en caché recientes
+      if (typeof window !== "undefined") {
+        const cachedUserData = localStorage.getItem("userData")
+        const cacheTime = localStorage.getItem("userDataTimestamp")
+
+        if (cachedUserData && cacheTime && Date.now() - Number.parseInt(cacheTime) < 60 * 1000) {
+          try {
+            const userData = JSON.parse(cachedUserData) as User
+            setUser(userData)
+            setIsAdmin(userData.role === "admin")
+            setLoading(false)
+
+            // Actualizar en segundo plano
+            setTimeout(async () => {
+              const freshData = await getCurrentUserData()
+              if (freshData) {
+                setUser(freshData)
+                setIsAdmin(freshData.role === "admin")
+              }
+            }, 0)
+
+            return
+          } catch (e) {
+            console.error("Error al parsear datos de usuario en caché:", e)
+          }
+        }
+      }
+
       const userData = await getCurrentUserData()
 
       if (userData) {
@@ -93,13 +121,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setIsAdmin(false)
       }
 
-      // Verificar consistencia
-      const consistency = await verifyAuthConsistency()
-      setAuthStatus((prev) => ({
-        ...prev,
-        lastChecked: new Date(),
-        isConsistent: consistency.isConsistent,
-      }))
+      // Verificar consistencia en segundo plano
+      setTimeout(async () => {
+        try {
+          const consistency = await verifyAuthConsistency()
+          setAuthStatus((prev) => ({
+            ...prev,
+            lastChecked: new Date(),
+            isConsistent: consistency.isConsistent,
+          }))
+        } catch (err) {
+          console.error("Error verificando consistencia en segundo plano:", err)
+        }
+      }, 0)
     } catch (err) {
       console.error("Error al refrescar datos del usuario:", err)
     } finally {
@@ -109,18 +143,37 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   // Dentro de la función AuthProvider, en el useEffect para onAuthStateChanged
   useEffect(() => {
+    // Verificar si tenemos datos en caché local para mostrar inmediatamente
+    if (typeof window !== "undefined") {
+      const cachedUserData = localStorage.getItem("userData")
+      if (cachedUserData) {
+        try {
+          const userData = JSON.parse(cachedUserData) as User
+          setUser(userData)
+          setIsAdmin(userData.role === "admin")
+          setLoading(false) // Reducir el tiempo de carga inicial usando caché
+        } catch (e) {
+          console.error("Error al parsear datos de usuario en caché:", e)
+          localStorage.removeItem("userData")
+        }
+      }
+    }
+
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       try {
         if (firebaseUser) {
-          // Verificar si la cuenta está bloqueada
+          // Verificar si la cuenta está bloqueada (mantener esta verificación por seguridad)
           const lockStatus = await isAccountLocked(firebaseUser.uid)
           if (lockStatus.isLocked) {
             setError(`Cuenta bloqueada: ${lockStatus.reason}`)
             await signOut(auth)
+            setUser(null)
+            setIsAdmin(false)
+            setLoading(false)
             return
           }
 
-          // Registrar el último acceso en Firestore
+          // Registrar el último acceso en Firestore en segundo plano
           const userRef = doc(db, "users", firebaseUser.uid)
           const now = new Date()
           const firestoreTimestamp = Timestamp.now()
@@ -136,71 +189,119 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           // Crear un string descriptivo del dispositivo
           const deviceDescription = `${getDeviceType(navigator.userAgent)} - ${getBrowserInfo(navigator.userAgent)}`
 
-          // Actualizar ambos campos de timestamp y añadir información del dispositivo
-          await updateDoc(userRef, {
-            lastLoginAt: firestoreTimestamp,
-            lastLogin: firestoreTimestamp,
-            lastLoginDevice: deviceDescription,
-            lastLoginInfo: deviceInfo,
-          }).catch((err) => console.error("Error al actualizar timestamp de login:", err))
+          // Actualizar en segundo plano sin bloquear la UI
+          setTimeout(() => {
+            updateDoc(userRef, {
+              lastLoginAt: firestoreTimestamp,
+              lastLogin: firestoreTimestamp,
+              lastLoginDevice: deviceDescription,
+              lastLoginInfo: deviceInfo,
+            }).catch((err) => console.error("Error al actualizar timestamp de login:", err))
+          }, 0)
 
-          const userDoc = await getDoc(doc(db, "users", firebaseUser.uid))
+          // Verificar si ya tenemos datos del usuario en caché
+          let userData: User | null = null
+          if (typeof window !== "undefined") {
+            const cachedUserData = localStorage.getItem("userData")
+            const cacheTime = localStorage.getItem("userDataTimestamp")
 
-          if (userDoc.exists()) {
-            const userData = userDoc.data() as User
-
-            // Asegurarse de que el ID del usuario esté siempre presente
-            const validatedUser = validateUserObject({
-              ...userData,
-              id: firebaseUser.uid, // Forzar el ID correcto
-            })
-
-            setUser(validatedUser)
-            setIsAdmin(validatedUser.role === "admin")
-          } else {
-            // Crear un usuario básico con el ID correcto
-            const basicUser: User = {
-              id: firebaseUser.uid,
-              email: firebaseUser.email || "",
-              firstName: firebaseUser.displayName?.split(" ")[0] || "Usuario",
-              lastName: firebaseUser.displayName?.split(" ").slice(1).join(" ") || "",
-              phone: "",
-              phonePrefix: "",
-              country: "",
-              documentType: "",
-              documentNumber: "",
-              createdAt: new Date(),
-              updatedAt: new Date(),
-              isActive: true,
-              role: "user",
-              preferredCurrency: "USD",
+            if (cachedUserData && cacheTime && Date.now() - Number.parseInt(cacheTime) < 5 * 60 * 1000) {
+              try {
+                userData = JSON.parse(cachedUserData) as User
+              } catch (e) {
+                console.error("Error al parsear datos de usuario en caché:", e)
+              }
             }
-
-            // Guardar el usuario básico en Firestore
-            await setDoc(doc(db, "users", firebaseUser.uid), basicUser)
-
-            setUser(basicUser)
-            setIsAdmin(false)
           }
+
+          // Si no tenemos datos en caché o son antiguos, obtenerlos de Firestore
+          if (!userData) {
+            const userDoc = await getDoc(doc(db, "users", firebaseUser.uid))
+
+            if (userDoc.exists()) {
+              userData = userDoc.data() as User
+
+              // Asegurarse de que el ID del usuario esté siempre presente
+              userData = validateUserObject({
+                ...userData,
+                id: firebaseUser.uid, // Forzar el ID correcto
+              })
+
+              // Guardar en caché local
+              if (typeof window !== "undefined") {
+                try {
+                  localStorage.setItem("userData", JSON.stringify(userData))
+                  localStorage.setItem("userDataTimestamp", Date.now().toString())
+                } catch (e) {
+                  console.error("Error al guardar datos de usuario en caché:", e)
+                }
+              }
+            } else {
+              // Crear un usuario básico con el ID correcto
+              userData = {
+                id: firebaseUser.uid,
+                email: firebaseUser.email || "",
+                firstName: firebaseUser.displayName?.split(" ")[0] || "Usuario",
+                lastName: firebaseUser.displayName?.split(" ").slice(1).join(" ") || "",
+                phone: "",
+                phonePrefix: "",
+                country: "",
+                documentType: "",
+                documentNumber: "",
+                createdAt: new Date(),
+                updatedAt: new Date(),
+                isActive: true,
+                role: "user",
+                preferredCurrency: "USD",
+              }
+
+              // Guardar el usuario básico en Firestore en segundo plano
+              setTimeout(() => {
+                setDoc(doc(db, "users", firebaseUser.uid), userData).catch((err) =>
+                  console.error("Error al guardar usuario básico:", err),
+                )
+              }, 0)
+
+              // Guardar en caché local
+              if (typeof window !== "undefined") {
+                try {
+                  localStorage.setItem("userData", JSON.stringify(userData))
+                  localStorage.setItem("userDataTimestamp", Date.now().toString())
+                } catch (e) {
+                  console.error("Error al guardar datos de usuario en caché:", e)
+                }
+              }
+            }
+          }
+
+          setUser(userData)
+          setIsAdmin(userData.role === "admin")
         } else {
           setUser(null)
           setIsAdmin(false)
+
+          // Limpiar caché local cuando el usuario cierra sesión
+          if (typeof window !== "undefined") {
+            localStorage.removeItem("userData")
+            localStorage.removeItem("userDataTimestamp")
+          }
         }
 
-        // Verificar consistencia
-        const consistency = await verifyAuthConsistency()
-        setAuthStatus({
-          initialized: true,
-          lastChecked: new Date(),
-          isConsistent: consistency.isConsistent,
-        })
+        // Verificar consistencia en segundo plano sin bloquear la UI
+        setTimeout(async () => {
+          try {
+            const consistency = await verifyAuthConsistency()
+            setAuthStatus({
+              initialized: true,
+              lastChecked: new Date(),
+              isConsistent: consistency.isConsistent,
+            })
+          } catch (err) {
+            console.error("Error verificando consistencia en segundo plano:", err)
+          }
+        }, 0)
       } catch (err) {
         console.error("Error procesando cambio de estado de autenticación:", err)
-        setAuthStatus((prev) => ({
-          ...prev,
-          initialized: true,
-          lastChecked: new Date(),
-        }))
       } finally {
         setLoading(false)
       }
