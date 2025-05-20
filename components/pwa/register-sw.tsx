@@ -97,6 +97,38 @@ export function RegisterSW() {
     }
   }, [])
 
+  // Actualizar la función de suscripción para usar un endpoint seguro
+  const registerPushSubscription = async (reg: ServiceWorkerRegistration) => {
+    try {
+      if ("pushManager" in reg) {
+        // En lugar de usar la clave VAPID directamente, obtenemos la clave pública del servidor
+        const response = await fetch("/api/push/vapid-key")
+
+        if (!response.ok) {
+          throw new Error("No se pudo obtener la clave pública VAPID")
+        }
+
+        const { publicKey } = await response.json()
+
+        const subscription = await reg.pushManager.subscribe({
+          userVisibleOnly: true,
+          applicationServerKey: publicKey,
+        })
+
+        console.log("Suscripción push creada:", subscription)
+
+        // Enviar la suscripción al servidor para almacenarla
+        await fetch("/api/push/register", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ subscription }),
+        })
+      }
+    } catch (error) {
+      console.error("Error al suscribirse a notificaciones push:", error)
+    }
+  }
+
   // Solicitar permiso para notificaciones
   const requestNotificationPermission = async () => {
     try {
@@ -105,24 +137,8 @@ export function RegisterSW() {
         console.log("Permiso de notificaciones concedido")
 
         // Registrar para notificaciones push si está disponible
-        if (registration && "pushManager" in registration) {
-          try {
-            const subscription = await registration.pushManager.subscribe({
-              userVisibleOnly: true,
-              applicationServerKey: urlBase64ToUint8Array(process.env.NEXT_PUBLIC_FIREBASE_VAPID_KEY || ""),
-            })
-
-            console.log("Suscripción push creada:", subscription)
-
-            // Aquí podrías enviar la suscripción al servidor
-            // await fetch('/api/push/register', {
-            //   method: 'POST',
-            //   headers: { 'Content-Type': 'application/json' },
-            //   body: JSON.stringify({ subscription })
-            // })
-          } catch (error) {
-            console.error("Error al suscribirse a notificaciones push:", error)
-          }
+        if (registration) {
+          await registerPushSubscription(registration)
         }
       }
     } catch (error) {
@@ -150,20 +166,6 @@ export function RegisterSW() {
       // Enviar mensaje al SW en espera para que tome el control
       registration.waiting.postMessage({ action: "skipWaiting" })
     }
-  }
-
-  // Convertir VAPID key de base64 a Uint8Array
-  function urlBase64ToUint8Array(base64String: string) {
-    const padding = "=".repeat((4 - (base64String.length % 4)) % 4)
-    const base64 = (base64String + padding).replace(/-/g, "+").replace(/_/g, "/")
-
-    const rawData = window.atob(base64)
-    const outputArray = new Uint8Array(rawData.length)
-
-    for (let i = 0; i < rawData.length; ++i) {
-      outputArray[i] = rawData.charCodeAt(i)
-    }
-    return outputArray
   }
 
   return null
