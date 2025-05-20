@@ -11,8 +11,8 @@ export const viewport = {
 
 export default function VotePage() {
   return (
-    <div className="container max-w-4xl py-10">
-      <div className="mb-8 text-center">
+    <div className="container py-10 px-4 mx-auto">
+      <div className="max-w-4xl mx-auto mb-8 text-center">
         <h1 className="text-3xl font-bold mb-2">Vota por tus DJs favoritos</h1>
         <p className="text-muted-foreground">
           Selecciona hasta 5 DJs para el ranking anual. Tu voto ayudará a determinar quiénes son los mejores DJs de cada
@@ -20,7 +20,9 @@ export default function VotePage() {
         </p>
       </div>
 
-      <VoteDJForm />
+      <div className="max-w-4xl mx-auto">
+        <VoteDJForm />
+      </div>
     </div>
   )
 }

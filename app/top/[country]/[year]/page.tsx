@@ -7,13 +7,15 @@ export const metadata = {
 
 export default function TopDJsPage() {
   return (
-    <div className="container max-w-4xl py-10">
-      <div className="mb-8 text-center">
+    <div className="container py-10 px-4 mx-auto">
+      <div className="max-w-4xl mx-auto mb-8 text-center">
         <h1 className="text-3xl font-bold mb-2">Ranking de DJs</h1>
         <p className="text-muted-foreground">Descubre los mejores DJs de cada país según los votos de la comunidad.</p>
       </div>
 
-      <DJRankingDisplay />
+      <div className="max-w-4xl mx-auto">
+        <DJRankingDisplay />
+      </div>
     </div>
   )
 }

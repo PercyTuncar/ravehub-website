@@ -154,7 +154,7 @@ export function VoteDJForm() {
 
   if (!votingPeriod || !votingPeriod.votingOpen) {
     return (
-      <Card>
+      <Card className="w-full">
         <CardHeader>
           <CardTitle>Votaciones cerradas</CardTitle>
           <CardDescription>
@@ -196,8 +196,8 @@ export function VoteDJForm() {
   }
 
   return (
-    <div className="space-y-6">
-      <Card>
+    <div className="space-y-6 w-full">
+      <Card className="w-full">
         <CardHeader>
           <CardTitle>Vota por tus DJs favoritos</CardTitle>
           <CardDescription>
@@ -261,7 +261,7 @@ export function VoteDJForm() {
             {filteredDjs.map((dj) => (
               <Card
                 key={dj.id}
-                className={`cursor-pointer transition-all ${
+                className={`w-full cursor-pointer transition-all ${
                   selectedDjs.includes(dj.id) ? "border-green-500 shadow-md" : ""
                 }`}
                 onClick={() => handleToggleDJ(dj.id)}
@@ -289,7 +289,7 @@ export function VoteDJForm() {
           </div>
 
           {filteredDjs.length === 0 && (
-            <Card>
+            <Card className="w-full">
               <CardContent className="p-8 text-center">
                 <p>No se encontraron DJs para este país.</p>
               </CardContent>

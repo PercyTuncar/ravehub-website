@@ -67,8 +67,8 @@ export function DJRankingDisplay() {
   }
 
   return (
-    <div className="space-y-6">
-      <Card>
+    <div className="space-y-6 w-full">
+      <Card className="w-full">
         <CardHeader>
           <CardTitle>
             Top DJs {countries.find((c) => c.value === country)?.label} {year}
@@ -119,7 +119,7 @@ export function DJRankingDisplay() {
           {ranking && ranking.djs.length > 0 ? (
             <div className="space-y-4">
               {ranking.djs.map((dj) => (
-                <Card key={dj.djId} className="overflow-hidden">
+                <Card key={dj.djId} className="overflow-hidden w-full">
                   <div className="flex items-center p-4">
                     <div
                       className={`flex items-center justify-center h-10 w-10 rounded-full ${getPositionBadgeColor(dj.position)} text-white font-bold mr-4`}
@@ -154,7 +154,7 @@ export function DJRankingDisplay() {
               ))}
             </div>
           ) : (
-            <Card>
+            <Card className="w-full">
               <CardContent className="p-8 text-center">
                 {votingPeriod ? (
                   votingPeriod.resultsPublished ? (

@@ -1,6 +1,7 @@
+import { CardFooter } from "@/components/ui/card"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Trophy, ThumbsUp, Vote } from "lucide-react"
 
 export const metadata = {
@@ -14,8 +15,8 @@ export const viewport = {
 
 export default function DJRankingPage() {
   return (
-    <div className="container max-w-5xl py-10">
-      <div className="mb-12 text-center">
+    <div className="container py-10 px-4 mx-auto">
+      <div className="max-w-5xl mx-auto mb-12 text-center">
         <h1 className="text-4xl font-bold mb-4">DJ Ranking</h1>
         <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
           Descubre, sugiere y vota por los mejores DJs de cada país. Ayúdanos a crear el ranking definitivo de la escena
@@ -23,7 +24,7 @@ export default function DJRankingPage() {
         </p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
+      <div className="max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
         <Card className="flex flex-col">
           <CardHeader>
             <CardTitle className="flex items-center">
@@ -85,7 +86,7 @@ export default function DJRankingPage() {
         </Card>
       </div>
 
-      <div className="bg-gray-100 rounded-lg p-8 text-center">
+      <div className="max-w-5xl mx-auto bg-gray-100 rounded-lg p-8 text-center">
         <h2 className="text-2xl font-bold mb-4">¿Cómo funciona?</h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-4xl mx-auto">
           <div className="flex flex-col items-center">
