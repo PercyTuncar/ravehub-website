@@ -1,9 +1,5 @@
 import { NextResponse } from "next/server"
 import { getFirestore } from "firebase-admin/firestore"
-import { initAdmin } from "@/lib/firebase/firebase-admin"
-
-// Inicializar Firebase Admin
-initAdmin()
 
 export async function POST(request: Request) {
   try {
