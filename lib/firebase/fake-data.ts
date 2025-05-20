@@ -13,7 +13,7 @@ import {
   getDocs,
 } from "firebase/firestore"
 import { db } from "@/lib/firebase/config"
-import { getRandomUser } from "@/lib/fake-data/users"
+import { getRandomFakeUser as getRandomUser } from "@/lib/fake-data/users"
 import { getRandomBlogComment, getRandomBlogRating, getRandomProductReview } from "@/lib/fake-data/comments"
 import { REACTION_TYPES } from "@/lib/fake-data/constants"
 // Importar las constantes centralizadas
