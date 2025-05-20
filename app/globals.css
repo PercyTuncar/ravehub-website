@@ -73,120 +73,138 @@
     -ms-overflow-style: none; /* IE and Edge */
     scrollbar-width: none; /* Firefox */
   }
-}
 
-/* Optimized animations - using opacity, transform property with GPU acceleration */
-@keyframes fade-in {
-  from {
+  /* Fade in animations with different directions */
+  .fade-in {
     opacity: 0;
-    transform: translateY(10px);
+    animation: fadeIn 0.5s ease-out forwards;
+    will-change: opacity;
   }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
 
-@keyframes fade-in-left {
-  from {
+  .fade-in-up {
+    opacity: 0;
+    transform: translateY(20px);
+    animation: fadeInUp 0.5s ease-out forwards;
+    will-change: opacity, transform;
+  }
+
+  .fade-in-left {
     opacity: 0;
     transform: translateX(-20px);
+    animation: fadeInLeft 0.5s ease-out forwards;
+    will-change: opacity, transform;
   }
-  to {
-    opacity: 1;
-    transform: translateX(0);
-  }
-}
 
-@keyframes fade-in-right {
-  from {
+  .fade-in-right {
     opacity: 0;
     transform: translateX(20px);
+    animation: fadeInRight 0.5s ease-out forwards;
+    will-change: opacity, transform;
   }
-  to {
-    opacity: 1;
-    transform: translateX(0);
+
+  /* Delay classes */
+  .delay-100 {
+    animation-delay: 100ms;
+  }
+
+  .delay-200 {
+    animation-delay: 200ms;
+  }
+
+  .delay-300 {
+    animation-delay: 300ms;
+  }
+
+  .delay-400 {
+    animation-delay: 400ms;
+  }
+
+  .delay-500 {
+    animation-delay: 500ms;
+  }
+
+  /* Staggered animations for lists */
+  .fade-in-stagger > * {
+    opacity: 0;
+    transform: translateY(10px);
+    animation: fadeIn 0.5s ease-out forwards;
+    animation-delay: calc(var(--index, 0) * 100ms);
+  }
+
+  .fade-in-stagger-item {
+    opacity: 0;
+    transform: translateY(10px);
+    animation: fadeInUp 0.5s ease-out forwards;
+    will-change: opacity, transform;
+  }
+
+  /* Simple bounce animation for indicators */
+  .simple-bounce {
+    animation: simpleBounce 1.5s infinite;
+    will-change: transform;
+  }
+
+  /* Keyframes */
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+
+  @keyframes fadeInUp {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes fadeInLeft {
+    from {
+      opacity: 0;
+      transform: translateX(-20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateX(0);
+    }
+  }
+
+  @keyframes fadeInRight {
+    from {
+      opacity: 0;
+      transform: translateX(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateX(0);
+    }
+  }
+
+  @keyframes simpleBounce {
+    0%,
+    100% {
+      transform: translateY(0);
+    }
+    50% {
+      transform: translateY(5px);
+    }
+  }
+
+  /* Longer duration for image hover effects */
+  .duration-3000 {
+    transition-duration: 3000ms;
   }
 }
 
-@keyframes simple-bounce {
-  0%,
-  100% {
-    transform: translateY(0);
-  }
-  50% {
-    transform: translateY(5px);
-  }
-}
-
-.fade-in {
-  opacity: 0;
-  animation: fade-in 0.5s ease-out forwards;
-  will-change: opacity, transform;
-}
-
-.fade-in-up {
-  opacity: 0;
-  animation: fade-in 0.6s ease-out forwards;
-  will-change: opacity, transform;
-}
-
-.fade-in-left {
-  opacity: 0;
-  animation: fade-in-left 0.6s ease-out forwards;
-  will-change: opacity, transform;
-}
-
-.fade-in-right {
-  opacity: 0;
-  animation: fade-in-right 0.6s ease-out forwards;
-  will-change: opacity, transform;
-}
-
-.simple-bounce {
-  animation: simple-bounce 1.5s infinite;
-  will-change: transform;
-}
-
-.delay-100 {
-  animation-delay: 100ms;
-}
-
-.delay-200 {
-  animation-delay: 200ms;
-}
-
-.delay-300 {
-  animation-delay: 300ms;
-}
-
-.delay-400 {
-  animation-delay: 400ms;
-}
-
-.delay-500 {
-  animation-delay: 500ms;
-}
-
-.duration-3000 {
-  transition-duration: 3000ms;
-}
-
-/* Staggered animations for multiple items */
-.fade-in-stagger > * {
-  opacity: 0;
-  transform: translateY(10px);
-  animation: fade-in 0.5s ease-out forwards;
-  animation-delay: calc(var(--index, 0) * 100ms);
-}
-
-.fade-in-stagger-item {
-  opacity: 0;
-  animation: fade-in 0.5s ease-out forwards;
-}
-
-/* Reduce motion preference */
-@media (prefers-reduced-motion) {
+/* Respect user preferences for reduced motion */
+@media (prefers-reduced-motion: reduce) {
   .fade-in,
   .fade-in-up,
   .fade-in-left,
