@@ -113,12 +113,24 @@ export default function Navbar() {
     }
   }, [currency])
 
+  // Modificar la sección de navLinks para reorganizar los enlaces principales
+  // y crear un nuevo array para los enlaces del menú "Más"
+
+  // Reemplazar la definición de navLinks con:
   const navLinks = [
     { name: "Eventos", href: "/eventos" },
     { name: "Tienda", href: "/tienda" },
     { name: "Blog", href: "/blog" },
-    { name: "Galeria", href: "/galeria" },
     { name: "Contacto", href: "/contacto" },
+  ]
+
+  // Añadir después de navLinks:
+  const moreMenuLinks = [
+    { name: "Galería", href: "/galeria" },
+    { name: "Votar", href: "/votar" },
+    { name: "DJ Ranking", href: "/dj-ranking" },
+    { name: "Sugerir DJ", href: "/sugerir-dj" },
+    { name: "Equipo", href: "/team" },
   ]
 
   const userMenuLinks = [
@@ -211,6 +223,15 @@ export default function Navbar() {
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-56">
+              {moreMenuLinks.map((link) => (
+                <DropdownMenuItem key={link.href} asChild>
+                  <Link href={link.href} className="flex items-center">
+                    <span>{link.name}</span>
+                    {pathname === link.href && <div className="ml-auto w-1.5 h-1.5 rounded-full bg-primary" />}
+                  </Link>
+                </DropdownMenuItem>
+              ))}
+              <DropdownMenuSeparator />
               <DropdownMenuItem asChild>
                 <Link href="/perfil/entradas" className="flex items-center">
                   <Ticket className="mr-2 h-4 w-4" />
@@ -235,7 +256,6 @@ export default function Navbar() {
                   <span>Ajustes</span>
                 </Link>
               </DropdownMenuItem>
-              <DropdownMenuSeparator />
               <DropdownMenuSeparator />
               <DropdownMenuItem onClick={logout} className="text-red-500 focus:text-red-500">
                 <LogOut className="mr-2 h-4 w-4" />
@@ -325,6 +345,35 @@ export default function Navbar() {
                       )}
                     </motion.div>
                   ))}
+
+                  {/* Menú desplegable "Más" */}
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        className="text-sm font-medium transition-colors hover:text-primary text-gray-700 p-0"
+                      >
+                        Más <ChevronDown className="h-4 w-4 ml-1" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="w-48 rounded-xl p-1 shadow-lg border border-gray-200">
+                      {moreMenuLinks.map((link) => (
+                        <motion.div key={link.href} whileHover={{ backgroundColor: "rgba(0,0,0,0.03)" }}>
+                          <DropdownMenuItem asChild className="rounded-lg">
+                            <Link
+                              href={link.href}
+                              className={`flex items-center text-gray-700 ${pathname === link.href ? "text-primary" : ""}`}
+                            >
+                              <span>{link.name}</span>
+                              {pathname === link.href && (
+                                <div className="ml-auto w-1.5 h-1.5 rounded-full bg-primary" />
+                              )}
+                            </Link>
+                          </DropdownMenuItem>
+                        </motion.div>
+                      ))}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                 </nav>
               </div>
 
@@ -497,6 +546,25 @@ export default function Navbar() {
                       <div className="grid gap-6 py-6">
                         <div className="grid gap-3">
                           {navLinks.map((link) => (
+                            <Link
+                              key={link.href}
+                              href={link.href}
+                              className={`text-sm font-medium transition-colors hover:text-primary flex items-center p-2 rounded-lg ${
+                                pathname === link.href ? "text-primary bg-gray-50" : "text-gray-700"
+                              }`}
+                            >
+                              {link.name}
+                              {pathname === link.href && (
+                                <div className="ml-auto w-1.5 h-1.5 rounded-full bg-primary" />
+                              )}
+                            </Link>
+                          ))}
+
+                          <div className="pt-2 pb-1">
+                            <p className="text-xs font-medium text-gray-500 px-2">Más opciones</p>
+                          </div>
+
+                          {moreMenuLinks.map((link) => (
                             <Link
                               key={link.href}
                               href={link.href}
