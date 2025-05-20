@@ -114,8 +114,9 @@ export function TicketDetailsModal({ isOpen, onClose, transaction }: TicketDetai
       initialNomineeData[ticket.id] = {
         nomineeFirstName: ticket.nomineeFirstName || "",
         nomineeLastName: ticket.nomineeLastName || "",
-        nomineeDocType: ticket.nomineeDocType || "dni",
+        nomineeDocType: ticket.nomineeDocType || "",
         nomineeDocNumber: ticket.nomineeDocNumber || "",
+        country: localTransaction.user?.country || "PE",
         searchResults: [],
       }
       initialEditingState[ticket.id] = false
@@ -1044,6 +1045,31 @@ export function TicketDetailsModal({ isOpen, onClose, transaction }: TicketDetai
                               placeholder="Apellido"
                             />
                           </div>
+                          {(!localTransaction.user?.country || localTransaction.user?.country === "WORLD") && (
+                            <div className="space-y-1 col-span-2">
+                              <Label htmlFor={`country-${ticket.id}`}>País</Label>
+                              <Select
+                                value={nomineeDataMap[ticket.id]?.country || "PE"}
+                                onValueChange={(value) => {
+                                  handleNomineeChange("country", value)
+                                  // Resetear el tipo de documento al cambiar de país
+                                  handleNomineeChange("nomineeDocType", "")
+                                }}
+                              >
+                                <SelectTrigger id={`country-${ticket.id}`}>
+                                  <SelectValue placeholder="Seleccionar país" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="PE">Perú 🇵🇪</SelectItem>
+                                  <SelectItem value="CL">Chile 🇨🇱</SelectItem>
+                                  <SelectItem value="AR">Argentina 🇦🇷</SelectItem>
+                                  <SelectItem value="CO">Colombia 🇨🇴</SelectItem>
+                                  <SelectItem value="MX">México 🇲🇽</SelectItem>
+                                  <SelectItem value="OTHER">Otro país</SelectItem>
+                                </SelectContent>
+                              </Select>
+                            </div>
+                          )}
                           <div className="space-y-1">
                             <Label htmlFor={`docType-${ticket.id}`}>Tipo de documento</Label>
                             <Select
@@ -1054,9 +1080,63 @@ export function TicketDetailsModal({ isOpen, onClose, transaction }: TicketDetai
                                 <SelectValue placeholder="Tipo de documento" />
                               </SelectTrigger>
                               <SelectContent>
-                                <SelectItem value="dni">DNI</SelectItem>
-                                <SelectItem value="passport">Pasaporte</SelectItem>
-                                <SelectItem value="foreignId">Carnet de Extranjería</SelectItem>
+                                {/* Usar el país del formulario si no hay país en los datos del usuario */}
+                                {(() => {
+                                  const userCountry =
+                                    localTransaction.user?.country && localTransaction.user?.country !== "WORLD"
+                                      ? localTransaction.user?.country
+                                      : nomineeDataMap[ticket.id]?.country || "OTHER"
+
+                                  switch (userCountry) {
+                                    case "PE":
+                                      return (
+                                        <>
+                                          <SelectItem value="dni">DNI</SelectItem>
+                                          <SelectItem value="ce">Carnet de Extranjería</SelectItem>
+                                          <SelectItem value="passport">Pasaporte</SelectItem>
+                                        </>
+                                      )
+                                    case "CL":
+                                      return (
+                                        <>
+                                          <SelectItem value="rut">RUT</SelectItem>
+                                          <SelectItem value="passport">Pasaporte</SelectItem>
+                                        </>
+                                      )
+                                    case "AR":
+                                      return (
+                                        <>
+                                          <SelectItem value="dni">DNI</SelectItem>
+                                          <SelectItem value="passport">Pasaporte</SelectItem>
+                                        </>
+                                      )
+                                    case "CO":
+                                      return (
+                                        <>
+                                          <SelectItem value="cc">Cédula de Ciudadanía</SelectItem>
+                                          <SelectItem value="ce">Cédula de Extranjería</SelectItem>
+                                          <SelectItem value="passport">Pasaporte</SelectItem>
+                                        </>
+                                      )
+                                    case "MX":
+                                      return (
+                                        <>
+                                          <SelectItem value="ine">INE/IFE</SelectItem>
+                                          <SelectItem value="curp">CURP</SelectItem>
+                                          <SelectItem value="passport">Pasaporte</SelectItem>
+                                        </>
+                                      )
+                                    default:
+                                      return (
+                                        <>
+                                          <SelectItem value="nationalId">Documento Nacional</SelectItem>
+                                          <SelectItem value="passport">Pasaporte</SelectItem>
+                                          <SelectItem value="foreignId">ID de Extranjero</SelectItem>
+                                          <SelectItem value="other">Otro</SelectItem>
+                                        </>
+                                      )
+                                  }
+                                })()}
                               </SelectContent>
                             </Select>
                           </div>

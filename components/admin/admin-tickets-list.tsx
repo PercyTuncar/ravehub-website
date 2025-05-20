@@ -18,7 +18,6 @@ import type { TicketTransaction } from "@/types"
 import { toast } from "@/components/ui/use-toast"
 import { TicketDetailsModal } from "@/components/admin/ticket-details-modal"
 import { ApproveTicketModal } from "@/components/admin/approve-ticket-modal"
-import { formatDate } from "@/lib/utils"
 
 // Añadir el import para el modal de asignación de tickets
 import { AssignTicketModal } from "@/components/admin/assign-ticket-modal"
@@ -408,7 +407,30 @@ export function AdminTicketsList() {
                       {transaction.user?.firstName} {transaction.user?.lastName}
                     </TableCell>
                     <TableCell>
-                      {transaction.createdAt ? formatDate(transaction.createdAt) : "Fecha no disponible"}
+                      {(() => {
+                        try {
+                          // Verificar si createdAt existe
+                          if (!transaction.createdAt) return "Fecha no disponible"
+
+                          // Si es un timestamp de Firestore, convertirlo a Date
+                          const date = transaction.createdAt.toDate
+                            ? transaction.createdAt.toDate()
+                            : new Date(transaction.createdAt)
+
+                          // Verificar si la fecha es válida
+                          if (isNaN(date.getTime())) return "Fecha no disponible"
+
+                          // Formatear la fecha usando el formato español
+                          return new Intl.DateTimeFormat("es-ES", {
+                            day: "numeric",
+                            month: "long",
+                            year: "numeric",
+                          }).format(date)
+                        } catch (error) {
+                          console.error("Error al formatear fecha:", error, transaction.createdAt)
+                          return "Fecha no disponible"
+                        }
+                      })()}
                     </TableCell>
                     <TableCell>{transaction.paymentType === "full" ? "Pago completo" : "Cuotas"}</TableCell>
                     <TableCell>${transaction.totalAmount.toFixed(2)}</TableCell>

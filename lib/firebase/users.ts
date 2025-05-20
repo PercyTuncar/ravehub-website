@@ -19,6 +19,9 @@ export interface UserData {
   createdAt?: any
   updatedAt?: any
   photoURL?: string // Para la foto de perfil
+  lastLoginAt?: any // Timestamp del último inicio de sesión
+  lastLogin?: any // Campo alternativo para último login
+  lastLoginDevice?: string // Información del dispositivo de último acceso
   // Nuevos campos para preferencias
   emailNotifications?: boolean
   eventReminders?: boolean
@@ -156,6 +159,23 @@ export async function updateUserProfile(uid: string, data: Partial<UserData>): P
         validatedData[field] = data[field]
       }
     })
+
+    // Permitir la actualización de campos de login
+    if (data.lastLoginAt !== undefined) {
+      validatedData.lastLoginAt = data.lastLoginAt
+      // Mantener sincronizados ambos campos de timestamp
+      validatedData.lastLogin = data.lastLoginAt
+    }
+
+    if (data.lastLogin !== undefined) {
+      validatedData.lastLogin = data.lastLogin
+      // Mantener sincronizados ambos campos de timestamp
+      validatedData.lastLoginAt = data.lastLogin
+    }
+
+    if (data.lastLoginDevice !== undefined) {
+      validatedData.lastLoginDevice = data.lastLoginDevice
+    }
 
     // Añadir timestamp de actualización
     validatedData.updatedAt = new Date()

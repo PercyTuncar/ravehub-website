@@ -10,6 +10,8 @@ import {
   EmailAuthProvider,
 } from "firebase/auth"
 import { getUserByEmail } from "./users"
+import { db } from "./firebase"
+import { doc, updateDoc, Timestamp } from "firebase/firestore"
 
 // Función para obtener el estado actual de autenticación
 export function getAuthStatus() {
@@ -35,6 +37,22 @@ export function getCurrentUser() {
           try {
             // Verificar que el token sea válido
             await user.getIdToken(true)
+
+            // Actualizar el timestamp de último acceso en Firestore
+            try {
+              const userRef = doc(db, "users", user.uid)
+              const now = Timestamp.now()
+
+              // Actualizar ambos campos de último acceso y mantener consistencia
+              await updateDoc(userRef, {
+                lastLoginAt: now,
+                lastLogin: now,
+              })
+            } catch (updateError) {
+              console.error("Error al actualizar timestamp de acceso:", updateError)
+              // Continuamos aunque falle la actualización del timestamp
+            }
+
             resolve(user)
           } catch (tokenError) {
             console.error("Error al verificar token:", tokenError)

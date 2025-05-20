@@ -62,19 +62,87 @@ export function AdminUsersList() {
   const [currentPage, setCurrentPage] = useState(1)
   const [itemsPerPage] = useState(10)
 
+  // Reemplazar la función formatDate con una versión mejorada
+  const formatDate = (timestamp: any) => {
+    if (!timestamp) return "N/A"
+
+    try {
+      // Manejar diferentes tipos de timestamp de Firestore
+      let date
+
+      // Si es un objeto Timestamp de Firestore con método toDate()
+      if (timestamp && typeof timestamp.toDate === "function") {
+        date = timestamp.toDate()
+      }
+      // Si es un objeto Date
+      else if (timestamp instanceof Date) {
+        date = timestamp
+      }
+      // Si es un string ISO o timestamp en milisegundos
+      else if (typeof timestamp === "string" || typeof timestamp === "number") {
+        date = new Date(timestamp)
+      }
+      // Si es un objeto con seconds y nanoseconds (formato raw de Firestore)
+      else if (timestamp && timestamp.seconds !== undefined) {
+        date = new Date(timestamp.seconds * 1000)
+      } else {
+        console.error("Formato de timestamp no reconocido:", timestamp)
+        return "Formato inválido"
+      }
+
+      // Verificar si la fecha es válida
+      if (isNaN(date.getTime())) {
+        console.error("Fecha inválida:", timestamp)
+        return "Fecha inválida"
+      }
+
+      // Formatear la fecha con Intl.DateTimeFormat para mayor consistencia
+      return new Intl.DateTimeFormat("es-ES", {
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+        timeZone: "America/Santiago", // Usar zona horaria de Chile por defecto
+      }).format(date)
+    } catch (error) {
+      console.error("Error al formatear fecha:", error, "Timestamp original:", timestamp)
+      return "Error en formato"
+    }
+  }
+
   useEffect(() => {
     const fetchUsers = async () => {
       try {
         setLoading(true)
+        // Asegurarse de que estamos obteniendo todos los campos necesarios
         const usersQuery = query(collection(db, "users"), orderBy("createdAt", "desc"))
         const querySnapshot = await getDocs(usersQuery)
 
-        const usersData = querySnapshot.docs.map((doc) => ({
-          id: doc.id,
-          ...doc.data(),
-        }))
+        const usersData = querySnapshot.docs.map((doc) => {
+          const data = doc.data()
+
+          // Log para depuración - solo del primer usuario
+          if (querySnapshot.docs.indexOf(doc) === 0) {
+            console.log("Datos de usuario (muestra):", {
+              id: doc.id,
+              lastLoginAt: data.lastLoginAt,
+              lastLogin: data.lastLogin,
+              lastLoginDevice: data.lastLoginDevice,
+            })
+          }
+
+          return {
+            id: doc.id,
+            ...data,
+            // Usar cualquiera de los dos campos de timestamp que esté disponible
+            lastLoginAt: data.lastLoginAt || data.lastLogin || null,
+            lastLogin: data.lastLogin || data.lastLoginAt || null,
+          }
+        })
 
         setUsers(usersData)
+        console.log("Users data fetched:", usersData[0]) // Log para depuración
       } catch (error) {
         console.error("Error fetching users:", error)
         toast({
@@ -123,18 +191,6 @@ export function AdminUsersList() {
   const indexOfFirstItem = indexOfLastItem - itemsPerPage
   const currentUsers = filteredUsers.slice(indexOfFirstItem, indexOfLastItem)
   const totalPages = Math.ceil(filteredUsers.length / itemsPerPage)
-
-  // Format timestamp to readable date
-  const formatDate = (timestamp: any) => {
-    if (!timestamp || !timestamp.toDate) return "N/A"
-    return new Date(timestamp.toDate()).toLocaleDateString("es-ES", {
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-    })
-  }
 
   const handleLockAccount = (userId: string) => {
     setUserToLock(userId)
@@ -434,7 +490,19 @@ export function AdminUsersList() {
                           <Badge variant="destructive">Inactivo</Badge>
                         )}
                       </TableCell>
-                      <TableCell>{user.lastLoginAt ? formatDate(user.lastLoginAt) : "Nunca"}</TableCell>
+                      {/* Modificar la celda de último acceso para mostrar información más detallada */}
+                      <TableCell>
+                        {user.lastLoginAt || user.lastLogin ? (
+                          <div className="flex flex-col">
+                            <span className="font-medium">{formatDate(user.lastLoginAt || user.lastLogin)}</span>
+                            {user.lastLoginDevice && (
+                              <span className="text-xs text-muted-foreground mt-1">{user.lastLoginDevice}</span>
+                            )}
+                          </div>
+                        ) : (
+                          <span className="text-muted-foreground">Nunca ha iniciado sesión</span>
+                        )}
+                      </TableCell>
                       <TableCell className="text-right">
                         <div className="flex justify-end gap-2">
                           <Button variant="outline" size="icon" onClick={() => handleViewUser(user.id)}>

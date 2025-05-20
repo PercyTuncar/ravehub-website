@@ -2,7 +2,7 @@
 
 import { createContext, useContext, useState, useEffect, useCallback, type ReactNode } from "react"
 import { createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "firebase/auth"
-import { doc, getDoc, setDoc } from "firebase/firestore"
+import { doc, getDoc, setDoc, updateDoc, Timestamp } from "firebase/firestore"
 import { auth, db } from "@/lib/firebase/config"
 import { verifyAuthConsistency, getCurrentUserData } from "@/lib/firebase/auth"
 import type { User } from "@/types"
@@ -107,7 +107,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, [])
 
-  // Inicializar el listener de autenticación
+  // Dentro de la función AuthProvider, en el useEffect para onAuthStateChanged
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       try {
@@ -119,6 +119,30 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             await signOut(auth)
             return
           }
+
+          // Registrar el último acceso en Firestore
+          const userRef = doc(db, "users", firebaseUser.uid)
+          const now = new Date()
+          const firestoreTimestamp = Timestamp.now()
+
+          // Detectar información del dispositivo
+          const deviceInfo = {
+            userAgent: navigator.userAgent,
+            platform: navigator.platform,
+            language: navigator.language,
+            screenSize: `${window.screen.width}x${window.screen.height}`,
+          }
+
+          // Crear un string descriptivo del dispositivo
+          const deviceDescription = `${getDeviceType(navigator.userAgent)} - ${getBrowserInfo(navigator.userAgent)}`
+
+          // Actualizar ambos campos de timestamp y añadir información del dispositivo
+          await updateDoc(userRef, {
+            lastLoginAt: firestoreTimestamp,
+            lastLogin: firestoreTimestamp,
+            lastLoginDevice: deviceDescription,
+            lastLoginInfo: deviceInfo,
+          }).catch((err) => console.error("Error al actualizar timestamp de login:", err))
 
           const userDoc = await getDoc(doc(db, "users", firebaseUser.uid))
 
@@ -465,4 +489,35 @@ export function useAuth() {
     throw new Error("useAuth must be used within an AuthProvider")
   }
   return context
+}
+
+// Agregar estas funciones auxiliares al final del archivo, antes del cierre del componente
+// Función para detectar tipo de dispositivo
+function getDeviceType(userAgent) {
+  if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(userAgent)) {
+    return "Móvil"
+  } else if (/iPad|Tablet|PlayBook|Silk|Android(?!.*Mobile)/i.test(userAgent)) {
+    return "Tablet"
+  }
+  return "Desktop"
+}
+
+// Función para obtener información del navegador
+function getBrowserInfo(userAgent) {
+  const browsers = [
+    { name: "Chrome", regex: /Chrome\/([0-9.]+)/ },
+    { name: "Firefox", regex: /Firefox\/([0-9.]+)/ },
+    { name: "Safari", regex: /Version\/([0-9.]+).*Safari/ },
+    { name: "Edge", regex: /Edg\/([0-9.]+)/ },
+    { name: "Opera", regex: /OPR\/([0-9.]+)/ },
+  ]
+
+  for (const browser of browsers) {
+    const match = userAgent.match(browser.regex)
+    if (match) {
+      return `${browser.name} ${match[1]}`
+    }
+  }
+
+  return "Navegador desconocido"
 }
