@@ -21,6 +21,30 @@ interface EnhancedPostSchemaProps {
   url: string
 }
 
+// Define mapeos constantes para mantener la coherencia
+const CONTENT_TYPE_MAPPINGS = {
+  blog: {
+    schemaType: "BlogPosting",
+    ogType: "article",
+  },
+  news: {
+    schemaType: "NewsArticle",
+    ogType: "article",
+  },
+  event: {
+    schemaType: "Event",
+    ogType: "event",
+  },
+  review: {
+    schemaType: "Review",
+    ogType: "article",
+  },
+  guide: {
+    schemaType: "HowTo",
+    ogType: "article",
+  },
+}
+
 export function EnhancedPostSchema({ post, category, url }: EnhancedPostSchemaProps) {
   const [comments, setComments] = useState<BlogComment[]>([])
   const [reactions, setReactions] = useState<PostReaction[]>([])
@@ -121,29 +145,27 @@ export function EnhancedPostSchema({ post, category, url }: EnhancedPostSchemaPr
           return "blog"
         }
 
-        // Use the determined content type to set schema type
+        // Use the determined content type and ensure all related fields are consistent
         const contentType = determineContentType()
-        if (contentType === "news" && !post.schemaType) {
-          post.schemaType = "NewsArticle"
-        } else if (contentType === "event" && !post.schemaType) {
-          post.schemaType = "Event"
-        } else if (contentType === "review" && !post.schemaType) {
-          post.schemaType = "Review"
-        } else if (contentType === "guide" && !post.schemaType) {
-          post.schemaType = "HowTo"
-        } else if (!post.schemaType) {
-          post.schemaType = "BlogPosting"
-        }
 
-        // Set Open Graph type based on content type
-        if (contentType === "event" && !post.ogType) {
-          post.ogType = "event"
-        } else if (!post.ogType) {
-          post.ogType = "article" // Default OG type for most content
+        // Ensure schema and OG types match the content type
+        if (contentType && CONTENT_TYPE_MAPPINGS[contentType]) {
+          const mapping = CONTENT_TYPE_MAPPINGS[contentType]
+          post.contentType = contentType
+
+          // Only set these if they're not already set or don't match the mapping
+          if (!post.schemaType || post.schemaType !== mapping.schemaType) {
+            post.schemaType = mapping.schemaType
+          }
+
+          if (!post.ogType || post.ogType !== mapping.ogType) {
+            post.ogType = mapping.ogType
+          }
         }
 
         // Enhance post data with event details if it's an event-related post
         if (
+          post.contentType === "event" ||
           (post.title && post.title.toLowerCase().includes("dldk")) ||
           post.title?.toLowerCase().includes("festival") ||
           post.content?.includes("evento") ||
@@ -201,24 +223,28 @@ export function EnhancedPostSchema({ post, category, url }: EnhancedPostSchemaPr
         }
 
         // Fetch comments
-        const commentsQuery = query(
-          collection(db, "blogComments"),
-          where("postId", "==", post.id),
-          where("isApproved", "==", true),
-        )
-        const commentsSnapshot = await getDocs(commentsQuery)
-        const commentsData = commentsSnapshot.docs.map((doc) => ({
-          id: doc.id,
-          ...doc.data(),
-        })) as BlogComment[]
+        if (post.id) {
+          const commentsQuery = query(
+            collection(db, "blogComments"),
+            where("postId", "==", post.id),
+            where("isApproved", "==", true),
+          )
+          const commentsSnapshot = await getDocs(commentsQuery)
+          const commentsData = commentsSnapshot.docs.map((doc) => ({
+            id: doc.id,
+            ...doc.data(),
+          })) as BlogComment[]
+          setComments(commentsData)
 
-        // Fetch reactions
-        const reactionsQuery = query(collection(db, "blogReactions"), where("postId", "==", post.id))
-        const reactionsSnapshot = await getDocs(reactionsQuery)
-        const reactionsData = reactionsSnapshot.docs.map((doc) => ({
-          id: doc.id,
-          ...doc.data(),
-        })) as PostReaction[]
+          // Fetch reactions
+          const reactionsQuery = query(collection(db, "blogReactions"), where("postId", "==", post.id))
+          const reactionsSnapshot = await getDocs(reactionsQuery)
+          const reactionsData = reactionsSnapshot.docs.map((doc) => ({
+            id: doc.id,
+            ...doc.data(),
+          })) as PostReaction[]
+          setReactions(reactionsData)
+        }
 
         // Fetch ratings if not already included in post data
         if (!post.averageRating || !post.ratingCount) {
@@ -275,12 +301,11 @@ export function EnhancedPostSchema({ post, category, url }: EnhancedPostSchemaPr
         // Extract author information if available
         if (post.author && !post.authorUrl) {
           // Try to construct author URL
-          const authorSlug = post.authorSlug || post.author.toLowerCase().replace(/\s+/g, "-")
+          const authorSlug =
+            post.authorSlug ||
+            (typeof post.author === "string" ? post.author.toLowerCase().replace(/\s+/g, "-") : "equipo")
           post.authorUrl = `${process.env.NEXT_PUBLIC_BASE_URL || "https://www.ravehublatam.com"}/autores/${authorSlug}`
         }
-
-        setComments(commentsData)
-        setReactions(reactionsData)
       } catch (error) {
         console.error("Error fetching post interactions:", error)
       } finally {
@@ -288,9 +313,7 @@ export function EnhancedPostSchema({ post, category, url }: EnhancedPostSchemaPr
       }
     }
 
-    if (post.id) {
-      fetchPostInteractions()
-    }
+    fetchPostInteractions()
   }, [post])
 
   // Always render basic schema even if we're still loading the full data

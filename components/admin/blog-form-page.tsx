@@ -25,7 +25,7 @@ import { SeoPreview } from "@/components/admin/seo-preview"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Card, CardContent } from "@/components/ui/card"
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
-import { PlusCircle, Search, Trash2, Code, AlertCircle, Plus } from "lucide-react"
+import { PlusCircle, Search, Trash2, Code, AlertCircle, Plus, CheckCircle2 } from "lucide-react"
 import { useAuth } from "@/context/auth-context"
 import { ImageGalleryUploader } from "@/components/admin/image-gallery-uploader"
 import Link from "next/link"
@@ -42,6 +42,47 @@ interface GalleryImage {
   url: string
   alt: string
   id: string
+}
+
+// Define mapeos constantes para mantener la coherencia en todo el código
+const CONTENT_TYPE_MAPPINGS = {
+  blog: {
+    schemaType: "BlogPosting",
+    ogType: "article",
+  },
+  news: {
+    schemaType: "NewsArticle",
+    ogType: "article",
+  },
+  event: {
+    schemaType: "Event",
+    ogType: "event",
+  },
+  review: {
+    schemaType: "Review",
+    ogType: "article",
+  },
+  guide: {
+    schemaType: "HowTo",
+    ogType: "article",
+  },
+}
+
+// Función para derivar el tipo de contenido a partir del tipo de esquema
+const deriveContentTypeFromSchema = (schemaType: string): string => {
+  switch (schemaType) {
+    case "NewsArticle":
+      return "news"
+    case "Event":
+      return "event"
+    case "Review":
+      return "review"
+    case "HowTo":
+      return "guide"
+    case "BlogPosting":
+    default:
+      return "blog"
+  }
 }
 
 export default function BlogFormPage({ postId, isEditing }: BlogFormPageProps) {
@@ -89,11 +130,12 @@ export default function BlogFormPage({ postId, isEditing }: BlogFormPageProps) {
     seoTitle: "",
     seoDescription: "",
     seoKeywords: [],
-    ogType: "article",
+    ogType: "article", // Default OG type
     twitterCardType: "summary_large_image",
     socialImageUrl: "",
     canonicalUrl: "",
-    schemaType: "NewsArticle",
+    schemaType: "BlogPosting", // Default Schema type
+    contentType: "blog", // Default content type
     focusKeyword: "",
     faq: [],
     translations: [],
@@ -125,6 +167,11 @@ export default function BlogFormPage({ postId, isEditing }: BlogFormPageProps) {
   const [isTagsDropdownOpen, setIsTagsDropdownOpen] = useState(false)
   const tagsDropdownRef = useRef<HTMLDivElement>(null)
 
+  // SEO validation info
+  const [seoIssues, setSeoIssues] = useState<string[]>([])
+  const [seoScore, setSeoScore] = useState(0)
+  const [showSeoIssues, setShowSeoIssues] = useState(false)
+
   // Añadir estado para las redirecciones existentes
   const [existingRedirects, setExistingRedirects] = useState<any[]>([])
   const [loadingRedirects, setLoadingRedirects] = useState(false)
@@ -142,7 +189,28 @@ export default function BlogFormPage({ postId, isEditing }: BlogFormPageProps) {
           const docSnap = await getDoc(docRef)
 
           if (docSnap.exists()) {
-            setPost({ id: docSnap.id, ...docSnap.data() } as BlogPost)
+            const postData = docSnap.data() as BlogPost
+
+            // Si el post ya existe pero no tiene un contentType, derivarlo del schemaType
+            if (postData.schemaType && !postData.contentType) {
+              postData.contentType = deriveContentTypeFromSchema(postData.schemaType)
+            }
+
+            // Asegurar coherencia entre contentType, schemaType y ogType
+            if (postData.contentType && CONTENT_TYPE_MAPPINGS[postData.contentType]) {
+              const mapping = CONTENT_TYPE_MAPPINGS[postData.contentType]
+
+              // Solo sobrescribir si no están definidos o no coinciden con el mapping
+              if (!postData.schemaType || postData.schemaType !== mapping.schemaType) {
+                postData.schemaType = mapping.schemaType
+              }
+
+              if (!postData.ogType || postData.ogType !== mapping.ogType) {
+                postData.ogType = mapping.ogType
+              }
+            }
+
+            setPost({ id: docSnap.id, ...postData })
           } else {
             toast.error("No se encontró el artículo")
             router.push("/admin/blog")
@@ -178,6 +246,29 @@ export default function BlogFormPage({ postId, isEditing }: BlogFormPageProps) {
       }))
     }
   }, [isEditing, postId, router, user])
+
+  // Validación automática de SEO cuando cambian campos relevantes
+  useEffect(() => {
+    const runValidation = () => {
+      const { issues, score } = validateSeoSettings(false)
+      setSeoIssues(issues)
+      setSeoScore(score)
+    }
+
+    // Ejecutar validación cada vez que cambien campos SEO relevantes
+    if (post.title || post.seoTitle || post.seoDescription || post.schemaType || post.ogType || post.contentType) {
+      runValidation()
+    }
+  }, [
+    post.title,
+    post.seoTitle,
+    post.seoDescription,
+    post.schemaType,
+    post.ogType,
+    post.featuredImageUrl,
+    post.socialImageUrl,
+    post.contentType,
+  ])
 
   // Fetch admin users for author selection
   useEffect(() => {
@@ -275,6 +366,15 @@ export default function BlogFormPage({ postId, isEditing }: BlogFormPageProps) {
       fetchRedirects()
     }
   }, [isEditing, post.slug])
+
+  // Synchronize the editor mode with the post's contentFormat
+  useEffect(() => {
+    if (post.contentFormat === "html") {
+      setMode("html")
+    } else if (post.contentFormat === "markdown") {
+      setMode("markdown")
+    }
+  }, [post.contentFormat])
 
   // Modificar la función handleInputChange para manejar cambios de slug
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -536,9 +636,15 @@ export default function BlogFormPage({ postId, isEditing }: BlogFormPageProps) {
     if (!validateForm()) return
 
     // Validar configuración SEO
-    if (!validateSeoSettings()) {
+    const { isValid, issues } = validateSeoSettings(true)
+
+    if (!isValid) {
       // Mostrar advertencia pero permitir continuar
-      if (!confirm("Hay problemas con la configuración SEO. ¿Desea continuar de todos modos?")) {
+      if (
+        !confirm(
+          "Hay problemas con la configuración SEO: \n\n" + issues.join("\n") + "\n\n¿Desea continuar de todos modos?",
+        )
+      ) {
         return
       }
     }
@@ -567,11 +673,26 @@ export default function BlogFormPage({ postId, isEditing }: BlogFormPageProps) {
         id: image.id,
       }))
 
+      // Asegurarse de que los tipos contentType, schemaType y ogType son coherentes
+      const finalPost = { ...post }
+
+      // Asegurar que contentType existe
+      if (!finalPost.contentType) {
+        finalPost.contentType = deriveContentTypeFromSchema(finalPost.schemaType || "BlogPosting")
+      }
+
+      // Asegurar que los tipos son coherentes según el contentType
+      if (CONTENT_TYPE_MAPPINGS[finalPost.contentType]) {
+        const mapping = CONTENT_TYPE_MAPPINGS[finalPost.contentType]
+        finalPost.schemaType = mapping.schemaType
+        finalPost.ogType = mapping.ogType
+      }
+
       if (isEditing && postId) {
         // Update existing post
         const docRef = doc(db, "blog", postId)
         await updateDoc(docRef, {
-          ...post,
+          ...finalPost,
           imageGalleryPost,
           updatedDate: new Date().toISOString(),
         })
@@ -596,7 +717,7 @@ export default function BlogFormPage({ postId, isEditing }: BlogFormPageProps) {
       } else {
         // Create new post
         const newPost = {
-          ...post,
+          ...finalPost,
           imageGalleryPost,
           createdAt: new Date().toISOString(),
           updatedDate: new Date().toISOString(),
@@ -758,6 +879,14 @@ export default function BlogFormPage({ postId, isEditing }: BlogFormPageProps) {
         printSection: post.categories && post.categories.length > 0 ? post.categories[0] : "Noticias",
         printEdition: "Edición Digital",
         newUpdates: post.updatedDate ? "Actualizado con la información más reciente" : undefined,
+        // Propiedades específicas para Google News
+        dateCreated: post.publishDate || new Date().toISOString(),
+        datePublished: post.publishDate || new Date().toISOString(),
+        dateModified: post.updatedDate || post.publishDate || new Date().toISOString(),
+        reportingPrinciples: `${baseUrl}/politica-editorial`,
+        diversityPolicy: `${baseUrl}/politica-diversidad`,
+        ethicsPolicy: `${baseUrl}/codigo-etico`,
+        correctionsPolicy: `${baseUrl}/politica-correcciones`,
       }
     } else if (schemaType === "Event") {
       // Propiedades específicas para eventos
@@ -854,61 +983,92 @@ export default function BlogFormPage({ postId, isEditing }: BlogFormPageProps) {
     return JSON.stringify(jsonLd, null, 2)
   }
 
-  // Añadir esta función después de validateForm
-  const validateSeoSettings = () => {
+  // Mejorar la función de validación SEO para devolver un objeto con resultados
+  const validateSeoSettings = (showToasts = true) => {
     const issues = []
+    let score = 100 // Comienza con 100 puntos
+    let isValid = true
 
     // Validar título SEO
     if (!post.seoTitle) {
       issues.push("El título SEO está vacío")
+      score -= 15
+      isValid = false
     } else if (post.seoTitle.length > 60) {
       issues.push("El título SEO es demasiado largo (máximo 60 caracteres)")
+      score -= 5
+      isValid = false
     }
 
     // Validar descripción SEO
     if (!post.seoDescription) {
       issues.push("La descripción SEO está vacía")
+      score -= 15
+      isValid = false
     } else if (post.seoDescription.length > 160) {
       issues.push("La descripción SEO es demasiado larga (máximo 160 caracteres)")
+      score -= 5
+      isValid = false
     }
 
     // Validar coherencia entre tipos
-    if (post.schemaType === "NewsArticle" && post.ogType !== "article") {
-      issues.push("Para noticias, el tipo Open Graph debería ser 'article'")
-    }
+    // Comprobar que los tipos sean coherentes según los mapeos definidos
+    const contentType = post.contentType || "blog"
+    if (contentType in CONTENT_TYPE_MAPPINGS) {
+      const mapping = CONTENT_TYPE_MAPPINGS[contentType]
 
-    if (post.schemaType === "Event" && post.ogType !== "event") {
-      issues.push("Para eventos, el tipo Open Graph debería ser 'event'")
+      if (post.schemaType !== mapping.schemaType) {
+        issues.push(`Para contenido tipo '${contentType}', el tipo Schema.org debería ser '${mapping.schemaType}'`)
+        score -= 10
+        isValid = false
+      }
+
+      if (post.ogType !== mapping.ogType) {
+        issues.push(`Para contenido tipo '${contentType}', el tipo Open Graph debería ser '${mapping.ogType}'`)
+        score -= 10
+        isValid = false
+      }
     }
 
     // Validar imagen para redes sociales
     if (!post.socialImageUrl && !post.featuredImageUrl) {
       issues.push("No hay imagen para redes sociales")
+      score -= 10
+      isValid = false
     }
 
     // Validar palabras clave
     if (!post.seoKeywords || post.seoKeywords.length === 0) {
       issues.push("No hay palabras clave SEO definidas")
+      score -= 10
+      isValid = false
     }
 
-    // Mostrar resultados
-    if (issues.length > 0) {
-      toast.error(`Problemas SEO encontrados: ${issues.join(", ")}`)
-      return false
+    // Validar slug para SEO
+    if (post.slug && post.slug.length > 100) {
+      issues.push("El slug es demasiado largo para SEO")
+      score -= 5
+      isValid = false
     }
 
-    toast.success("Configuración SEO validada correctamente")
-    return true
+    // Limitar score entre 0 y 100
+    score = Math.max(0, Math.min(100, score))
+
+    // Mostrar resultados si showToasts es true
+    if (showToasts) {
+      if (issues.length > 0) {
+        toast.error(`Problemas SEO encontrados: ${issues.join(", ")}`)
+      } else {
+        toast.success("Configuración SEO validada correctamente")
+      }
+    }
+
+    return {
+      isValid,
+      issues,
+      score,
+    }
   }
-
-  // Synchronize the editor mode with the post's contentFormat
-  useEffect(() => {
-    if (post.contentFormat === "html") {
-      setMode("html")
-    } else if (post.contentFormat === "markdown") {
-      setMode("markdown")
-    }
-  }, [post.contentFormat])
 
   // Añadir función para crear redirección manual
   const handleAddManualRedirect = async () => {
@@ -1503,7 +1663,7 @@ export default function BlogFormPage({ postId, isEditing }: BlogFormPageProps) {
                       const closeTags = (post.content?.match(/<\/[^>]*>/g) || []).length
 
                       if (openTags !== closeTags) {
-                        toast.warning("Posible error: Las etiquetas HTML no están balanceadas correctamente.")
+                        toast.error("Posible error: Las etiquetas HTML no están balanceadas correctamente.")
                         return
                       }
 
@@ -1512,7 +1672,7 @@ export default function BlogFormPage({ postId, isEditing }: BlogFormPageProps) {
                       const codeBlocksClose = (post.content?.match(/```(?!\w)/g) || []).length
 
                       if (codeBlocksOpen !== codeBlocksClose) {
-                        toast.warning("Posible error: Los bloques de código no están cerrados correctamente.")
+                        toast.error("Posible error: Los bloques de código no están cerrados correctamente.")
                         return
                       }
 
@@ -1800,8 +1960,88 @@ export default function BlogFormPage({ postId, isEditing }: BlogFormPageProps) {
         <TabsContent value="seo" className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div className="md:col-span-2 space-y-6">
+              {/* Mostrar puntuación SEO en la parte superior */}
+              <div className="w-full bg-gray-100 p-4 rounded-lg mb-6">
+                <div className="flex items-center justify-between mb-2">
+                  <h3 className="text-base font-medium">Puntuación SEO</h3>
+                  <span
+                    className={`text-lg font-bold ${
+                      seoScore >= 90 ? "text-green-600" : seoScore >= 70 ? "text-yellow-600" : "text-red-600"
+                    }`}
+                  >
+                    {seoScore}/100
+                  </span>
+                </div>
+                <div className="w-full bg-gray-200 rounded-full h-2.5">
+                  <div
+                    className={`h-2.5 rounded-full ${
+                      seoScore >= 90 ? "bg-green-600" : seoScore >= 70 ? "bg-yellow-500" : "bg-red-600"
+                    }`}
+                    style={{ width: `${seoScore}%` }}
+                  ></div>
+                </div>
+
+                {seoIssues.length > 0 && (
+                  <div className="mt-2">
+                    <button
+                      onClick={() => setShowSeoIssues(!showSeoIssues)}
+                      className="text-sm text-blue-600 flex items-center"
+                    >
+                      {showSeoIssues ? "Ocultar problemas" : `Mostrar ${seoIssues.length} problemas`}
+                    </button>
+
+                    {showSeoIssues && (
+                      <ul className="mt-2 text-sm space-y-1 text-gray-700">
+                        {seoIssues.map((issue, index) => (
+                          <li key={index} className="flex items-start">
+                            <span className="text-red-500 mr-1">•</span>
+                            <span>{issue}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </div>
+                )}
+              </div>
+
               <div>
-                <Label htmlFor="seoTitle">Título SEO</Label>
+                <Label htmlFor="contentType">Tipo de contenido *</Label>
+                <Select
+                  value={post.contentType || "blog"}
+                  onValueChange={(value: string) => {
+                    // Asegurar que contentType es de un tipo aceptado
+                    if (!CONTENT_TYPE_MAPPINGS[value]) return
+
+                    // Obtener los tipos correspondientes del mapeo
+                    const mapping = CONTENT_TYPE_MAPPINGS[value]
+
+                    // Actualizar todos los tipos al mismo tiempo para mantener coherencia
+                    setPost((prev) => ({
+                      ...prev,
+                      contentType: value,
+                      schemaType: mapping.schemaType,
+                      ogType: mapping.ogType,
+                    }))
+                  }}
+                >
+                  <SelectTrigger id="contentType">
+                    <SelectValue placeholder="Selecciona tipo de contenido" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="blog">Entrada de blog</SelectItem>
+                    <SelectItem value="news">Noticia</SelectItem>
+                    <SelectItem value="event">Evento</SelectItem>
+                    <SelectItem value="review">Reseña</SelectItem>
+                    <SelectItem value="guide">Guía / Tutorial</SelectItem>
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-gray-500 mt-1">
+                  Establece automáticamente el tipo de Schema.org y Open Graph apropiados
+                </p>
+              </div>
+
+              <div>
+                <Label htmlFor="seoTitle">Título SEO *</Label>
                 <Input
                   id="seoTitle"
                   name="seoTitle"
@@ -1810,11 +2050,19 @@ export default function BlogFormPage({ postId, isEditing }: BlogFormPageProps) {
                   placeholder="Título para SEO (máx. 60 caracteres)"
                   maxLength={60}
                 />
-                <p className="text-xs text-gray-500 mt-1">{post.seoTitle?.length || 0}/60 caracteres</p>
+                <div className="flex justify-between">
+                  <p className="text-xs text-gray-500 mt-1">{post.seoTitle?.length || 0}/60 caracteres</p>
+                  {post.seoTitle && post.seoTitle.length > 0 && post.seoTitle.length <= 60 && (
+                    <p className="text-xs text-green-500 mt-1 flex items-center">
+                      <CheckCircle2 className="h-3 w-3 mr-1" />
+                      Longitud óptima
+                    </p>
+                  )}
+                </div>
               </div>
 
               <div>
-                <Label htmlFor="seoDescription">Descripción SEO</Label>
+                <Label htmlFor="seoDescription">Descripción SEO *</Label>
                 <Textarea
                   id="seoDescription"
                   name="seoDescription"
@@ -1824,10 +2072,19 @@ export default function BlogFormPage({ postId, isEditing }: BlogFormPageProps) {
                   maxLength={160}
                   rows={3}
                 />
-                <p className="text-xs text-gray-500 mt-1">{post.seoDescription?.length || 0}/160 caracteres</p>
+                <div className="flex justify-between">
+                  <p className="text-xs text-gray-500 mt-1">{post.seoDescription?.length || 0}/160 caracteres</p>
+                  {post.seoDescription && post.seoDescription.length > 0 && post.seoDescription.length <= 160 && (
+                    <p className="text-xs text-green-500 mt-1 flex items-center">
+                      <CheckCircle2 className="h-3 w-3 mr-1" />
+                      Longitud óptima
+                    </p>
+                  )}
+                </div>
               </div>
+
               <div>
-                <Label htmlFor="seoKeywords">Palabras clave SEO</Label>
+                <Label htmlFor="seoKeywords">Palabras clave SEO *</Label>
                 <Input
                   id="seoKeywords"
                   name="seoKeywords"
@@ -1835,16 +2092,21 @@ export default function BlogFormPage({ postId, isEditing }: BlogFormPageProps) {
                   onChange={(e) =>
                     setPost((prev) => ({
                       ...prev,
-                      seoKeywords: e.target.value.split(",").map((s) => s.trim()),
+                      seoKeywords: e.target.value
+                        .split(",")
+                        .map((s) => s.trim())
+                        .filter(Boolean),
                     }))
                   }
                   placeholder="Palabras clave separadas por comas"
                 />
-                <p className="text-xs text-gray-500 mt-1">Palabras clave separadas por comas</p>
+                <p className="text-xs text-gray-500 mt-1">
+                  {post.seoKeywords?.length || 0} {post.seoKeywords?.length === 1 ? "palabra clave" : "palabras clave"}
+                </p>
               </div>
 
               <div>
-                <Label htmlFor="focusKeyword">Palabra clave principal</Label>
+                <Label htmlFor="focusKeyword">Palabra clave principal *</Label>
                 <Input
                   id="focusKeyword"
                   name="focusKeyword"
@@ -1852,6 +2114,18 @@ export default function BlogFormPage({ postId, isEditing }: BlogFormPageProps) {
                   onChange={handleInputChange}
                   placeholder="Palabra clave principal para SEO"
                 />
+                {post.focusKeyword &&
+                post.title &&
+                post.title.toLowerCase().includes(post.focusKeyword.toLowerCase()) ? (
+                  <p className="text-xs text-green-500 mt-1 flex items-center">
+                    <CheckCircle2 className="h-3 w-3 mr-1" />
+                    Palabra clave incluida en el título
+                  </p>
+                ) : post.focusKeyword ? (
+                  <p className="text-xs text-amber-500 mt-1">
+                    Recomendado: incluye la palabra clave principal en el título
+                  </p>
+                ) : null}
               </div>
 
               <div>
@@ -1868,88 +2142,22 @@ export default function BlogFormPage({ postId, isEditing }: BlogFormPageProps) {
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <Label htmlFor="contentType">Tipo de contenido</Label>
-                  <Select
-                    value={post.contentType || "blog"}
-                    onValueChange={(value) => {
-                      // Sincronizar el tipo de contenido con los tipos de OG y Schema
-                      let ogType = "article"
-                      let schemaType = "BlogPosting"
-
-                      if (value === "news") {
-                        ogType = "article"
-                        schemaType = "NewsArticle"
-                      } else if (value === "event") {
-                        ogType = "event"
-                        schemaType = "Event"
-                      }
-
-                      setPost((prev) => ({
-                        ...prev,
-                        contentType: value,
-                        ogType,
-                        schemaType,
-                      }))
-                    }}
-                  >
-                    <SelectTrigger id="contentType">
-                      <SelectValue placeholder="Selecciona tipo" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="blog">Entrada de blog</SelectItem>
-                      <SelectItem value="news">Noticia</SelectItem>
-                      <SelectItem value="event">Evento</SelectItem>
-                      <SelectItem value="review">Reseña</SelectItem>
-                      <SelectItem value="guide">Guía</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <p className="text-xs text-gray-500 mt-1">Afecta a los tipos de OG y Schema</p>
-                </div>
-
-                <div>
-                  <Label htmlFor="ogType">Tipo Open Graph</Label>
-                  <Select
-                    value={post.ogType || "article"}
-                    onValueChange={(value) => setPost((prev) => ({ ...prev, ogType: value }))}
-                  >
-                    <SelectTrigger id="ogType">
-                      <SelectValue placeholder="Selecciona tipo" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="article">Artículo</SelectItem>
-                      <SelectItem value="website">Sitio web</SelectItem>
-                      <SelectItem value="blog">Blog</SelectItem>
-                      <SelectItem value="event">Evento</SelectItem>
-                      <SelectItem value="profile">Perfil</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <p className="text-xs text-gray-500 mt-1">Tipo de contenido para redes sociales</p>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
                   <Label htmlFor="schemaType">Tipo de Schema.org</Label>
                   <Select
-                    value={post.schemaType || "BlogPosting"}
+                    value={post.schemaType}
                     onValueChange={(value) => {
-                      // Actualizar el tipo de contenido si es necesario
-                      let contentType = post.contentType || "blog"
+                      // Determinar el contentType basado en schemaType
+                      const contentType = deriveContentTypeFromSchema(value)
 
-                      if (value === "NewsArticle") {
-                        contentType = "news"
-                      } else if (value === "Event") {
-                        contentType = "event"
-                      } else if (value === "Review") {
-                        contentType = "review"
-                      } else if (value === "HowTo") {
-                        contentType = "guide"
-                      }
+                      // Obtener el tipo OG apropiado
+                      const ogType = CONTENT_TYPE_MAPPINGS[contentType]?.ogType || "article"
 
+                      // Actualizar todos los campos relacionados
                       setPost((prev) => ({
                         ...prev,
                         schemaType: value,
                         contentType,
+                        ogType,
                       }))
                     }}
                   >
@@ -1969,6 +2177,28 @@ export default function BlogFormPage({ postId, isEditing }: BlogFormPageProps) {
                 </div>
 
                 <div>
+                  <Label htmlFor="ogType">Tipo Open Graph</Label>
+                  <Select
+                    value={post.ogType}
+                    onValueChange={(value) => setPost((prev) => ({ ...prev, ogType: value }))}
+                  >
+                    <SelectTrigger id="ogType">
+                      <SelectValue placeholder="Selecciona tipo" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="article">Artículo</SelectItem>
+                      <SelectItem value="website">Sitio web</SelectItem>
+                      <SelectItem value="blog">Blog</SelectItem>
+                      <SelectItem value="event">Evento</SelectItem>
+                      <SelectItem value="profile">Perfil</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <p className="text-xs text-gray-500 mt-1">Tipo de contenido para redes sociales</p>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
                   <Label htmlFor="twitterCardType">Tipo de tarjeta Twitter</Label>
                   <Select
                     value={post.twitterCardType || "summary_large_image"}
@@ -1984,6 +2214,20 @@ export default function BlogFormPage({ postId, isEditing }: BlogFormPageProps) {
                       <SelectItem value="player">Reproductor</SelectItem>
                     </SelectContent>
                   </Select>
+                </div>
+
+                <div>
+                  <Label htmlFor="isAccessibleForFree">Accesibilidad del contenido</Label>
+                  <div className="flex items-center h-10 mt-2 space-x-2">
+                    <Switch
+                      id="isAccessibleForFree"
+                      checked={post.isAccessibleForFree !== false}
+                      onCheckedChange={(checked) => handleSwitchChange(checked, "isAccessibleForFree")}
+                    />
+                    <Label htmlFor="isAccessibleForFree" className="text-sm">
+                      Contenido accesible de forma gratuita
+                    </Label>
+                  </div>
                 </div>
               </div>
 
@@ -2026,7 +2270,7 @@ export default function BlogFormPage({ postId, isEditing }: BlogFormPageProps) {
 
             <div className="space-y-6">
               <div>
-                <Label>Imagen para redes sociales</Label>
+                <Label>Imagen para redes sociales *</Label>
                 <ImageUploader
                   currentImage={post.socialImageUrl || ""}
                   onImageUpload={handleSocialImageUpload}
@@ -2045,40 +2289,58 @@ export default function BlogFormPage({ postId, isEditing }: BlogFormPageProps) {
               </div>
 
               <div className="mt-6 p-4 bg-blue-50 rounded-md">
-                <h4 className="text-sm font-medium text-blue-800 mb-2">Recomendaciones SEO</h4>
+                <h4 className="text-sm font-medium text-blue-800 mb-2">Recomendaciones SEO por tipo</h4>
                 <ul className="text-xs text-blue-700 space-y-1">
                   <li className="flex items-start">
                     <span className="mr-1">•</span>
                     <span>
-                      Para noticias, usa <strong>NewsArticle</strong> como tipo de Schema.org
+                      <strong>Blog:</strong> Usa <strong>BlogPosting</strong> schema y <strong>article</strong> Open
+                      Graph
                     </span>
                   </li>
                   <li className="flex items-start">
                     <span className="mr-1">•</span>
                     <span>
-                      Para entradas de blog, usa <strong>BlogPosting</strong> como tipo de Schema.org
+                      <strong>Noticias:</strong> Usa <strong>NewsArticle</strong> schema y <strong>article</strong> Open
+                      Graph
                     </span>
                   </li>
                   <li className="flex items-start">
                     <span className="mr-1">•</span>
                     <span>
-                      Para eventos, usa <strong>Event</strong> como tipo de Schema.org y <strong>event</strong> como
-                      tipo de Open Graph
+                      <strong>Eventos:</strong> Usa <strong>Event</strong> schema y <strong>event</strong> Open Graph
                     </span>
                   </li>
                   <li className="flex items-start">
                     <span className="mr-1">•</span>
-                    <span>Incluye siempre una imagen destacada optimizada para redes sociales</span>
+                    <span>
+                      <strong>Reseñas:</strong> Usa <strong>Review</strong> schema y <strong>article</strong> Open Graph
+                    </span>
                   </li>
                   <li className="flex items-start">
                     <span className="mr-1">•</span>
-                    <span>Usa palabras clave relevantes en el título y descripción SEO</span>
+                    <span>
+                      <strong>Guías:</strong> Usa <strong>HowTo</strong> schema y <strong>article</strong> Open Graph
+                    </span>
                   </li>
                 </ul>
+                <p className="text-xs text-blue-700 mt-3 italic">
+                  Consejo: Usa el selector "Tipo de contenido" para establecer automáticamente los tipos correctos
+                </p>
               </div>
             </div>
           </div>
-          <Button type="button" variant="outline" onClick={validateSeoSettings} className="mt-4">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => {
+              const { issues, score, isValid } = validateSeoSettings(true)
+              setSeoIssues(issues)
+              setSeoScore(score)
+              setShowSeoIssues(true)
+            }}
+            className="mt-4"
+          >
             Validar configuración SEO
           </Button>
         </TabsContent>
@@ -2198,15 +2460,6 @@ export default function BlogFormPage({ postId, isEditing }: BlogFormPageProps) {
                 </div>
               </CardContent>
             </Card>
-          </div>
-
-          <div className="flex items-center space-x-2 mt-6">
-            <Switch
-              id="isAccessibleForFree"
-              checked={post.isAccessibleForFree !== false}
-              onCheckedChange={(checked) => handleSwitchChange(checked, "isAccessibleForFree")}
-            />
-            <Label htmlFor="isAccessibleForFree">Contenido accesible de forma gratuita</Label>
           </div>
 
           <div className="mt-6">
