@@ -23,15 +23,17 @@ import type {
   BlogTag,
   BlogComment,
   BlogRating,
-  ReactionType,
   PostReaction,
   PostReactionsDetail,
-  CommentReactionType,
   CommentReaction,
 } from "@/types"
+import type { ReactionType } from "@/types/blog"
 import { generateSlug } from "@/lib/utils"
 import { filterBlobUrls, cleanAltTexts } from "@/lib/firebase/image-utils"
 import { getFirestore, limit as firestoreLimit } from "firebase/firestore"
+
+// Importar las constantes centralizadas
+import { VALID_REACTION_TYPES, REACTION_TYPE_MAP } from "@/lib/constants/reaction-types"
 
 // Añadir estas líneas al principio del archivo, después de las importaciones
 declare global {
@@ -1321,34 +1323,109 @@ export async function editComment(commentId: string, content: string): Promise<v
 // Obtener todas las reacciones de un post
 export async function getPostReactions(postId: string): Promise<PostReactionsDetail> {
   try {
+    // Definición de tipos de reacciones válidos para normalización
+    const validReactionTypes = VALID_REACTION_TYPES
+
+    // Mapa para normalizar los tipos de reacciones
+    const reactionTypeMap = REACTION_TYPE_MAP
+
+    // Primero, obtener el documento del post para verificar si tiene el campo reactions
+    const postRef = doc(db, "blog", postId)
+    const postDoc = await getDoc(postRef)
+
+    if (!postDoc.exists()) {
+      console.error(`Post no encontrado con ID: ${postId}`)
+      return {
+        summary: {
+          total: 0,
+          types: {},
+          topReactions: [],
+        },
+        reactions: [],
+      }
+    }
+
+    const postData = postDoc.data()
+    const postReactions = postData.reactions || { total: 0, types: {} }
+
+    // Obtener las reacciones individuales de la colección blogReactions
     const reactionsRef = collection(db, "blogReactions")
     const q = query(reactionsRef, where("postId", "==", postId))
     const querySnapshot = await getDocs(q)
 
     const reactions: PostReaction[] = []
-    const reactionCounts: { [key in ReactionType]?: number } = {}
-    let totalReactions = 0
+    const reactionCounts: Record<string, number> = {}
 
+    // Procesar las reacciones individuales y normalizar los tipos
     querySnapshot.forEach((doc) => {
       const reactionData = convertTimestamps(doc.data())
+
+      // Normalizar el tipo de reacción
+      let normalizedType = reactionTypeMap[reactionData.reactionType] || reactionData.reactionType
+
+      // Asegurarse de que el tipo normalizado es válido, si no, usar 'like' como fallback
+      if (!validReactionTypes.includes(normalizedType as ReactionType)) {
+        console.warn(`Tipo de reacción desconocido: ${reactionData.reactionType}, normalizando a 'like'`)
+        normalizedType = "like"
+      }
+
+      // Actualizar el tipo de reacción normalizado
+      reactionData.reactionType = normalizedType
+
       const reaction = { id: doc.id, ...reactionData } as PostReaction
       reactions.push(reaction)
 
-      // Contar por tipo de reacción
-      const type = reaction.reactionType
-      reactionCounts[type] = (reactionCounts[type] || 0) + 1
-      totalReactions++
+      // Contar por tipo de reacción normalizado
+      reactionCounts[normalizedType] = (reactionCounts[normalizedType] || 0) + 1
     })
+
+    // Calcular el total real de reacciones
+    const totalFromReactions = reactions.length
+
+    // Verificar si hay discrepancia entre el contador del post y las reacciones reales
+    const totalFromPost = postReactions.total || 0
+    const typesFromPost = postReactions.types || {}
+
+    // Verificar si hay inconsistencias en los tipos de reacciones
+    let needsUpdate = totalFromReactions !== totalFromPost
+
+    // Comprobar si los tipos y conteos coinciden
+    const normalizedTypes = Object.keys(reactionCounts)
+    for (const type of normalizedTypes) {
+      if (reactionCounts[type] !== (typesFromPost[type] || 0)) {
+        needsUpdate = true
+        break
+      }
+    }
+
+    // Si hay discrepancia, actualizar el contador en el post
+    if (needsUpdate) {
+      console.log(`Discrepancia detectada en reacciones para post ${postId}: 
+        Post tiene ${totalFromPost}, pero hay ${totalFromReactions} reacciones reales.
+        Actualizando contador y normalizando tipos...`)
+
+      // Actualizar el contador en el post con los datos normalizados
+      await updateDoc(postRef, {
+        reactions: {
+          total: totalFromReactions,
+          types: reactionCounts,
+        },
+      })
+
+      // Usar los contadores reales normalizados
+      postReactions.total = totalFromReactions
+      postReactions.types = reactionCounts
+    }
 
     // Obtener las 3 reacciones más populares
     const topReactions = Object.entries(reactionCounts)
-      .sort((a, b) => (b[1] || 0) - (a[1] || 0))
+      .sort(([, countA], [, countB]) => countB - countA)
       .slice(0, 3)
       .map(([type]) => type as ReactionType)
 
     return {
       summary: {
-        total: totalReactions,
+        total: totalFromReactions,
         types: reactionCounts,
         topReactions,
       },
@@ -1356,14 +1433,8 @@ export async function getPostReactions(postId: string): Promise<PostReactionsDet
     }
   } catch (error) {
     console.error(`Error fetching reactions for post ${postId}:`, error)
-    return {
-      summary: {
-        total: 0,
-        types: {},
-        topReactions: [],
-      },
-      reactions: [],
-    }
+    // Lanzar el error para que el componente pueda manejarlo adecuadamente
+    throw new Error(`No se pudieron cargar las reacciones: ${error.message}`)
   }
 }
 
@@ -1417,12 +1488,7 @@ export async function addOrUpdateReaction(
 
     console.log("Adding/updating reaction with:", { postId, userId, reactionType })
 
-    // Verificar si el usuario ya reaccionó a este post
-    const reactionsRef = collection(db, "blogReactions")
-    const q = query(reactionsRef, where("postId", "==", postId), where("userId", "==", userId))
-    const querySnapshot = await getDocs(q)
-
-    // Usar una transacción para actualizar tanto la reacción como el contador en el post
+    // Usar una transacción para garantizar consistencia
     await runTransaction(db, async (transaction) => {
       const postRef = doc(db, "blog", postId)
       const postDoc = await transaction.get(postRef)
@@ -1430,6 +1496,11 @@ export async function addOrUpdateReaction(
       if (!postDoc.exists()) {
         throw new Error(`Post not found with ID: ${postId}`)
       }
+
+      // Verificar si el usuario ya reaccionó a este post (dentro de la transacción)
+      const reactionsRef = collection(db, "blogReactions")
+      const q = query(reactionsRef, where("postId", "==", postId), where("userId", "==", userId))
+      const querySnapshot = await getDocs(q)
 
       const postData = postDoc.data()
       const reactions = postData.reactions || { total: 0, types: {} }
@@ -1451,6 +1522,7 @@ export async function addOrUpdateReaction(
         transaction.update(doc(db, "blogReactions", reactionDoc.id), {
           reactionType,
           updatedAt: new Date(),
+          timestamp: new Date(), // Añadir timestamp para ordenación
         })
 
         // Actualizar contadores en el post
@@ -1476,6 +1548,7 @@ export async function addOrUpdateReaction(
           userImageUrl,
           reactionType,
           createdAt: new Date(),
+          timestamp: new Date(), // Añadir timestamp para ordenación
         }
 
         const newReactionRef = doc(reactionsRef)
@@ -1506,17 +1579,18 @@ export async function removeReaction(postId: string, userId: string): Promise<vo
       throw new Error("postId and userId are required")
     }
 
-    // Verificar si el usuario ya reaccionó a este post
-    const reactionsRef = collection(db, "blogReactions")
-    const q = query(reactionsRef, where("postId", "==", postId), where("userId", "==", userId))
-    const querySnapshot = await getDocs(q)
-
-    if (querySnapshot.empty) {
-      return // No hay reacción para eliminar
-    }
-
-    // Usar una transacción para actualizar tanto la reacción como el contador en el post
+    // Usar una transacción para garantizar consistencia
     await runTransaction(db, async (transaction) => {
+      // Verificar si el usuario ya reaccionó a este post (dentro de la transacción)
+      const reactionsRef = collection(db, "blogReactions")
+      const q = query(reactionsRef, where("postId", "==", postId), where("userId", "==", userId))
+      const querySnapshot = await getDocs(q)
+
+      if (querySnapshot.empty) {
+        console.log("No reaction found to remove")
+        return // No hay reacción para eliminar
+      }
+
       const reactionDoc = querySnapshot.docs[0]
       const reactionType = reactionDoc.data().reactionType as ReactionType
 
@@ -1535,11 +1609,21 @@ export async function removeReaction(postId: string, userId: string): Promise<vo
 
       // Actualizar contadores en el post
       const updatedReactions = { ...reactions }
-      updatedReactions.total = Math.max(0, (updatedReactions.total || 1) - 1)
-      updatedReactions.types[reactionType] = Math.max(0, (updatedReactions.types[reactionType] || 1) - 1)
+
+      // Decrementar el total solo si es mayor que 0
+      if (updatedReactions.total > 0) {
+        updatedReactions.total -= 1
+      }
+
+      // Decrementar el contador del tipo solo si existe y es mayor que 0
+      if (updatedReactions.types[reactionType] && updatedReactions.types[reactionType] > 0) {
+        updatedReactions.types[reactionType] -= 1
+      }
 
       transaction.update(postRef, { reactions: updatedReactions })
     })
+
+    console.log("Reaction successfully removed")
   } catch (error) {
     console.error(`Error removing reaction for post ${postId}:`, error)
     throw error
@@ -1620,6 +1704,7 @@ export async function getUsersByReactionType(
 // Add these new functions at the end of the file
 
 // Types for comment reactions
+export type CommentReactionType = "like" | "love" | "haha" | "wow" | "sad" | "angry"
 
 // Get all reactions for a comment
 export async function getCommentReactions(commentId: string): Promise<CommentReaction[]> {

@@ -25,9 +25,10 @@ import { verifyAuthConsistency } from "@/lib/firebase/auth"
 import type { ReactionType, PostReaction, PostReactionsSummary } from "@/types/blog"
 import { auth } from "@/lib/firebase/config"
 
-// Primero, añadir un nuevo hook para manejar el long press
-// Añadir esta función después de las importaciones existentes, antes de la definición de PostReactionsProps
+// Importar las constantes centralizadas
+import { REACTION_INFO, getReactionInfo } from "@/lib/constants/reaction-types"
 
+// Hook para manejar el long press
 function useLongPress(callback: () => void, ms = 500) {
   const [startLongPress, setStartLongPress] = useState(false)
   const timerRef = useRef<NodeJS.Timeout | null>(null)
@@ -77,28 +78,7 @@ interface PostReactionsProps {
 }
 
 // Definición de las reacciones disponibles
-const REACTIONS = [
-  { type: "hot" as ReactionType, emoji: "🥵", label: "Me calienta" },
-  { type: "crazy" as ReactionType, emoji: "🤪", label: "Me aloca" },
-  { type: "somos" as ReactionType, emoji: "👌", label: "¡Somos, Gente!" },
-  { type: "excited" as ReactionType, emoji: "😈", label: "Me excita" },
-  { type: "scream" as ReactionType, emoji: "🌈", label: "Me hace gritar ¡Aaaahhh!" },
-  { type: "ono" as ReactionType, emoji: "🌸", label: "Oño" },
-  { type: "like" as ReactionType, emoji: "👍", label: "Me gusta" },
-  { type: "love" as ReactionType, emoji: "❤️", label: "Me encanta" },
-  { type: "haha" as ReactionType, emoji: "😂", label: "Me divierte" },
-  { type: "wow" as ReactionType, emoji: "😮", label: "Me sorprende" },
-  { type: "sad" as ReactionType, emoji: "😢", label: "Me entristece" },
-  { type: "angry" as ReactionType, emoji: "😡", label: "Me enoja" },
-]
-
-// Función para obtener información de una reacción por su tipo
-export function getReactionInfo(type: ReactionType) {
-  if (!type) {
-    return { type: "like" as ReactionType, emoji: "👍", label: "Me gusta" }
-  }
-  return REACTIONS.find((r) => r.type === type) || { type: type as ReactionType, emoji: "👍", label: "Me gusta" }
-}
+const REACTIONS = REACTION_INFO
 
 interface ReactionsModalProps {
   postId: string
@@ -188,7 +168,6 @@ export function ReactionsModal({ postId, isOpen, onOpenChange, reactionsSummary 
       const result = await getUsersByReactionType(postId, type as ReactionType)
 
       // Ordenar las reacciones por fecha (más recientes primero)
-      // Asumimos que reaction.timestamp existe, si no, puedes usar reaction.createdAt o similar
       setReactionUsers(
         result.reactions.sort((a, b) => {
           // Si tienen timestamp, ordenar por timestamp (más reciente primero)
@@ -217,14 +196,10 @@ export function ReactionsModal({ postId, isOpen, onOpenChange, reactionsSummary 
   }
 
   // Obtener todas las reacciones con conteo > 0 para mostrar en las pestañas
-  const getActiveReactions = () => {
-    return Object.entries(reactionsSummary.types)
-      .filter(([_, count]) => count > 0)
-      .map(([type, count]) => ({ type: type as ReactionType, count }))
-      .sort((a, b) => b.count - a.count)
-  }
-
-  const activeReactions = getActiveReactions()
+  const activeReactions = Object.entries(reactionsSummary.types)
+    .filter(([_, count]) => count > 0)
+    .map(([type, count]) => ({ type: type as ReactionType, count: count as number }))
+    .sort((a, b) => b.count - a.count)
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
@@ -319,6 +294,15 @@ export function ReactionsModal({ postId, isOpen, onOpenChange, reactionsSummary 
   )
 }
 
+function debounce<T extends (...args: any[]) => any>(func: T, wait: number): (...args: Parameters<T>) => void {
+  let timeout: NodeJS.Timeout | null = null
+
+  return (...args: Parameters<T>) => {
+    if (timeout) clearTimeout(timeout)
+    timeout = setTimeout(() => func(...args), wait)
+  }
+}
+
 export function PostReactions({ postId }: PostReactionsProps) {
   const { user, refreshUserData, authStatus } = useAuth()
   const { toast } = useToast()
@@ -330,8 +314,6 @@ export function PostReactions({ postId }: PostReactionsProps) {
   const [userReaction, setUserReaction] = useState<ReactionType | undefined>(undefined)
   const [showReactionPicker, setShowReactionPicker] = useState(false)
   const [isModalOpen, setIsModalOpen] = useState(false)
-  const [selectedTab, setSelectedTab] = useState<ReactionType | "all">("all")
-  const [reactionUsers, setReactionUsers] = useState<PostReaction[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [isProcessing, setIsProcessing] = useState(false)
   const [authCheckResult, setAuthCheckResult] = useState<{
@@ -341,7 +323,6 @@ export function PostReactions({ postId }: PostReactionsProps) {
   } | null>(null)
   const [showAuthDialog, setShowAuthDialog] = useState(false)
   const [effectiveUserId, setEffectiveUserId] = useState<string | null>(null)
-  const [showMoreReactions, setShowMoreReactions] = useState(false)
   const longPressProps = useLongPress(() => {
     setShowReactionPicker(true)
   }, 400)
@@ -382,13 +363,6 @@ export function PostReactions({ postId }: PostReactionsProps) {
     loadReactions()
   }, [postId, effectiveUserId])
 
-  // Cargar los usuarios que reaccionaron cuando hay reacciones pero no tenemos datos de usuarios
-  useEffect(() => {
-    if (reactionsSummary.total > 0 && reactionUsers.length === 0 && !isLoading) {
-      loadReactionUsers("all")
-    }
-  }, [reactionsSummary.total, reactionUsers.length, isLoading])
-
   // Verificar autenticación cuando se monta el componente
   useEffect(() => {
     checkAuthConsistency()
@@ -411,6 +385,22 @@ export function PostReactions({ postId }: PostReactionsProps) {
     }
   }
 
+  // Función para depurar las reacciones (solo en desarrollo)
+  const debugReactions = () => {
+    if (process.env.NODE_ENV === "development") {
+      console.log("Resumen de reacciones:", {
+        total: reactionsSummary.total,
+        types: reactionsSummary.types,
+        topReactions: reactionsSummary.topReactions,
+      })
+    }
+  }
+
+  // Llamar a la función de depuración cuando cambian las reacciones
+  useEffect(() => {
+    debugReactions()
+  }, [reactionsSummary])
+
   // Cargar las reacciones del post
   const loadReactions = async () => {
     try {
@@ -422,8 +412,15 @@ export function PostReactions({ postId }: PostReactionsProps) {
         topReactions: reactionsData.summary.topReactions,
       })
 
-      // Actualizar el resumen de reacciones
-      setReactionsSummary(reactionsData.summary)
+      // Normalizar las reacciones para asegurar consistencia
+      const normalizedTypes = { ...reactionsData.summary.types }
+
+      // Actualizar el resumen de reacciones con datos normalizados
+      setReactionsSummary({
+        total: reactionsData.summary.total,
+        types: normalizedTypes,
+        topReactions: reactionsData.summary.topReactions,
+      })
 
       // Si tenemos un ID de usuario efectivo, verificar si ya reaccionó
       if (effectiveUserId) {
@@ -446,26 +443,19 @@ export function PostReactions({ postId }: PostReactionsProps) {
         description: "No se pudieron cargar las reacciones. Inténtalo de nuevo más tarde.",
         variant: "destructive",
       })
+      // Establecer un estado de error para mostrar un mensaje adecuado en la UI
+      setReactionsSummary({
+        total: 0,
+        types: {},
+        topReactions: [],
+      })
     } finally {
       setIsLoading(false)
     }
   }
 
-  // Actualizar la función loadReactionUsers en el componente PostReactions
-  const loadReactionUsers = async (type: ReactionType | "all") => {
-    try {
-      setIsLoading(true)
-      const result = await getUsersByReactionType(postId, type as ReactionType)
-      setReactionUsers(result.reactions)
-    } catch (error) {
-      console.error(`Error loading users for reaction type ${type}:`, error)
-    } finally {
-      setIsLoading(false)
-    }
-  }
-
-  // Manejar la selección de una reacción
-  const handleReactionSelect = async (type: ReactionType) => {
+  // Añadir debounce a handleReactionSelect para evitar múltiples clics rápidos
+  const debouncedReactionSelect = debounce(async (type: ReactionType) => {
     // Obtener el ID efectivo del usuario
     const userId = effectiveUserId || auth.currentUser?.uid
 
@@ -553,20 +543,15 @@ export function PostReactions({ postId }: PostReactionsProps) {
       setIsProcessing(false)
       setShowReactionPicker(false)
     }
+  }, 300)
+
+  const handleReactionSelect = (type: ReactionType) => {
+    debouncedReactionSelect(type)
   }
 
   // Manejar la apertura del modal de reacciones
-  const handleOpenModal = async () => {
+  const handleOpenModal = () => {
     setIsModalOpen(true)
-    setSelectedTab("all")
-    await loadReactionUsers("all")
-  }
-
-  // Manejar el cambio de pestaña en el modal
-  const handleTabChange = async (value: string) => {
-    const tabValue = value as ReactionType | "all"
-    setSelectedTab(tabValue)
-    await loadReactionUsers(tabValue)
   }
 
   // Manejar el refresco manual de datos de usuario
@@ -594,15 +579,7 @@ export function PostReactions({ postId }: PostReactionsProps) {
     }
   }
 
-  // Ahora, modificar el renderMainReactionButton para incluir los eventos de long press
-  // Buscar la función renderMainReactionButton y reemplazarla con esta versión:
-
   const renderMainReactionButton = () => {
-    // Configurar el long press para abrir el popover
-    //const longPressProps = useLongPress(() => {
-    //  setShowReactionPicker(true)
-    //}, 400) // 400ms es un buen tiempo para detectar long press
-
     return (
       <Button
         variant="ghost"
@@ -624,9 +601,14 @@ export function PostReactions({ postId }: PostReactionsProps) {
       return <div className="text-sm text-muted-foreground">¡Sé el primero en reaccionar y mostrar lo que piensas!</div>
     }
 
-    // Obtener el nombre del último usuario que reaccionó (si está disponible)
-    const lastReactedUser = reactionUsers.length > 0 ? reactionUsers[0] : null
-    const remainingCount = reactionsSummary.total - (lastReactedUser ? 1 : 0)
+    // Normalizar y agrupar las reacciones por tipo
+    const normalizedReactions = { ...reactionsSummary.types }
+
+    // Asegurarse de que las reacciones estén agrupadas correctamente
+    const topReactions = Object.entries(normalizedReactions)
+      .sort(([, countA], [, countB]) => (countB as number) - (countA as number))
+      .slice(0, 3)
+      .map(([type]) => type as ReactionType)
 
     return (
       <div
@@ -637,7 +619,7 @@ export function PostReactions({ postId }: PostReactionsProps) {
       >
         {/* Mostrar los emojis de las reacciones más populares */}
         <div className="flex -space-x-1">
-          {reactionsSummary.topReactions.slice(0, 3).map((type) => (
+          {topReactions.map((type) => (
             <div
               key={type}
               className="flex items-center justify-center w-6 h-6 rounded-full bg-muted text-lg shadow-sm border border-background"
@@ -647,17 +629,8 @@ export function PostReactions({ postId }: PostReactionsProps) {
           ))}
         </div>
 
-        {/* Mostrar el nombre del último usuario y el total de reacciones */}
-        <span className="text-sm text-muted-foreground hover:text-foreground">
-          {lastReactedUser ? (
-            <>
-              <span className="font-medium">{lastReactedUser.userName}</span>
-              {remainingCount > 0 && <span> y {remainingCount} más</span>}
-            </>
-          ) : (
-            reactionsSummary.total
-          )}
-        </span>
+        {/* Mostrar el total de reacciones */}
+        <span className="text-sm text-muted-foreground hover:text-foreground">{reactionsSummary.total}</span>
       </div>
     )
   }
@@ -689,42 +662,6 @@ export function PostReactions({ postId }: PostReactionsProps) {
 
     return null
   }
-
-  const reactionInfo = Object.fromEntries(REACTIONS.map((r) => [r.type, r]))
-
-  // Obtener las principales reacciones para mostrar en las pestañas
-  const getTopReactions = () => {
-    // Convertir el objeto de tipos a un array de [tipo, conteo]
-    const typesArray = Object.entries(reactionsSummary.types)
-      .map(([type, count]) => ({ type: type as ReactionType, count }))
-      .sort((a, b) => b.count - a.count)
-      .slice(0, 3) // Mostrar solo las 3 principales reacciones
-
-    return typesArray
-  }
-
-  // Obtener las reacciones principales y secundarias
-  const getMainAndSecondaryReactions = () => {
-    // Convertir el objeto de tipos a un array de [tipo, conteo]
-    const typesArray = Object.entries(reactionsSummary.types)
-      .map(([type, count]) => ({ type: type as ReactionType, count }))
-      .sort((a, b) => b.count - a.count)
-
-    // Las 3 principales reacciones
-    const mainReactions = typesArray.slice(0, 3)
-
-    // El resto de reacciones con conteo > 0
-    const secondaryReactions = typesArray.slice(3).filter((r) => r.count > 0)
-
-    return { mainReactions, secondaryReactions }
-  }
-
-  const { mainReactions, secondaryReactions } = getMainAndSecondaryReactions()
-
-  // Configurar el long press para abrir el popover
-  //const longPressProps = useLongPress(() => {
-  //  setShowReactionPicker(true)
-  //}, 400ms es un buen tiempo para detectar long press
 
   return (
     <div className="space-y-2">

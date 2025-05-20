@@ -1,27 +1,32 @@
-import { collection, doc, getDoc, addDoc, updateDoc } from "firebase/firestore"
-import { db } from "./firebase"
-import { getRandomFakeUser } from "@/lib/fake-data/users"
+import {
+  collection,
+  doc,
+  getDoc,
+  addDoc,
+  updateDoc,
+  increment,
+  serverTimestamp,
+  writeBatch,
+  runTransaction,
+  query,
+  where,
+  getDocs,
+} from "firebase/firestore"
+import { db } from "@/lib/firebase/config"
+import { getRandomUser } from "@/lib/fake-data/users"
 import { getRandomBlogComment, getRandomBlogRating, getRandomProductReview } from "@/lib/fake-data/comments"
 import { REACTION_TYPES } from "@/lib/fake-data/constants"
+// Importar las constantes centralizadas
+import { VALID_REACTION_TYPES, REACTION_TYPE_MAP } from "@/lib/constants/reaction-types"
+import type { ReactionType } from "@/types/blog"
 
 // Generar vistas falsas para un post
 export async function generateFakeViews(postId: string, viewCount: number): Promise<void> {
   try {
-    // Obtener el post
     const postRef = doc(db, "blog", postId)
-    const postDoc = await getDoc(postRef)
-
-    if (!postDoc.exists()) {
-      throw new Error(`Post with ID ${postId} not found`)
-    }
-
-    // Actualizar el contador de vistas
     await updateDoc(postRef, {
-      viewCount: viewCount,
-      views: viewCount, // Para compatibilidad con código existente
+      viewCount: increment(viewCount),
     })
-
-    console.log(`Generated ${viewCount} fake views for post ${postId}`)
   } catch (error) {
     console.error("Error generating fake views:", error)
     throw error
@@ -29,75 +34,156 @@ export async function generateFakeViews(postId: string, viewCount: number): Prom
 }
 
 // Generar reacciones falsas para un post
-export async function generateFakeReactions(postId: string, reactionCounts: Record<string, number>): Promise<void> {
+export async function generateFakeReactions(postId: string, reactionData: Record<ReactionType, number>): Promise<void> {
   try {
-    // Obtener el post
+    // Verificar que el postId sea válido
+    if (!postId) {
+      throw new Error("ID de post inválido")
+    }
+
+    // Lista de tipos de reacciones válidos
+    const validReactionTypes = VALID_REACTION_TYPES
+
+    // Obtener referencia al post
     const postRef = doc(db, "blog", postId)
-    const postDoc = await getDoc(postRef)
 
-    if (!postDoc.exists()) {
-      throw new Error(`Post with ID ${postId} not found`)
-    }
+    // Usar una transacción para actualizar tanto las reacciones individuales como el contador en el post
+    await runTransaction(db, async (transaction) => {
+      // Verificar que el post existe
+      const postDoc = await transaction.get(postRef)
+      if (!postDoc.exists()) {
+        throw new Error(`Post no encontrado con ID: ${postId}`)
+      }
 
-    // Obtener las reacciones actuales del post
-    const postData = postDoc.data()
-    const currentReactions = postData.reactions || { total: 0, types: {} }
+      // Obtener los datos actuales del post
+      const postData = postDoc.data()
 
-    // Crear objeto para las reacciones actualizadas
-    const updatedReactions = {
-      total: currentReactions.total || 0,
-      types: { ...currentReactions.types },
-    }
+      // Inicializar el objeto de reacciones si no existe
+      const currentReactions = postData.reactions || { total: 0, types: {} }
 
-    console.log("Reacciones actuales:", currentReactions)
-    console.log("Reacciones a generar:", reactionCounts)
+      // Crear un nuevo objeto para las reacciones actualizadas
+      const updatedReactions = {
+        total: currentReactions.total || 0,
+        types: { ...currentReactions.types },
+      }
 
-    // Generar reacciones para cada tipo
-    for (const [type, count] of Object.entries(reactionCounts)) {
-      if (count <= 0) continue
+      // Batch para añadir múltiples reacciones eficientemente
+      const batch = writeBatch(db)
 
-      // Actualizar el contador de reacciones
-      updatedReactions.total += count
-      updatedReactions.types[type] = (updatedReactions.types[type] || 0) + count
+      let totalReactionsGenerated = 0
+      // Para cada tipo de reacción
+      for (const [type, count] of Object.entries(reactionData)) {
+        // Validar que el tipo de reacción es válido
+        const normalizedType = type.toLowerCase().trim() as ReactionType
 
-      // Generar reacciones individuales
-      const batch = []
-      for (let i = 0; i < count; i++) {
-        const fakeUser = getRandomFakeUser()
-
-        batch.push({
-          postId,
-          userId: fakeUser.id,
-          userName: `${fakeUser.firstName} ${fakeUser.lastName}`,
-          userImageUrl: fakeUser.photoURL,
-          reactionType: type,
-          createdAt: new Date(Date.now() - Math.floor(Math.random() * 30 * 24 * 60 * 60 * 1000)), // Random date in the last 30 days
-        })
-
-        // Procesar en lotes de 20 para evitar sobrecarga
-        if (batch.length >= 20) {
-          await Promise.all(batch.map((reaction) => addDoc(collection(db, "blogReactions"), reaction)))
-          batch.length = 0
+        if (!validReactionTypes.includes(normalizedType)) {
+          console.warn(`Tipo de reacción desconocido: ${type}, se omitirá`)
+          continue
         }
+
+        // Validar que el contador es un número válido
+        const reactionCount = Number(count)
+        if (isNaN(reactionCount) || reactionCount <= 0) {
+          console.warn(`Contador inválido para ${type}: ${count}, se omitirá`)
+          continue
+        }
+
+        // Generar las reacciones falsas para este tipo
+        for (let i = 0; i < reactionCount; i++) {
+          // Generar un usuario aleatorio
+          const user = getRandomUser()
+
+          // Crear un documento de reacción
+          const reactionRef = doc(collection(db, "blogReactions"))
+
+          // Añadir la reacción al batch con el tipo normalizado
+          batch.set(reactionRef, {
+            postId,
+            userId: user.id,
+            userName: `${user.firstName} ${user.lastName}`,
+            userImageUrl: user.photoURL,
+            reactionType: normalizedType,
+            createdAt: serverTimestamp(),
+            timestamp: serverTimestamp(),
+          })
+
+          // Actualizar los contadores
+          updatedReactions.total += 1
+          updatedReactions.types[normalizedType] = (updatedReactions.types[normalizedType] || 0) + 1
+        }
+        totalReactionsGenerated += reactionCount
       }
 
-      // Procesar el lote restante
-      if (batch.length > 0) {
-        await Promise.all(batch.map((reaction) => addDoc(collection(db, "blogReactions"), reaction)))
+      // Verificar que el total generado coincida con el esperado
+      if (totalReactionsGenerated !== updatedReactions.total) {
+        console.warn(
+          `Advertencia: El total de reacciones generadas (${totalReactionsGenerated}) no coincide con el contador actualizado (${updatedReactions.total})`,
+        )
+        // Corregir el total
+        updatedReactions.total = totalReactionsGenerated
       }
-    }
 
-    console.log("Reacciones actualizadas:", updatedReactions)
+      // Actualizar el documento del post con los nuevos contadores de reacciones
+      transaction.update(postRef, { reactions: updatedReactions })
 
-    // Actualizar el post con las nuevas reacciones
-    await updateDoc(postRef, {
-      reactions: updatedReactions,
+      // Commit del batch para añadir todas las reacciones
+      await batch.commit()
     })
 
-    console.log(`Generated fake reactions for post ${postId}:`, reactionCounts)
+    console.log("Reacciones generadas exitosamente")
+
+    // Ejecutar una función para normalizar todas las reacciones existentes
+    await normalizeExistingReactions(postId)
   } catch (error) {
     console.error("Error generating fake reactions:", error)
     throw error
+  }
+}
+
+// Nueva función para normalizar reacciones existentes
+async function normalizeExistingReactions(postId: string): Promise<void> {
+  try {
+    console.log(`Normalizando reacciones existentes para post ${postId}...`)
+
+    // Mapa para normalizar los tipos de reacciones
+    const reactionTypeMap = REACTION_TYPE_MAP
+
+    // Obtener todas las reacciones para este post
+    const reactionsRef = collection(db, "blogReactions")
+    const q = query(reactionsRef, where("postId", "==", postId))
+    const querySnapshot = await getDocs(q)
+
+    // Batch para actualizar múltiples documentos
+    const batch = writeBatch(db)
+    let updateCount = 0
+
+    // Procesar cada reacción
+    querySnapshot.forEach((doc) => {
+      const reactionData = doc.data()
+      const currentType = reactionData.reactionType
+
+      // Normalizar el tipo de reacción
+      const normalizedType = reactionTypeMap[currentType] || currentType
+
+      // Si el tipo es diferente, actualizar el documento
+      if (normalizedType !== currentType) {
+        batch.update(doc.ref, { reactionType: normalizedType })
+        updateCount++
+      }
+    })
+
+    // Si hay actualizaciones, ejecutar el batch
+    if (updateCount > 0) {
+      await batch.commit()
+      console.log(`Se normalizaron ${updateCount} reacciones para el post ${postId}`)
+
+      // Actualizar el contador en el post
+      await getPostReactions(postId)
+    } else {
+      console.log(`No se encontraron reacciones para normalizar en el post ${postId}`)
+    }
+  } catch (error) {
+    console.error(`Error normalizando reacciones existentes: ${error}`)
   }
 }
 
@@ -114,7 +200,7 @@ export async function generateFakeComments(postId: string, commentCount: number)
 
     // Generar comentarios
     for (let i = 0; i < commentCount; i++) {
-      const fakeUser = getRandomFakeUser()
+      const fakeUser = getRandomUser()
       const commentText = getRandomBlogComment()
 
       // Crear fecha aleatoria en los últimos 30 días
@@ -161,7 +247,7 @@ export async function generateFakeRatings(
 
     // Generar reseñas de 4 estrellas
     for (let i = 0; i < fourStarRatings; i++) {
-      const fakeUser = getRandomFakeUser()
+      const fakeUser = getRandomUser()
       const ratingText = getRandomBlogRating()
 
       // Crear fecha aleatoria en los últimos 60 días
@@ -181,7 +267,7 @@ export async function generateFakeRatings(
 
     // Generar reseñas de 5 estrellas
     for (let i = 0; i < fiveStarRatings; i++) {
-      const fakeUser = getRandomFakeUser()
+      const fakeUser = getRandomUser()
       const ratingText = getRandomBlogRating()
 
       // Crear fecha aleatoria en los últimos 60 días
@@ -204,7 +290,7 @@ export async function generateFakeRatings(
 
     await updateDoc(postRef, {
       averageRating,
-      ratingCount: totalRatings,
+      ratingCount: increment(totalRatings),
     })
 
     console.log(`Generated ${totalRatings} fake ratings for post ${postId}`)
@@ -361,7 +447,7 @@ export async function generateFakePostReactions(
 
       // Generar reacciones individuales
       for (let i = 0; i < count; i++) {
-        const fakeUser = getRandomFakeUser()
+        const fakeUser = getRandomUser()
 
         await addDoc(collection(db, "blogReactions"), {
           postId,
@@ -410,7 +496,7 @@ export async function generateFakeProductReviews(
 
     // Generar reseñas de 4 estrellas
     for (let i = 0; i < fourStarReviews; i++) {
-      const fakeUser = getRandomFakeUser()
+      const fakeUser = getRandomUser()
       const reviewText = getRandomProductReview(productType, fakeUser.gender)
 
       // Crear fecha aleatoria en los últimos 90 días
@@ -436,7 +522,7 @@ export async function generateFakeProductReviews(
 
     // Generar reseñas de 5 estrellas
     for (let i = 0; i < fiveStarReviews; i++) {
-      const fakeUser = getRandomFakeUser()
+      const fakeUser = getRandomUser()
       const reviewText = getRandomProductReview(productType, fakeUser.gender)
 
       // Crear fecha aleatoria en los últimos 90 días
@@ -465,12 +551,30 @@ export async function generateFakeProductReviews(
 
     await updateDoc(productRef, {
       rating: averageRating,
-      reviewCount: (productData.reviewCount || 0) + totalReviews,
+      reviewCount: increment(totalReviews),
     })
 
     console.log(`Generated ${totalReviews} fake reviews for product ${productId}`)
   } catch (error) {
     console.error("Error generating fake product reviews:", error)
     throw error
+  }
+}
+
+// Función auxiliar para obtener las reacciones de un post
+async function getPostReactions(postId: string): Promise<void> {
+  try {
+    const postRef = doc(db, "blog", postId)
+    const postDoc = await getDoc(postRef)
+
+    if (postDoc.exists()) {
+      const postData = postDoc.data()
+      const reactions = postData.reactions || { total: 0, types: {} }
+      console.log(`Reacciones actuales para el post ${postId}:`, reactions)
+    } else {
+      console.log(`Post con ID ${postId} no encontrado`)
+    }
+  } catch (error) {
+    console.error("Error obteniendo reacciones del post:", error)
   }
 }

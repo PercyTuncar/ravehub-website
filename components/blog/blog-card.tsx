@@ -5,13 +5,13 @@ import Link from "next/link"
 import { useState, useEffect, useRef, useCallback } from "react"
 import { collection, query, where, getDocs, doc, updateDoc, increment } from "firebase/firestore"
 import { db } from "@/lib/firebase/config"
-import type { BlogPost, PostReaction, ReactionType } from "@/types"
+import type { BlogPost, ReactionType } from "@/types"
 import { getTimeAgo } from "@/lib/utils"
 import { Share, MessageSquare, Eye, Star } from "lucide-react"
 import { useAuth } from "@/context/auth-context"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
-import { addOrUpdateReaction, getUserReaction, removeReaction } from "@/lib/firebase/blog"
+import { addOrUpdateReaction, getUserReaction, removeReaction, getPostReactions } from "@/lib/firebase/blog"
 import { SmilePlus } from "lucide-react"
 import { useToast } from "@/components/ui/use-toast"
 import { motion, AnimatePresence } from "framer-motion"
@@ -363,45 +363,14 @@ export function BlogCard({ post }: BlogCardProps) {
     const fetchReactionsAndComments = async () => {
       try {
         // Fetch reactions
-        const reactionsRef = collection(db, "blogReactions")
-        const reactionsQuery = query(reactionsRef, where("postId", "==", post.id))
-        const reactionsSnapshot = await getDocs(reactionsQuery)
+        const reactionsData = await getPostReactions(post.id)
 
-        if (!reactionsSnapshot.empty) {
-          const reactionDocs = reactionsSnapshot.docs.map(
-            (doc) =>
-              ({
-                id: doc.id,
-                ...doc.data(),
-              }) as PostReaction,
-          )
-
-          // Count reactions by type
-          const reactionCounts: Record<ReactionType, number> = {} as Record<ReactionType, number>
-          reactionDocs.forEach((reaction) => {
-            const type = reaction.reactionType as ReactionType
-            reactionCounts[type] = (reactionCounts[type] || 0) + 1
-          })
-
-          // Get top 3 reactions
-          const topReactions = Object.entries(reactionCounts)
-            .sort(([, countA], [, countB]) => countB - countA)
-            .slice(0, 3)
-            .map(([type]) => type as ReactionType)
-
-          // Get most recent reactor
-          const lastReactor = reactionDocs.sort((a, b) => {
-            const dateA = a.createdAt instanceof Date ? a.createdAt : new Date(a.createdAt)
-            const dateB = b.createdAt instanceof Date ? b.createdAt : new Date(b.createdAt)
-            return dateB.getTime() - dateA.getTime()
-          })[0]?.userName
-
-          setReactions({
-            total: reactionDocs.length,
-            topReactions,
-            lastReactor,
-          })
-        }
+        // Actualizar el estado con los datos de reacciones
+        setReactions({
+          total: reactionsData.summary.total,
+          topReactions: reactionsData.summary.topReactions,
+          lastReactor: reactionsData.reactions.length > 0 ? reactionsData.reactions[0].userName : undefined,
+        })
 
         // Fetch comments
         const commentsRef = collection(db, "blogComments")
@@ -510,11 +479,7 @@ export function BlogCard({ post }: BlogCardProps) {
                 ))}
               </div>
             )}
-            {reactions.total > 0 && (
-              <span className="ml-2">
-                {reactions.total} 
-              </span>
-            )}
+            {reactions.total > 0 && <span className="ml-2">{reactions.total}</span>}
           </div>
           <div className="flex gap-3">
             <span className="flex items-center gap-1">

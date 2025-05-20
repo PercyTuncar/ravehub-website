@@ -7,8 +7,10 @@ import { ScrollArea } from "@/components/ui/scroll-area"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Loader2 } from "lucide-react"
 import { getUsersByReactionType } from "@/lib/firebase/blog"
-import { getReactionInfo } from "./post-reactions"
+// Importar las constantes centralizadas
+import { getReactionInfo } from "@/lib/constants/reaction-types"
 import type { ReactionType, PostReaction, PostReactionsSummary } from "@/types/blog"
+import { toast } from "@/components/ui/use-toast"
 
 interface ReactionsModalProps {
   postId: string
@@ -77,11 +79,28 @@ export function ReactionsModal({ postId, isOpen, onOpenChange, reactionsSummary 
       setIsLoading(true)
       const result = await getUsersByReactionType(postId, type as ReactionType)
 
-      setReactionUsers(result.reactions)
+      // Ordenar las reacciones por fecha (más recientes primero)
+      setReactionUsers(
+        result.reactions.sort((a, b) => {
+          // Si tienen timestamp, ordenar por timestamp (más reciente primero)
+          if (a.timestamp && b.timestamp) {
+            return b.timestamp.seconds - a.timestamp.seconds
+          }
+          // Si no tienen timestamp, mantener el orden que vino de la base de datos
+          return 0
+        }),
+      )
+
       setLastVisible(result.lastVisible)
       setHasMore(result.hasMore)
     } catch (error) {
       console.error(`Error loading users for reaction type ${type}:`, error)
+      // Mostrar un mensaje de error en la UI
+      toast({
+        title: "Error",
+        description: "No se pudieron cargar las reacciones. Inténtalo de nuevo más tarde.",
+        variant: "destructive",
+      })
     } finally {
       setIsLoading(false)
     }
@@ -95,11 +114,25 @@ export function ReactionsModal({ postId, isOpen, onOpenChange, reactionsSummary 
       setIsLoadingMore(true)
       const result = await getUsersByReactionType(postId, selectedTab as ReactionType, 10, lastVisible)
 
-      setReactionUsers((prev) => [...prev, ...result.reactions])
+      // Ordenar las nuevas reacciones y combinarlas con las existentes
+      const sortedNewReactions = result.reactions.sort((a, b) => {
+        if (a.timestamp && b.timestamp) {
+          return b.timestamp.seconds - a.timestamp.seconds
+        }
+        return 0
+      })
+
+      setReactionUsers((prev) => [...prev, ...sortedNewReactions])
       setLastVisible(result.lastVisible)
       setHasMore(result.hasMore)
     } catch (error) {
       console.error(`Error loading more reactions:`, error)
+      // Mostrar un mensaje de error en la UI
+      toast({
+        title: "Error",
+        description: "No se pudieron cargar más reacciones. Inténtalo de nuevo más tarde.",
+        variant: "destructive",
+      })
     } finally {
       setIsLoadingMore(false)
     }
