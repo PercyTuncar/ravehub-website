@@ -1,36 +1,25 @@
 "use client"
 
 import type React from "react"
-import { useState, useEffect } from "react"
+import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { motion } from "framer-motion"
 import { Mail, CheckCircle, AlertCircle } from "lucide-react"
 import { db } from "@/lib/firebase/config"
 import { collection, addDoc, serverTimestamp, query, where, getDocs, doc, getDoc, setDoc } from "firebase/firestore"
-import FingerprintJS from "@fingerprintjs/fingerprintjs"
+
+// Lazy load FingerprintJS only when needed
+const loadFingerprint = async () => {
+  const FingerprintJS = await import("@fingerprintjs/fingerprintjs")
+  const fp = await FingerprintJS.default.load()
+  return (await fp.get()).visitorId
+}
 
 export function NewsletterSection() {
   const [email, setEmail] = useState("")
   const [isSubmitted, setIsSubmitted] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [fingerprint, setFingerprint] = useState<string | null>(null)
-
-  // Generar huella digital del navegador al cargar el componente
-  useEffect(() => {
-    const generateFingerprint = async () => {
-      try {
-        const fp = await FingerprintJS.load()
-        const result = await fp.get()
-        setFingerprint(result.visitorId)
-      } catch (err) {
-        console.error("Error generando huella digital:", err)
-      }
-    }
-
-    generateFingerprint()
-  }, [])
 
   const checkSubmissionLimit = async (visitorId: string): Promise<boolean> => {
     try {
@@ -90,13 +79,10 @@ export function NewsletterSection() {
     setIsLoading(true)
     setError(null)
 
-    if (!fingerprint) {
-      setError("No se pudo generar la huella digital del navegador. Por favor, intenta nuevamente.")
-      setIsLoading(false)
-      return
-    }
-
     try {
+      // Cargar la huella digital solo cuando sea necesario
+      const fingerprint = await loadFingerprint()
+
       // Verificar límite de envíos por huella digital
       const canSubmit = await checkSubmissionLimit(fingerprint)
       if (!canSubmit) {
@@ -135,13 +121,7 @@ export function NewsletterSection() {
 
   return (
     <section className="py-16 px-4 md:px-8">
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true, margin: "-100px" }}
-        transition={{ duration: 0.5 }}
-        className="max-w-4xl mx-auto bg-gradient-to-r from-primary/10 to-primary/5 rounded-2xl p-8 md:p-12 text-center"
-      >
+      <div className="fade-in-up max-w-4xl mx-auto bg-gradient-to-r from-primary/10 to-primary/5 rounded-2xl p-8 md:p-12 text-center">
         <div className="inline-flex items-center justify-center h-16 w-16 rounded-full bg-primary/20 mb-6">
           <Mail className="h-8 w-8 text-primary" />
         </div>
@@ -153,14 +133,10 @@ export function NewsletterSection() {
         </p>
 
         {isSubmitted ? (
-          <motion.div
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="flex items-center justify-center gap-2 text-green-600 bg-green-50 p-4 rounded-lg"
-          >
+          <div className="fade-in flex items-center justify-center gap-2 text-green-600 bg-green-50 p-4 rounded-lg">
             <CheckCircle className="h-5 w-5" />
             <span>¡Gracias por suscribirte! Tu correo ha sido registrado correctamente.</span>
-          </motion.div>
+          </div>
         ) : (
           <form onSubmit={handleSubmit} className="flex flex-col sm:flex-row gap-3 max-w-md mx-auto">
             <Input
@@ -179,16 +155,12 @@ export function NewsletterSection() {
         )}
 
         {error && (
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="mt-3 flex items-center justify-center gap-2 text-red-600 bg-red-50 p-3 rounded-lg max-w-md mx-auto"
-          >
+          <div className="fade-in mt-3 flex items-center justify-center gap-2 text-red-600 bg-red-50 p-3 rounded-lg max-w-md mx-auto">
             <AlertCircle className="h-4 w-4 flex-shrink-0" />
             <span className="text-sm">{error}</span>
-          </motion.div>
+          </div>
         )}
-      </motion.div>
+      </div>
     </section>
   )
 }

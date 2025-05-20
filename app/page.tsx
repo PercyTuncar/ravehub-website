@@ -5,31 +5,42 @@ import type { Metadata } from "next"
 import dynamic from "next/dynamic"
 import { Suspense } from "react"
 
-// Cargar componentes de forma dinámica para mejorar el tiempo de carga inicial
+// Optimized dynamic imports with reduced loading components
 const CountriesSection = dynamic(
   () => import("@/components/home/countries-section").then((mod) => ({ default: mod.CountriesSection })),
   {
-    loading: () => <div className="h-40 bg-gradient-to-b from-background/95 to-background"></div>,
+    loading: () => <div aria-hidden="true" className="h-20"></div>,
+    ssr: true,
   },
 )
 
 const FeaturedEventsSection = dynamic(
   () => import("@/components/home/featured-events-section").then((mod) => ({ default: mod.FeaturedEventsSection })),
   {
-    loading: () => <div className="py-12 bg-gradient-to-b from-background to-background/80"></div>,
+    loading: () => <div aria-hidden="true" className="py-8"></div>,
+    ssr: true,
   },
 )
 
-const AboutSection = dynamic(() =>
-  import("@/components/home/about-section").then((mod) => ({ default: mod.AboutSection })),
+// Use intersection observer loading for less important sections
+const AboutSection = dynamic(
+  () => import("@/components/home/about-section").then((mod) => ({ default: mod.AboutSection })),
+  { ssr: false },
 )
-const TestimonialsSection = dynamic(() =>
-  import("@/components/home/testimonials-section").then((mod) => ({ default: mod.TestimonialsSection })),
+
+const TestimonialsSection = dynamic(
+  () => import("@/components/home/testimonials-section").then((mod) => ({ default: mod.TestimonialsSection })),
+  { ssr: false },
 )
-const NewsletterSection = dynamic(() =>
-  import("@/components/home/newsletter-section").then((mod) => ({ default: mod.NewsletterSection })),
+
+const NewsletterSection = dynamic(
+  () => import("@/components/home/newsletter-section").then((mod) => ({ default: mod.NewsletterSection })),
+  { ssr: false },
 )
-const CtaSection = dynamic(() => import("@/components/home/cta-section").then((mod) => ({ default: mod.CtaSection })))
+
+const CtaSection = dynamic(() => import("@/components/home/cta-section").then((mod) => ({ default: mod.CtaSection })), {
+  ssr: false,
+})
 
 export const metadata: Metadata = {
   title: "RaveHub - Eventos de música electrónica",
@@ -67,41 +78,42 @@ export const viewport = {
   themeColor: "#000000",
 }
 
-// Modificar el componente principal para usar Suspense
 export default async function Home() {
+  // Prefetch critical data
   const featuredEvents = await getFeaturedEvents()
 
   return (
     <div className="flex flex-col min-h-screen bg-gradient-to-b from-background to-background/95">
-      {/* Hero Section - Cargar inmediatamente para mejorar LCP */}
+      {/* Critical path rendering - load immediately */}
       <HeroSection />
 
-      {/* Cargar el resto de secciones de forma progresiva */}
-      <Suspense fallback={<div className="h-40 bg-gradient-to-b from-background/95 to-background"></div>}>
+      {/* Important but can be loaded slightly after initial paint */}
+      <Suspense fallback={<div aria-hidden="true" className="h-20"></div>}>
         <CountriesSection />
       </Suspense>
 
-      <Suspense fallback={<div className="py-12 bg-gradient-to-b from-background to-background/80"></div>}>
+      <Suspense fallback={<div aria-hidden="true" className="py-8"></div>}>
         <FeaturedEventsSection events={featuredEvents} />
       </Suspense>
 
-      <Suspense fallback={<div className="py-12"></div>}>
+      {/* Non-critical sections loaded later */}
+      <Suspense>
         <AboutSection />
       </Suspense>
 
-      <Suspense fallback={<div className="py-12"></div>}>
+      <Suspense>
         <TestimonialsSection />
       </Suspense>
 
-      <Suspense fallback={<div className="py-12"></div>}>
+      <Suspense>
         <NewsletterSection />
       </Suspense>
 
-      <Suspense fallback={<div className="py-12"></div>}>
+      <Suspense>
         <CtaSection />
       </Suspense>
 
-      {/* Add the HomeSchema component */}
+      {/* Schema data for SEO - doesn't affect visual rendering */}
       <HomeSchema featuredEvents={featuredEvents} />
     </div>
   )

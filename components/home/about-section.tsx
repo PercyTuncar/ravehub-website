@@ -2,7 +2,6 @@
 
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
-import { motion } from "framer-motion"
 import { CheckCircle, ArrowRight } from "lucide-react"
 import Image from "next/image"
 
@@ -19,13 +18,7 @@ export function AboutSection() {
   return (
     <section className="py-12 sm:py-16 md:py-20 px-4 sm:px-6 md:px-8 bg-muted/50 overflow-hidden">
       <div className="max-w-7xl mx-auto">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: "-100px" }}
-          transition={{ duration: 0.5 }}
-          className="text-center mb-10 md:mb-16"
-        >
+        <div className="fade-in-up text-center mb-10 md:mb-16">
           <span className="inline-block px-3 py-1 bg-primary/10 text-primary rounded-full text-sm font-medium mb-4">
             Quiénes Somos
           </span>
@@ -33,24 +26,18 @@ export function AboutSection() {
           <p className="text-base sm:text-lg text-muted-foreground max-w-2xl mx-auto">
             Conectamos a los amantes de la música con los mejores eventos, artistas y productos en Latinoamérica.
           </p>
-        </motion.div>
+        </div>
 
         <div className="grid md:grid-cols-2 gap-8 md:gap-12 items-center">
-          <motion.div
-            initial={{ opacity: 0, x: -20 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            viewport={{ once: true, margin: "-100px" }}
-            transition={{ duration: 0.5 }}
-            className="order-2 md:order-1"
-          >
-            <div className="relative h-[350px] sm:h-[400px] md:h-[500px] rounded-2xl overflow-hidden shadow-xl group bg-muted">
+          <div className="fade-in-left order-2 md:order-1">
+            <div className="relative h-[350px] sm:h-[400px] md:h-[500px] rounded-2xl overflow-hidden shadow-xl group">
               <Image
                 src="https://firebasestorage.googleapis.com/v0/b/event-ticket-website-6b541.firebasestorage.app/o/rave-1-_1_-min.webp?alt=media&token=c1d8ad9c-7131-4174-9c0c-dbc52fb2af28"
                 alt="Comunidad RaveHub en Road to Ultra Ecuador"
                 fill
                 sizes="(max-width: 768px) 100vw, 50vw"
-                priority
-                className="object-cover w-full h-full transform scale-110 transition-transform duration-700 group-hover:scale-125"
+                loading="lazy"
+                className="object-cover w-full h-full transition-transform duration-3000 group-hover:scale-110"
                 onError={(e) => {
                   const target = e.target as HTMLImageElement
                   target.onerror = null
@@ -59,15 +46,9 @@ export function AboutSection() {
               />
               <div className="absolute inset-0 bg-black/5 pointer-events-none"></div>
             </div>
-          </motion.div>
+          </div>
 
-          <motion.div
-            initial={{ opacity: 0, x: 20 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            viewport={{ once: true, margin: "-100px" }}
-            transition={{ duration: 0.5 }}
-            className="order-1 md:order-2"
-          >
+          <div className="fade-in-right order-1 md:order-2">
             <h3 className="text-xl sm:text-2xl font-bold mb-3 sm:mb-4">
               La plataforma líder en eventos de música electrónica
             </h3>
@@ -82,17 +63,14 @@ export function AboutSection() {
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3 mb-6 sm:mb-8">
               {features.map((feature, index) => (
-                <motion.div
+                <div
                   key={index}
-                  initial={{ opacity: 0, y: 10 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ duration: 0.3, delay: index * 0.1 }}
-                  className="flex items-center gap-2"
+                  className="fade-in-stagger-item flex items-center gap-2"
+                  style={{ animationDelay: `${index * 100}ms` }}
                 >
                   <CheckCircle className="h-4 w-4 sm:h-5 sm:w-5 text-primary flex-shrink-0" />
                   <span className="text-sm sm:text-base">{feature}</span>
-                </motion.div>
+                </div>
               ))}
             </div>
 
@@ -102,7 +80,7 @@ export function AboutSection() {
                 <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
               </Link>
             </Button>
-          </motion.div>
+          </div>
         </div>
       </div>
     </section>

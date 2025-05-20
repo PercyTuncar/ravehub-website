@@ -17,6 +17,7 @@ import { UpdatePrompt } from "@/components/pwa/update-prompt"
 import GoogleAnalytics from "@/components/analytics/google-analytics"
 import { Suspense } from "react"
 import { FontOptimization } from "@/components/font-optimization"
+import { ConnectionStatus } from "@/components/pwa/connection-status" // Import ConnectionStatus component
 
 // Optimizar la carga de fuentes
 const inter = Inter({
@@ -157,6 +158,7 @@ export default function RootLayout({
           </GeolocationProvider>
         </ThemeProvider>
         <RegisterSW />
+        <ConnectionStatus /> {/* Added ConnectionStatus component */}
       </body>
     </html>
   )
