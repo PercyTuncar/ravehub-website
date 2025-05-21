@@ -2,7 +2,7 @@
 
 import type React from "react"
 
-import { useState, useEffect, useCallback } from "react"
+import { useState, useEffect } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
@@ -40,36 +40,8 @@ export function PostFilters() {
   const loadCategories = async () => {
     try {
       setLoading(true)
-
-      // Intentar obtener categorías de sessionStorage
-      const cachedCategories = sessionStorage.getItem("blog_categories")
-      if (cachedCategories) {
-        const parsed = JSON.parse(cachedCategories)
-        const cacheTime = parsed.timestamp
-
-        // Usar caché si tiene menos de 5 minutos
-        if (Date.now() - cacheTime < 300000) {
-          setCategories(parsed.categories)
-          setLoading(false)
-          return
-        }
-      }
-
       const categoriesData = await getAllCategories()
       setCategories(categoriesData)
-
-      // Guardar en sessionStorage
-      try {
-        sessionStorage.setItem(
-          "blog_categories",
-          JSON.stringify({
-            categories: categoriesData,
-            timestamp: Date.now(),
-          }),
-        )
-      } catch (e) {
-        console.error("Error caching categories:", e)
-      }
     } catch (error) {
       console.error("Error loading categories:", error)
     } finally {
@@ -77,29 +49,22 @@ export function PostFilters() {
     }
   }
 
-  // Usar useCallback para memoizar funciones
-  const handleSearch = useCallback(
-    (e: React.FormEvent) => {
-      e.preventDefault()
-      if (searchQuery.trim()) {
-        router.push(`/blog?q=${encodeURIComponent(searchQuery.trim())}`)
-      } else {
-        router.push("/blog")
-      }
-    },
-    [searchQuery, router],
-  )
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault()
+    if (searchQuery.trim()) {
+      router.push(`/blog?q=${encodeURIComponent(searchQuery.trim())}`)
+    } else {
+      router.push("/blog")
+    }
+  }
 
-  // Usar useCallback para memoizar funciones
-  const handleSortChange = useCallback(
-    (value: string) => {
-      setSortOrder(value)
-      const params = new URLSearchParams(searchParams.toString())
-      params.set("sort", value)
-      router.push(`/blog?${params.toString()}`)
-    },
-    [searchParams, router],
-  )
+  // Añadir un manejador para el cambio de ordenamiento
+  const handleSortChange = (value: string) => {
+    setSortOrder(value)
+    const params = new URLSearchParams(searchParams.toString())
+    params.set("sort", value)
+    router.push(`/blog?${params.toString()}`)
+  }
 
   return (
     <div className="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between mb-6">

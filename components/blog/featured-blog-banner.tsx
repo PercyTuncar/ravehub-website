@@ -2,14 +2,12 @@
 
 import { useState, useEffect } from "react"
 import Link from "next/link"
-import { OptimizedImage } from "./optimized-image"
+import Image from "next/image"
 import { collection, query, where, getDocs, orderBy, limit } from "firebase/firestore"
 import { db } from "@/lib/firebase/config"
 import { motion, AnimatePresence } from "framer-motion"
 import { Calendar, User, Star, StarHalf, Eye, MessageSquare } from "lucide-react"
 import { cn } from "@/lib/utils"
-import { getFeaturedPosts } from "@/lib/firebase/blog"
-import type { BlogPost } from "@/types/blog"
 
 interface FeaturedPost {
   id: string
@@ -43,7 +41,6 @@ export default function FeaturedBlogBanner() {
   const [currentIndex, setCurrentIndex] = useState(0)
   const [loading, setLoading] = useState(true)
   const [isHovering, setIsHovering] = useState(false)
-  const [featuredPost, setFeaturedPost] = useState<BlogPost | null>(null)
 
   useEffect(() => {
     const fetchFeaturedPosts = async () => {
@@ -88,48 +85,7 @@ export default function FeaturedBlogBanner() {
       }
     }
 
-    const loadFeaturedPost = async () => {
-      try {
-        // Intentar obtener de sessionStorage primero
-        const cachedPost = sessionStorage.getItem("featured_blog_post")
-        if (cachedPost) {
-          const parsed = JSON.parse(cachedPost)
-          const cacheTime = parsed.timestamp
-
-          // Usar caché si tiene menos de 5 minutos
-          if (Date.now() - cacheTime < 300000) {
-            setFeaturedPost(parsed.post)
-            setLoading(false)
-            return
-          }
-        }
-
-        const posts = await getFeaturedPosts(1)
-        if (posts.length > 0) {
-          setFeaturedPost(posts[0])
-
-          // Guardar en sessionStorage
-          try {
-            sessionStorage.setItem(
-              "featured_blog_post",
-              JSON.stringify({
-                post: posts[0],
-                timestamp: Date.now(),
-              }),
-            )
-          } catch (e) {
-            console.error("Error caching featured post:", e)
-          }
-        }
-      } catch (error) {
-        console.error("Error loading featured post:", error)
-      } finally {
-        setLoading(false)
-      }
-    }
-
     fetchFeaturedPosts()
-    loadFeaturedPost()
   }, [])
 
   const nextSlide = () => {
@@ -160,7 +116,7 @@ export default function FeaturedBlogBanner() {
     )
   }
 
-  if (featuredPosts.length === 0 && !featuredPost) {
+  if (featuredPosts.length === 0) {
     return null
   }
 
@@ -216,186 +172,152 @@ export default function FeaturedBlogBanner() {
         >
           {/* Main featured post */}
           <AnimatePresence mode="wait">
-            {featuredPost && (
-              <motion.div
-                key={`main-${featuredPost.id}`}
-                className="lg:col-span-2 relative rounded-xl overflow-hidden group h-[550px] shadow-lg"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -20 }}
-                transition={{ duration: 0.5 }}
-              >
-                <Link href={`/blog/${featuredPost.slug}`} className="block h-full">
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/50 to-transparent z-10"></div>
-                  <OptimizedImage
-                    src={featuredPost.featuredImageUrl || featuredPost.featuredImage || "/images/placeholder-blog.jpg"}
-                    alt={featuredPost.title}
-                    fill
-                    sizes="100vw"
-                    className="object-cover transition-transform duration-500 group-hover:scale-105"
-                    priority
-                  />
-                  <div className="absolute bottom-0 left-0 right-0 p-6 z-20 text-white">
-                    <span className="inline-block bg-blue-600 text-white text-xs font-semibold px-3 py-1 rounded-full mb-3">
-                      Destacado
+            <motion.div
+              key={`main-${currentIndex}`}
+              className="lg:col-span-2 relative rounded-xl overflow-hidden group h-[550px] shadow-lg"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              transition={{ duration: 0.5 }}
+            >
+              <Link href={`/blog/${mainPost.slug}`} className="block h-full">
+                <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/50 to-transparent z-10"></div>
+                <Image
+                  src={mainPost.featuredImageUrl || "/images/placeholder-blog.jpg"}
+                  alt={mainPost.title}
+                  fill
+                  className="object-cover transition-transform duration-700 group-hover:scale-105"
+                  sizes="(max-width: 768px) 100vw, 66vw"
+                  priority
+                  placeholder="blur"
+                  blurDataURL="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNzAwIiBoZWlnaHQ9IjQ3NSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiB2ZXJzaW9uPSIxLjEiPjxyZWN0IHg9IjAiIHk9IjAiIHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiIGZpbGw9IiMyMDIwMzAiLz48L3N2Zz4="
+                />
+                <div className="absolute top-4 left-4 z-20 flex items-center space-x-2">
+                  <span className="inline-block px-3 py-1 bg-primary text-white text-xs font-medium rounded-md">
+                    Destacado
+                  </span>
+                  {mainPost.averageRating > 0 && (
+                    <span className="inline-flex items-center px-3 py-1 bg-black/60 backdrop-blur-sm text-white text-xs font-medium rounded-md">
+                      {renderStarRating(mainPost.averageRating)}
+                      <span className="ml-1">({mainPost.averageRating?.toFixed(1) || 0})</span>
                     </span>
-                    <h2 className="text-3xl font-bold mb-2">{featuredPost.title}</h2>
-                    <p className="text-gray-200 mb-4 line-clamp-2">{featuredPost.excerpt}</p>
-                    <Link
-                      href={`/blog/${featuredPost.slug}`}
-                      className="inline-block bg-white text-blue-600 font-medium px-5 py-2 rounded-md hover:bg-blue-50 transition-colors"
-                    >
-                      Leer artículo
-                    </Link>
-                  </div>
-                </Link>
-              </motion.div>
-            )}
-            {mainPost && (
-              <motion.div
-                key={`main-${currentIndex}`}
-                className="lg:col-span-2 relative rounded-xl overflow-hidden group h-[550px] shadow-lg"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -20 }}
-                transition={{ duration: 0.5 }}
-              >
-                <Link href={`/blog/${mainPost.slug}`} className="block h-full">
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/50 to-transparent z-10"></div>
-                  <OptimizedImage
-                    src={mainPost.featuredImageUrl || "/images/placeholder-blog.jpg"}
-                    alt={mainPost.title}
-                    fill
-                    sizes="100vw"
-                    className="object-cover transition-transform duration-500 group-hover:scale-105"
-                    priority
-                  />
-                  <div className="absolute top-4 left-4 z-20 flex items-center space-x-2">
-                    <span className="inline-block px-3 py-1 bg-primary text-white text-xs font-medium rounded-md">
-                      Destacado
-                    </span>
-                    {mainPost.averageRating > 0 && (
-                      <span className="inline-flex items-center px-3 py-1 bg-black/60 backdrop-blur-sm text-white text-xs font-medium rounded-md">
-                        {renderStarRating(mainPost.averageRating)}
-                        <span className="ml-1">({mainPost.averageRating?.toFixed(1) || 0})</span>
-                      </span>
-                    )}
-                  </div>
-                  <div className="absolute bottom-0 left-0 right-0 p-6 z-20">
-                    <h2 className="text-2xl md:text-3xl font-bold text-white mb-3 line-clamp-2 group-hover:text-primary transition-colors">
-                      {mainPost.title}
-                    </h2>
-                    <p className="text-gray-200 mb-4 line-clamp-2">{mainPost.excerpt}</p>
+                  )}
+                </div>
+                <div className="absolute bottom-0 left-0 right-0 p-6 z-20">
+                  <h2 className="text-2xl md:text-3xl font-bold text-white mb-3 line-clamp-2 group-hover:text-primary transition-colors">
+                    {mainPost.title}
+                  </h2>
+                  <p className="text-gray-200 mb-4 line-clamp-2">{mainPost.excerpt}</p>
 
-                    <div className="flex flex-wrap items-center justify-between">
-                      <div className="flex items-center text-gray-300 text-sm mb-2 md:mb-0">
-                        {mainPost.authorImageUrl ? (
-                          <OptimizedImage
-                            src={mainPost.authorImageUrl || "/placeholder.svg"}
-                            alt={mainPost.author}
-                            width={24}
-                            height={24}
-                            className="rounded-full mr-2 object-cover"
-                            priority
-                          />
-                        ) : (
-                          <User size={16} className="mr-2" />
-                        )}
-                        <span className="mr-4">{mainPost.author}</span>
-                        <Calendar size={16} className="mr-1" />
-                        <span>{formatDate(mainPost.publishDate)}</span>
+                  <div className="flex flex-wrap items-center justify-between">
+                    <div className="flex items-center text-gray-300 text-sm mb-2 md:mb-0">
+                      {mainPost.authorImageUrl ? (
+                        <Image
+                          src={mainPost.authorImageUrl || "/placeholder.svg"}
+                          alt={mainPost.author}
+                          width={24}
+                          height={24}
+                          className="rounded-full mr-2 object-cover"
+                          placeholder="blur"
+                          blurDataURL="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgdmVyc2lvbj0iMS4xIj48Y2lyY2xlIGN4PSIxMiIgY3k9IjEyIiByPSIxMiIgZmlsbD0iIzMwMzA0MCIvPjwvc3ZnPg=="
+                        />
+                      ) : (
+                        <User size={16} className="mr-2" />
+                      )}
+                      <span className="mr-4">{mainPost.author}</span>
+                      <Calendar size={16} className="mr-1" />
+                      <span>{formatDate(mainPost.publishDate)}</span>
+                    </div>
+
+                    <div className="flex items-center space-x-4 text-gray-300 text-sm">
+                      <div className="flex items-center">
+                        <Eye size={16} className="mr-1" />
+                        <span>{formatNumber(mainPost.viewCount)}</span>
                       </div>
 
-                      <div className="flex items-center space-x-4 text-gray-300 text-sm">
+                      {mainPost.reactions?.total > 0 && (
                         <div className="flex items-center">
-                          <Eye size={16} className="mr-1" />
-                          <span>{formatNumber(mainPost.viewCount)}</span>
-                        </div>
+                          <div className="flex mr-1">
+                            {mainPost.reactions?.types &&
+                              (() => {
+                                const sortedReactions = Object.entries(mainPost.reactions.types)
+                                  .filter(([_, count]) => count && count > 0)
+                                  .sort(([_, countA], [__, countB]) => (countB as number) - (countA as number))
 
-                        {mainPost.reactions?.total > 0 && (
-                          <div className="flex items-center">
-                            <div className="flex mr-1">
-                              {mainPost.reactions?.types &&
-                                (() => {
-                                  const sortedReactions = Object.entries(mainPost.reactions.types)
-                                    .filter(([_, count]) => count && count > 0)
-                                    .sort(([_, countA], [__, countB]) => (countB as number) - (countA as number))
+                                const displayCount = 3
+                                const hasMore = sortedReactions.length > displayCount
 
-                                  const displayCount = 3
-                                  const hasMore = sortedReactions.length > displayCount
-
-                                  return (
-                                    <>
-                                      {sortedReactions.slice(0, displayCount).map(([type, _]) => {
-                                        const getEmoji = (type: string) => {
-                                          switch (type) {
-                                            case "crazy":
-                                              return "🤪"
-                                            case "somos":
-                                              return "👌"
-                                            case "excited":
-                                              return "😈"
-                                            case "scream":
-                                              return "🌈"
-                                            case "ono":
-                                              return "🌸"
-                                            case "like":
-                                              return "👍"
-                                            case "love":
-                                              return "❤️"
-                                            case "haha":
-                                              return "😂"
-                                            case "wow":
-                                              return "😮"
-                                            case "hot":
-                                              return "🔥"
-                                            default:
-                                              return "👍"
-                                          }
+                                return (
+                                  <>
+                                    {sortedReactions.slice(0, displayCount).map(([type, _]) => {
+                                      const getEmoji = (type: string) => {
+                                        switch (type) {
+                                          case "crazy":
+                                            return "🤪"
+                                          case "somos":
+                                            return "👌"
+                                          case "excited":
+                                            return "😈"
+                                          case "scream":
+                                            return "🌈"
+                                          case "ono":
+                                            return "🌸"
+                                          case "like":
+                                            return "👍"
+                                          case "love":
+                                            return "❤️"
+                                          case "haha":
+                                            return "😂"
+                                          case "wow":
+                                            return "😮"
+                                          case "hot":
+                                            return "🔥"
+                                          default:
+                                            return "👍"
                                         }
-                                        return (
-                                          <span key={type} className="text-sm mr-0.5" aria-label={`Reacción ${type}`}>
-                                            {getEmoji(type)}
-                                          </span>
-                                        )
-                                      })}
-                                      {hasMore && <span className="text-xs font-medium">+</span>}
-                                    </>
-                                  )
-                                })()}
-                            </div>
-                            <span>{formatNumber(mainPost.reactions.total)}</span>
+                                      }
+                                      return (
+                                        <span key={type} className="text-sm mr-0.5" aria-label={`Reacción ${type}`}>
+                                          {getEmoji(type)}
+                                        </span>
+                                      )
+                                    })}
+                                    {hasMore && <span className="text-xs font-medium">+</span>}
+                                  </>
+                                )
+                              })()}
                           </div>
-                        )}
-
-                        {mainPost.comments?.length > 0 && (
-                          <div className="flex items-center">
-                            <MessageSquare size={16} className="mr-1" />
-                            <span>{mainPost.comments.length}</span>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-
-                    {/* Engagement bar */}
-                    <div className="mt-4 pt-4 border-t border-gray-700/50">
-                      <div className="flex items-center justify-between">
-                        <div className="text-xs text-gray-300">
-                          {mainPost.reactions?.total > 0 && <span>{mainPost.reactions.total} reacciones</span>}
+                          <span>{formatNumber(mainPost.reactions.total)}</span>
                         </div>
+                      )}
 
-                        <motion.div
-                          className="text-sm text-white/80 bg-primary/80 backdrop-blur-sm px-3 py-1 rounded-full"
-                          whileHover={{ scale: 1.05 }}
-                        >
-                          Leer artículo completo
-                        </motion.div>
-                      </div>
+                      {mainPost.comments?.length > 0 && (
+                        <div className="flex items-center">
+                          <MessageSquare size={16} className="mr-1" />
+                          <span>{mainPost.comments.length}</span>
+                        </div>
+                      )}
                     </div>
                   </div>
-                </Link>
-              </motion.div>
-            )}
+
+                  {/* Engagement bar */}
+                  <div className="mt-4 pt-4 border-t border-gray-700/50">
+                    <div className="flex items-center justify-between">
+                      <div className="text-xs text-gray-300">
+                        {mainPost.reactions?.total > 0 && <span>{mainPost.reactions.total} reacciones</span>}
+                      </div>
+
+                      <motion.div
+                        className="text-sm text-white/80 bg-primary/80 backdrop-blur-sm px-3 py-1 rounded-full"
+                        whileHover={{ scale: 1.05 }}
+                      >
+                        Leer artículo completo
+                      </motion.div>
+                    </div>
+                  </div>
+                </div>
+              </Link>
+            </motion.div>
           </AnimatePresence>
 
           {/* Side posts */}
@@ -410,13 +332,15 @@ export default function FeaturedBlogBanner() {
               >
                 <Link href={`/blog/${post.slug}`} className="block h-full">
                   <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/50 to-transparent z-10"></div>
-                  <OptimizedImage
+                  <Image
                     src={post.featuredImageUrl || "/images/placeholder-blog.jpg"}
                     alt={post.title}
                     fill
-                    sizes="100vw"
-                    className="object-cover transition-transform duration-500 group-hover:scale-105"
-                    priority
+                    className="object-cover transition-transform duration-700 group-hover:scale-105"
+                    sizes="(max-width: 768px) 100vw, 33vw"
+                    placeholder="blur"
+                    blurDataURL="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNzAwIiBoZWlnaHQ9IjQ3NSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiB2ZXJzaW9uPSIxLjEiPjxyZWN0IHg9IjAiIHk9IjAiIHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiIGZpbGw9IiMyMDIwMzAiLz48L3N2Zz4="
+                    loading={index === 0 ? "eager" : "lazy"}
                   />
                   <div className="absolute top-3 left-3 z-20 flex items-center space-x-2">
                     <span className="inline-block px-2 py-1 bg-primary text-white text-xs font-medium rounded-md">
@@ -436,13 +360,14 @@ export default function FeaturedBlogBanner() {
                     <div className="flex items-center justify-between text-gray-300 text-xs">
                       <div className="flex items-center">
                         {post.authorImageUrl ? (
-                          <OptimizedImage
+                          <Image
                             src={post.authorImageUrl || "/placeholder.svg"}
                             alt={post.author}
                             width={20}
                             height={20}
                             className="rounded-full mr-1 object-cover"
-                            priority
+                            placeholder="blur"
+                            blurDataURL="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAiIGhlaWdodD0iMjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgdmVyc2lvbj0iMS4xIj48Y2lyY2xlIGN4PSIxMCIgY3k9IjEwIiByPSIxMCIgZmlsbD0iIzMwMzA0MCIvPjwvc3ZnPg=="
                           />
                         ) : (
                           <User size={12} className="mr-1" />

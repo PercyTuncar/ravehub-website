@@ -125,40 +125,11 @@ export async function getAllPostsForAdmin(): Promise<BlogPost[]> {
 }
 
 // Función para obtener todos los posts (con paginación)
-export async function getAllPosts(page = 1, pageSize = 9, categoryId?: string, tagName?: string, sortOrder = "recent") {
+export async function getAllPosts(page = 1, pageSize = 9, categoryId?: string, tagName?: string) {
   try {
-    console.log("getAllPosts called with:", { page, pageSize, categoryId, tagName, sortOrder })
-
-    // Crear una clave de caché basada en los parámetros
-    const cacheKey = `posts_${page}_${pageSize}_${categoryId || ""}_${tagName || ""}_${sortOrder}`
-
-    // Verificar si tenemos una caché global
-    if (globalThis.__POST_CACHE && globalThis.__POST_CACHE[cacheKey]) {
-      const cachedEntry = globalThis.__POST_CACHE[cacheKey]
-      const now = Date.now()
-
-      // Usar caché si tiene menos de 1 minuto
-      if (now - cachedEntry.timestamp < 60000) {
-        console.log("Using cached posts data")
-        return cachedEntry.data
-      }
-    }
-
-    const postsRef = collection(db, "blog")
-
-    // Determinar el campo y dirección de ordenamiento
-    let sortField = "publishDate"
-    let sortDirection: "asc" | "desc" = "desc"
-
-    if (sortOrder === "popular") {
-      sortField = "viewCount"
-      sortDirection = "desc"
-    } else if (sortOrder === "oldest") {
-      sortField = "publishDate"
-      sortDirection = "asc"
-    }
-
-    let q = query(postsRef, where("status", "==", "published"), orderBy(sortField, sortDirection))
+    console.log("getAllPosts called with:", { page, pageSize, categoryId, tagName })
+    const postsRef = collection(db, "blog") // Cambiado de 'blogPosts' a 'blog'
+    let q = query(postsRef, where("status", "==", "published"), orderBy("publishDate", "desc"))
 
     // Filtrar por categoría si se proporciona un categoryId
     if (categoryId) {
@@ -166,7 +137,7 @@ export async function getAllPosts(page = 1, pageSize = 9, categoryId?: string, t
         postsRef,
         where("status", "==", "published"),
         where("categories", "array-contains", categoryId),
-        orderBy(sortField, sortDirection),
+        orderBy("publishDate", "desc"),
       )
     }
 
@@ -177,6 +148,7 @@ export async function getAllPosts(page = 1, pageSize = 9, categoryId?: string, t
     const allPosts: BlogPost[] = []
     querySnapshot.forEach((doc) => {
       const postData = doc.data()
+      console.log("Post data:", { id: doc.id, ...postData })
       // Convertir las fechas de string a objetos Date
       const post: BlogPost = {
         id: doc.id,
@@ -206,23 +178,17 @@ export async function getAllPosts(page = 1, pageSize = 9, categoryId?: string, t
     // Para simular el lastVisible que se usaría con startAfter en una consulta real
     const lastVisible = hasMore ? allPosts[endIndex - 1].id : null
 
-    const result = {
+    console.log("Returning posts:", {
+      count: paginatedPosts.length,
+      hasMore,
+      firstPost: paginatedPosts[0] ? paginatedPosts[0].title : "none",
+    })
+
+    return {
       posts: paginatedPosts,
       lastVisible,
       hasMore,
     }
-
-    // Guardar en caché global
-    if (!globalThis.__POST_CACHE) {
-      globalThis.__POST_CACHE = {}
-    }
-
-    globalThis.__POST_CACHE[cacheKey] = {
-      data: result,
-      timestamp: Date.now(),
-    }
-
-    return result
   } catch (error) {
     console.error("Error al obtener los posts:", error)
     return {

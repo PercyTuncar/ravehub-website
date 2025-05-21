@@ -1,12 +1,9 @@
 "use client"
-
-import Image from "next/image"
 import Link from "next/link"
 import { useState, useEffect, useRef, useCallback } from "react"
 import { collection, query, where, getDocs, doc, updateDoc, increment } from "firebase/firestore"
 import { db } from "@/lib/firebase/config"
 import type { BlogPost, ReactionType } from "@/types"
-import { getTimeAgo } from "@/lib/utils"
 import { Share, MessageSquare, Eye, Star } from "lucide-react"
 import { useAuth } from "@/context/auth-context"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
@@ -15,79 +12,11 @@ import { addOrUpdateReaction, getUserReaction, removeReaction, getPostReactions 
 import { SmilePlus } from "lucide-react"
 import { useToast } from "@/components/ui/use-toast"
 import { motion, AnimatePresence } from "framer-motion"
-
-// Add this after all the imports but before the BlogCardProps interface
-function BlogCardSkeleton() {
-  return (
-    <div className="bg-white rounded-lg shadow-md overflow-hidden transition-all duration-300">
-      <div className="p-4">
-        <div className="flex items-start mb-2">
-          {/* Author avatar and info skeleton */}
-          <div className="flex-shrink-0 mr-3">
-            <div className="w-10 h-10 rounded-full bg-gray-200 animate-pulse"></div>
-          </div>
-          <div className="flex-1">
-            <div className="h-4 w-24 bg-gray-200 rounded animate-pulse mb-2"></div>
-            <div className="h-3 w-32 bg-gray-100 rounded animate-pulse"></div>
-          </div>
-          {/* Rating skeleton */}
-          <div className="ml-auto flex">
-            <div className="flex space-x-1">
-              {[...Array(5)].map((_, i) => (
-                <div key={i} className="w-4 h-4 bg-gray-200 rounded animate-pulse"></div>
-              ))}
-            </div>
-          </div>
-        </div>
-
-        {/* Post excerpt skeleton */}
-        <div className="space-y-2 mb-3">
-          <div className="h-3 bg-gray-200 rounded animate-pulse"></div>
-          <div className="h-3 bg-gray-200 rounded animate-pulse"></div>
-          <div className="h-3 w-3/4 bg-gray-200 rounded animate-pulse"></div>
-        </div>
-
-        {/* Image skeleton */}
-        <div className="relative mb-3 rounded-lg overflow-hidden">
-          <div className="w-full h-48 bg-gray-200 animate-pulse"></div>
-          <div className="bg-gray-100 p-3">
-            <div className="h-5 bg-gray-200 rounded animate-pulse"></div>
-          </div>
-        </div>
-
-        {/* Reactions and stats skeleton */}
-        <div className="flex justify-between items-center text-sm mb-3">
-          <div className="flex items-center gap-1">
-            <div className="flex -space-x-1">
-              {[...Array(3)].map((_, i) => (
-                <div key={i} className="h-5 w-5 rounded-full bg-gray-200 animate-pulse"></div>
-              ))}
-            </div>
-            <div className="ml-2 h-3 w-20 bg-gray-200 rounded animate-pulse"></div>
-          </div>
-          <div className="flex gap-3">
-            {[...Array(3)].map((_, i) => (
-              <div key={i} className="h-3 w-8 bg-gray-200 rounded animate-pulse"></div>
-            ))}
-          </div>
-        </div>
-
-        {/* Action buttons skeleton */}
-        <div className="border-t pt-2 flex justify-between">
-          {[...Array(3)].map((_, i) => (
-            <div key={i} className="flex-1 py-2">
-              <div className="h-6 bg-gray-200 rounded animate-pulse mx-auto w-20"></div>
-            </div>
-          ))}
-        </div>
-      </div>
-    </div>
-  )
-}
-
-interface BlogCardProps {
-  post: BlogPost
-}
+import { format } from "date-fns"
+import { es } from "date-fns/locale"
+import { OptimizedImage } from "./optimized-image"
+import { memo } from "react"
+import type { BlogCardProps } from "@/types" // Import BlogCardProps
 
 // Reaction emoji mapping
 const reactionEmojis: Record<ReactionType, string> = {
@@ -428,9 +357,13 @@ function PostCardReactions({ post }: { post: BlogPost }) {
   )
 }
 
-// Change this line:
-// export default function BlogCard({ post }: BlogCardProps) {
-export function BlogCard({ post }: BlogCardProps) {
+// Usar memo para evitar re-renders innecesarios
+export const BlogCard = memo(function BlogCard({ post, priority = false }: BlogCardProps) {
+  // Formatear la fecha de publicación
+  const formattedDate = post.publishDate
+    ? format(new Date(post.publishDate), "dd MMMM, yyyy", { locale: es })
+    : "Fecha no disponible"
+
   const { user } = useAuth()
   const [commentCount, setCommentCount] = useState(0)
   const [reactions, setReactions] = useState<{
@@ -500,115 +433,143 @@ export function BlogCard({ post }: BlogCardProps) {
     }
   }
 
-  // Format date for display
-  const timeAgo = post.publishDate ? getTimeAgo(new Date(post.publishDate)) : "Sin fecha"
   const imageUrl = post.featuredImageUrl || "/images/placeholder-blog.jpg"
 
   return (
-    <div className="bg-white rounded-lg shadow-md overflow-hidden transition-all duration-300 hover:shadow-lg">
-      <div className="p-4">
-        <div className="flex items-start mb-2 opacity-90">
-          <div className="flex-shrink-0 mr-3">
-            <Image
-              src={post.authorImageUrl || "/placeholder.svg?height=40&width=40"}
-              alt={post.author || "Author"}
-              width={40}
-              height={40}
-              className="rounded-full object-cover"
-              loading="lazy"
-              sizes="40px"
-            />
-          </div>
-          <div>
-            <h3 className="text-sm text-gray-800">{post.author || "Author"}</h3>
-            <div className="text-gray-400 text-xs flex items-center gap-1">
-              {timeAgo} ·{post.category && <span className="text-primary">{post.category.name}</span>}
-            </div>
-          </div>
-          <StarRating rating={post.averageRating || 0} />
-        </div>
-
-        <Link href={`/blog/${post.slug}`}>
-          <p className="text-gray-700 text-sm mb-3 line-clamp-3">
-            {post.excerpt || post.content?.substring(0, 150) || "Sin descripción"}
-          </p>
-
-          <div className="relative mb-3 rounded-lg overflow-hidden bg-gray-100">
-            <Image
-              src={imageUrl || "/placeholder.svg"}
-              alt={post.title}
-              width={800}
-              height={400}
-              className="w-full object-cover"
-              style={{ maxHeight: "400px" }}
-              loading="lazy"
-              sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-              placeholder="blur"
-              blurDataURL="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iODAwIiBoZWlnaHQ9IjQwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iODAwIiBoZWlnaHQ9IjQwMCIgZmlsbD0iI2YzZjRmNiIvPjwvc3ZnPg=="
-            />
-            <div className="bg-gray-100 p-3 text-base font-medium text-gray-800">{post.title}</div>
-          </div>
+    <div className="bg-white rounded-lg shadow-md overflow-hidden">
+      {/* Imagen destacada con dimensiones fijas para evitar CLS */}
+      <div className="relative h-48 w-full">
+        <Link href={`/blog/${post.slug}`} aria-label={post.title}>
+          <OptimizedImage
+            src={imageUrl || "/placeholder.svg"}
+            alt={post.title}
+            fill
+            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+            className="object-cover"
+            priority={priority}
+            quality={priority ? 85 : 75}
+            loading={priority ? "eager" : "lazy"}
+          />
         </Link>
+      </div>
 
-        <div className="flex justify-between items-center text-sm text-gray-500 mb-3">
-          <div className="flex items-center gap-1">
-            {reactions.topReactions.length > 0 && (
-              <div className="flex -space-x-2">
-                {reactions.topReactions.map((reaction, index) => (
-                  <span
-                    key={index}
-                    className={`${reactionColors[reaction]} h-6 w-6 flex items-center justify-center text-base rounded-full shadow-sm border border-white transform transition-transform hover:scale-110 hover:-translate-y-1`}
-                    title={reactionLabels[reaction]}
-                  >
-                    {reactionEmojis[reaction]}
-                  </span>
-                ))}
-              </div>
-            )}
-            {reactions.total > 0 && (
-              <span className="ml-2 font-medium bg-gray-50 px-2 py-0.5 rounded-full text-gray-600 border border-gray-100">
-                {reactions.total}
-              </span>
-            )}
-          </div>
-          <div className="flex gap-3">
-            <span className="flex items-center gap-1 hover:text-gray-700 transition-colors">
-              <MessageSquare size={14} />
-              {formatCount(commentCount)}
-            </span>
-            <span className="flex items-center gap-1 hover:text-gray-700 transition-colors">
-              <Share size={14} />
-              {shareCount > 0 && ` ${formatCount(shareCount)}`}
-            </span>
-            <span className="flex items-center gap-1 hover:text-gray-700 transition-colors">
-              <Eye size={14} />
-              {formatCount(viewCount)}
-            </span>
+      {/* Contenido */}
+      <div className="p-5">
+        {/* Fecha */}
+        <div className="text-sm text-gray-500 mb-2">{formattedDate}</div>
+
+        {/* Título */}
+        <h3 className="text-xl font-bold mb-3 line-clamp-2">
+          <Link href={`/blog/${post.slug}`} className="hover:text-blue-600 transition-colors">
+            {post.title}
+          </Link>
+        </h3>
+
+        {/* Extracto */}
+        <p className="text-gray-700 mb-4 line-clamp-3">{post.excerpt}</p>
+
+        {/* Footer */}
+        <div className="flex justify-between items-center">
+          <Link href={`/blog/${post.slug}`} className="text-blue-600 hover:text-blue-800 font-medium">
+            Leer más
+          </Link>
+
+          {/* Stats */}
+          <div className="flex items-center text-sm text-gray-500">
+            <span className="mr-4">{viewCount} vistas</span>
+            <span>{commentCount} comentarios</span>
           </div>
         </div>
+      </div>
 
-        <div className="border-t pt-2 flex justify-between text-xs sm:text-sm">
-          <PostCardReactions post={post} />
-          <Link
-            href={`/blog/${post.slug}`}
-            className="flex-1 flex items-center justify-center gap-1 text-gray-600 hover:bg-gray-100 py-1 rounded px-1"
-          >
+      {/* Reactions */}
+      <div className="flex justify-between items-center text-sm text-gray-500 mb-3">
+        <div className="flex items-center gap-1">
+          {reactions.topReactions.length > 0 && (
+            <div className="flex -space-x-2">
+              {reactions.topReactions.map((reaction, index) => (
+                <span
+                  key={index}
+                  className={`${reactionColors[reaction]} h-6 w-6 flex items-center justify-center text-base rounded-full shadow-sm border border-white transform transition-transform hover:scale-110 hover:-translate-y-1`}
+                  title={reactionLabels[reaction]}
+                >
+                  {reactionEmojis[reaction]}
+                </span>
+              ))}
+            </div>
+          )}
+          {reactions.total > 0 && (
+            <span className="ml-2 font-medium bg-gray-50 px-2 py-0.5 rounded-full text-gray-600 border border-gray-100">
+              {reactions.total}
+            </span>
+          )}
+        </div>
+        <div className="flex gap-3">
+          <span className="flex items-center gap-1 hover:text-gray-700 transition-colors">
             <MessageSquare size={14} />
-            <span className="truncate">Comenta</span>
-          </Link>
-          <button
-            onClick={handleShare}
-            className="flex-1 flex items-center justify-center gap-1 text-gray-600 hover:bg-gray-100 py-1 rounded px-1"
-          >
+            {formatCount(commentCount)}
+          </span>
+          <span className="flex items-center gap-1 hover:text-gray-700 transition-colors">
             <Share size={14} />
-            <span className="truncate">Comparte</span>
-          </button>
+            {shareCount > 0 && ` ${formatCount(shareCount)}`}
+          </span>
+          <span className="flex items-center gap-1 hover:text-gray-700 transition-colors">
+            <Eye size={14} />
+            {formatCount(viewCount)}
+          </span>
+        </div>
+      </div>
+
+      {/* Action buttons */}
+      <div className="border-t pt-2 flex justify-between text-xs sm:text-sm">
+        <PostCardReactions post={post} />
+        <Link
+          href={`/blog/${post.slug}`}
+          className="flex-1 flex items-center justify-center gap-1 text-gray-600 hover:bg-gray-100 py-1 rounded px-1"
+        >
+          <MessageSquare size={14} />
+          <span className="truncate">Comenta</span>
+        </Link>
+        <button
+          onClick={handleShare}
+          className="flex-1 flex items-center justify-center gap-1 text-gray-600 hover:bg-gray-100 py-1 rounded px-1"
+        >
+          <Share size={14} />
+          <span className="truncate">Comparte</span>
+        </button>
+      </div>
+    </div>
+  )
+})
+
+// Skeleton para BlogCard
+export function BlogCardSkeleton() {
+  return (
+    <div className="bg-white rounded-lg shadow-md overflow-hidden animate-pulse">
+      {/* Imagen skeleton */}
+      <div className="h-48 bg-gray-200"></div>
+
+      {/* Contenido skeleton */}
+      <div className="p-5 space-y-3">
+        {/* Fecha skeleton */}
+        <div className="h-4 bg-gray-200 rounded w-1/4"></div>
+
+        {/* Título skeleton */}
+        <div className="h-6 bg-gray-200 rounded w-3/4"></div>
+
+        {/* Extracto skeleton */}
+        <div className="space-y-2">
+          <div className="h-4 bg-gray-200 rounded w-full"></div>
+          <div className="h-4 bg-gray-200 rounded w-full"></div>
+          <div className="h-4 bg-gray-200 rounded w-2/3"></div>
+        </div>
+
+        {/* Footer skeleton */}
+        <div className="flex justify-between items-center pt-2">
+          <div className="h-4 bg-gray-200 rounded w-1/4"></div>
+          <div className="h-4 bg-gray-200 rounded w-1/3"></div>
         </div>
       </div>
     </div>
   )
 }
-
-// And add this at the end of the file:
-export { BlogCardSkeleton }
-export default BlogCard

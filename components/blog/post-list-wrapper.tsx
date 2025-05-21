@@ -1,8 +1,9 @@
 "use client"
 
-import { Suspense } from "react"
+import { Suspense, useEffect, useState } from "react"
 import { BlogList } from "./blog-list"
 import type { BlogPost } from "@/types/blog"
+import { usePathname, useSearchParams } from "next/navigation"
 
 interface PostListWrapperProps {
   initialPosts?: BlogPost[]
@@ -12,6 +13,39 @@ interface PostListWrapperProps {
 }
 
 export function PostListWrapper(props: PostListWrapperProps) {
+  const pathname = usePathname()
+  const searchParams = useSearchParams()
+  const [isVisible, setIsVisible] = useState(false)
+
+  // Efecto para restaurar la posición de desplazamiento cuando se navega hacia atrás
+  useEffect(() => {
+    // Guardar la posición de desplazamiento actual antes de navegar
+    const handleBeforeUnload = () => {
+      sessionStorage.setItem(
+        `scroll_position_${pathname}${searchParams ? `_${searchParams}` : ""}`,
+        window.scrollY.toString(),
+      )
+    }
+
+    // Restaurar la posición de desplazamiento al cargar la página
+    const savedPosition = sessionStorage.getItem(`scroll_position_${pathname}${searchParams ? `_${searchParams}` : ""}`)
+
+    if (savedPosition) {
+      window.scrollTo(0, Number.parseInt(savedPosition))
+    }
+
+    window.addEventListener("beforeunload", handleBeforeUnload)
+    setIsVisible(true)
+
+    return () => {
+      window.removeEventListener("beforeunload", handleBeforeUnload)
+    }
+  }, [pathname, searchParams])
+
+  if (!isVisible) {
+    return <PostListSkeleton />
+  }
+
   return (
     <Suspense fallback={<PostListSkeleton />}>
       <BlogList {...props} />
