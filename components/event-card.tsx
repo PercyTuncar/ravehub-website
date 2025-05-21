@@ -285,8 +285,8 @@ export function EventCard({ event }: EventCardProps) {
             {!event.sellTicketsOnPlatform ? (
               <>
                 <span className="text-xs text-gray-500">Información</span>
-                <span className="font-bold text-lg text-gray-900">Evento Externo</span>
-                <span className="text-xs text-gray-500">Entradas no disponibles en RaveHub</span>
+                <span className="font-bold text-lg text-gray-900">Venta Directa</span>
+                <span className="text-xs text-gray-500">Consulta puntos de venta oficiales</span>
               </>
             ) : (
               <>
