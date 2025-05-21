@@ -181,26 +181,66 @@ function PostCardReactions({ post }: { post: BlogPost }) {
   const [userReaction, setUserReaction] = useState<ReactionType | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [isOpen, setIsOpen] = useState(false)
+  const [isHoveringButton, setIsHoveringButton] = useState(false)
+  const [isHoveringPopover, setIsHoveringPopover] = useState(false)
+  const closeTimeoutRef = useRef<NodeJS.Timeout | null>(null)
   const { toast } = useToast()
+
+  // Función para limpiar cualquier timeout pendiente
+  const clearCloseTimeout = useCallback(() => {
+    if (closeTimeoutRef.current) {
+      clearTimeout(closeTimeoutRef.current)
+      closeTimeoutRef.current = null
+    }
+  }, [])
+
+  // Mantener abierto mientras el cursor esté sobre el botón
+  const handleButtonMouseEnter = useCallback(() => {
+    clearCloseTimeout()
+    setIsHoveringButton(true)
+    setIsOpen(true)
+  }, [clearCloseTimeout])
+
+  const handleButtonMouseLeave = useCallback(() => {
+    setIsHoveringButton(false)
+
+    // Solo programar el cierre si el cursor no está sobre el popover
+    if (!isHoveringPopover) {
+      closeTimeoutRef.current = setTimeout(() => {
+        setIsOpen(false)
+      }, 300)
+    }
+  }, [isHoveringPopover, clearCloseTimeout])
+
+  // Mantener abierto mientras el cursor esté sobre el popover
+  const handlePopoverMouseEnter = useCallback(() => {
+    clearCloseTimeout()
+    setIsHoveringPopover(true)
+  }, [clearCloseTimeout])
+
+  const handlePopoverMouseLeave = useCallback(() => {
+    setIsHoveringPopover(false)
+
+    // Solo programar el cierre si el cursor no está sobre el botón
+    if (!isHoveringButton) {
+      closeTimeoutRef.current = setTimeout(() => {
+        setIsOpen(false)
+      }, 300)
+    }
+  }, [isHoveringButton, clearCloseTimeout])
+
+  // Limpiar timeouts al desmontar
+  useEffect(() => {
+    return () => {
+      if (closeTimeoutRef.current) {
+        clearTimeout(closeTimeoutRef.current)
+      }
+    }
+  }, [])
 
   const [hoverTimeoutRef, setHoverTimeoutRef] = useState<NodeJS.Timeout | null>(null)
   const longPressTimeoutRef = useRef<NodeJS.Timeout | null>(null)
   const buttonRef = useRef<HTMLButtonElement>(null)
-
-  const handleMouseEnter = useCallback(() => {
-    if (hoverTimeoutRef) {
-      clearTimeout(hoverTimeoutRef)
-      setHoverTimeoutRef(null)
-    }
-    setIsOpen(true)
-  }, [hoverTimeoutRef])
-
-  const handleMouseLeave = useCallback(() => {
-    const timeout = setTimeout(() => {
-      setIsOpen(false)
-    }, 300) // Pequeño retraso para permitir mover el cursor al popover
-    setHoverTimeoutRef(timeout)
-  }, [])
 
   const handleLongPress = useCallback(() => {
     setIsOpen(true)
@@ -306,8 +346,8 @@ function PostCardReactions({ post }: { post: BlogPost }) {
           onMouseUp={handleMouseUp}
           onTouchStart={handleTouchStart}
           onTouchEnd={handleTouchEnd}
-          onMouseEnter={handleMouseEnter}
-          onMouseLeave={handleMouseLeave}
+          onMouseEnter={handleButtonMouseEnter}
+          onMouseLeave={handleButtonMouseLeave}
         >
           {isLoading ? (
             <div className="animate-pulse flex items-center gap-1">
@@ -334,9 +374,16 @@ function PostCardReactions({ post }: { post: BlogPost }) {
       {/* Replace the PopoverContent with this animated version */}
       <AnimatePresence>
         {isOpen && (
-          <PopoverContent className="w-auto p-2" align="center" forceMount sideOffset={5}>
+          <PopoverContent
+            className="w-auto p-2"
+            align="center"
+            forceMount
+            sideOffset={5}
+            onMouseEnter={handlePopoverMouseEnter}
+            onMouseLeave={handlePopoverMouseLeave}
+          >
             <motion.div
-              className="grid grid-cols-4 grid-rows-3 gap-2"
+              className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 p-2 max-w-md mx-auto"
               initial={{ scale: 0.8, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.8, opacity: 0 }}
@@ -346,21 +393,28 @@ function PostCardReactions({ post }: { post: BlogPost }) {
                 <TooltipProvider key={type}>
                   <Tooltip>
                     <TooltipTrigger asChild>
-                      <motion.button
-                        className={`h-10 w-10 rounded-full text-xl transition-all duration-200 hover:scale-110 hover:bg-gray-100 ${
-                          userReaction === type ? "bg-primary/10 text-primary" : ""
+                      <motion.div
+                        className={`flex flex-col items-center justify-center p-2 rounded-lg transition-all duration-200 cursor-pointer ${
+                          userReaction === type ? "bg-primary/10 ring-2 ring-primary/30" : "hover:bg-gray-100/80"
                         }`}
                         onClick={() => handleReaction(type as ReactionType)}
-                        disabled={isLoading}
                         whileHover={{
-                          scale: 1.2,
-                          y: -8,
+                          scale: 1.05,
+                          y: -2,
                           transition: { duration: 0.2 },
                         }}
-                        whileTap={{ scale: 0.9 }}
+                        whileTap={{ scale: 0.95 }}
                       >
-                        {emoji}
-                      </motion.button>
+                        <motion.span
+                          className="text-xl sm:text-2xl mb-1"
+                          whileHover={{ scale: 1.2, transition: { duration: 0.2 } }}
+                        >
+                          {emoji}
+                        </motion.span>
+                        <span className="text-[10px] sm:text-xs font-medium text-center text-gray-700 leading-tight">
+                          {reactionLabels[type as ReactionType]}
+                        </span>
+                      </motion.div>
                     </TooltipTrigger>
                     <TooltipContent side="bottom">{reactionLabels[type as ReactionType]}</TooltipContent>
                   </Tooltip>

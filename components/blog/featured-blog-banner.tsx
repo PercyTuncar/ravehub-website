@@ -127,10 +127,11 @@ export default function FeaturedBlogBanner() {
   )
 
   const formatDate = (date: Date) => {
+    // Formato corto: día/mes/año
     return new Intl.DateTimeFormat("es-ES", {
       day: "numeric",
-      month: "long",
-      year: "numeric",
+      month: "numeric",
+      year: "2-digit",
     }).format(date)
   }
 

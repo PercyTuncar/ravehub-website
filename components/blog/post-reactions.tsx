@@ -4,7 +4,6 @@ import { useState, useEffect, useCallback, useRef } from "react"
 import { useAuth } from "@/context/auth-context"
 import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Dialog, DialogContent, DialogClose } from "@/components/ui/dialog"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
@@ -855,28 +854,25 @@ export function PostReactions({ postId }: PostReactionsProps) {
                 </span>
               </Button>
             </PopoverTrigger>
-            <PopoverContent className="w-auto p-2" align="start">
-              <div className="flex flex-wrap gap-2 max-w-xs">
+            <PopoverContent
+              className="w-auto p-3 shadow-lg border-border/60 bg-background/95 backdrop-blur-sm"
+              align="start"
+            >
+              <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-2 max-w-[280px] sm:max-w-[320px]">
                 {REACTIONS.map(({ type, emoji, label }) => (
-                  <TooltipProvider key={type}>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className={cn(
-                            "h-10 w-10 rounded-full text-xl transition-transform hover:scale-110 select-none",
-                            userReaction === type && "bg-primary/10 text-primary",
-                          )}
-                          onClick={() => handleReactionSelect(type)}
-                          disabled={isProcessing}
-                        >
-                          {emoji}
-                        </Button>
-                      </TooltipTrigger>
-                      <TooltipContent side="bottom">{label}</TooltipContent>
-                    </Tooltip>
-                  </TooltipProvider>
+                  <div
+                    key={type}
+                    className={cn(
+                      "flex flex-col items-center justify-center p-1.5 rounded-lg cursor-pointer transition-all hover:scale-105 hover:bg-muted/80",
+                      userReaction === type && "bg-primary/10 ring-1 ring-primary/30",
+                    )}
+                    onClick={() => handleReactionSelect(type)}
+                  >
+                    <span className="text-2xl mb-1">{emoji}</span>
+                    <span className="text-[10px] font-medium text-center text-muted-foreground whitespace-nowrap overflow-hidden text-ellipsis max-w-full">
+                      {label}
+                    </span>
+                  </div>
                 ))}
               </div>
             </PopoverContent>

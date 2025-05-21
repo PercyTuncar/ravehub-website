@@ -314,21 +314,21 @@ export function FloatingReactionButton({ postId }: FloatingReactionButtonProps) 
           onMouseLeave={handleMouseLeave}
           align="end"
         >
-          <div className="grid grid-cols-6 gap-2 sm:grid-cols-6">
+          <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2 max-w-[280px] sm:max-w-[360px]">
             {(Object.keys(reactionEmojis) as ReactionType[]).map((type) => (
-              <button
+              <div
                 key={type}
-                className={`h-10 w-10 rounded-full flex items-center justify-center text-xl transition-all ${
-                  userReaction === type
-                    ? "bg-primary/20 ring-2 ring-primary scale-110"
-                    : "hover:bg-gray-100 hover:scale-110"
+                className={`flex flex-col items-center justify-center p-1.5 rounded-lg cursor-pointer transition-all hover:scale-105 hover:bg-gray-100 ${
+                  userReaction === type ? "bg-primary/20 ring-2 ring-primary/30" : ""
                 }`}
                 onClick={() => handleReaction(type)}
-                disabled={isLoading}
                 title={reactionLabels[type]}
               >
-                {reactionEmojis[type]}
-              </button>
+                <span className="text-2xl mb-1">{reactionEmojis[type]}</span>
+                <span className="text-[10px] font-medium text-center text-muted-foreground whitespace-nowrap overflow-hidden text-ellipsis max-w-full">
+                  {reactionLabels[type]}
+                </span>
+              </div>
             ))}
           </div>
           <div className="text-center mt-2 text-xs text-gray-500">
