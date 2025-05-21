@@ -1,12 +1,11 @@
 "use client"
 
-import { useState, useEffect, useCallback, useMemo } from "react"
+import { useState, useEffect, useRef } from "react"
 import { useSearchParams } from "next/navigation"
 import type { BlogPost } from "@/types/blog"
 import { getAllPosts } from "@/lib/firebase/blog"
 import { BlogCard, BlogCardSkeleton } from "./blog-card"
 import { Loader2 } from "lucide-react"
-import { useInView } from "react-intersection-observer"
 
 interface BlogListProps {
   initialPosts?: BlogPost[]
@@ -35,111 +34,86 @@ export function BlogList({
   const [page, setPage] = useState<number>(1)
   const [loading, setLoading] = useState<boolean>(false)
   const [initialLoad, setInitialLoad] = useState<boolean>(initialPosts.length === 0)
+  const loaderRef = useRef<HTMLDivElement>(null)
 
-  // Usar IntersectionObserver hook para infinite scroll más eficiente
-  const { ref: loaderRef, inView } = useInView({
-    threshold: 0,
-    rootMargin: "200px",
-  })
-
-  // Memoizar los parámetros de búsqueda para evitar re-renders innecesarios
-  const searchKey = useMemo(() => `${categoryParam || ""}-${tagParam || ""}`, [categoryParam, tagParam])
-
-  // Función para cargar posts optimizada con useCallback
-  const fetchPosts = useCallback(
-    async (pageNum: number, resetList = false) => {
+  // Cuando cambian los parámetros de búsqueda, reiniciamos la lista de posts
+  useEffect(() => {
+    const fetchPosts = async () => {
       setLoading(true)
       try {
         const {
           posts: newPosts,
           lastVisible: newLastVisible,
           hasMore: newHasMore,
-        } = await getAllPosts(pageNum, pageNum === 1 ? 6 : 3, categoryParam || undefined, tagParam || undefined)
+        } = await getAllPosts(1, 6, categoryParam || undefined, tagParam || undefined)
 
-        if (resetList) {
-          setPosts(newPosts)
-        } else {
-          setPosts((prevPosts) => [...prevPosts, ...newPosts])
-        }
-
+        setPosts(newPosts)
         setLastVisible(newLastVisible)
         setHasMore(newHasMore)
+        setPage(1)
         setInitialLoad(false)
       } catch (error) {
         console.error("Error al obtener posts:", error)
       } finally {
         setLoading(false)
       }
-    },
-    [categoryParam, tagParam],
-  )
+    }
 
-  // Efecto para cargar posts iniciales cuando cambian los filtros
-  useEffect(() => {
     if (initialPosts.length === 0 || categoryParam || tagParam) {
-      setPage(1)
-      fetchPosts(1, true)
+      fetchPosts()
     } else {
       setInitialLoad(false)
     }
-  }, [searchKey, initialPosts.length, fetchPosts])
+  }, [categoryParam, tagParam, initialPosts.length])
 
-  // Efecto para infinite scroll
-  useEffect(() => {
-    if (inView && hasMore && !loading && !initialLoad && showLoadMore) {
+  const loadMorePosts = async () => {
+    if (!hasMore || loading) return
+
+    setLoading(true)
+    try {
       const nextPage = page + 1
+      const {
+        posts: newPosts,
+        lastVisible: newLastVisible,
+        hasMore: newHasMore,
+      } = await getAllPosts(nextPage, 3, categoryParam || undefined, tagParam || undefined)
+
+      setPosts((prevPosts) => [...prevPosts, ...newPosts])
+      setLastVisible(newLastVisible)
+      setHasMore(newHasMore)
       setPage(nextPage)
-      fetchPosts(nextPage)
+    } catch (error) {
+      console.error("Error al cargar más posts:", error)
+    } finally {
+      setLoading(false)
     }
-  }, [inView, hasMore, loading, initialLoad, showLoadMore, page, fetchPosts])
+  }
 
-  // Implementar caché del lado del cliente para mejorar la experiencia
+  // Configurar el observador de intersección para el infinite scroll
   useEffect(() => {
-    // Guardar posts en sessionStorage para navegación rápida
-    if (posts.length > 0 && !categoryParam && !tagParam) {
-      try {
-        sessionStorage.setItem(
-          "blog_recent_posts",
-          JSON.stringify({
-            posts,
-            lastVisible,
-            hasMore,
-            timestamp: Date.now(),
-          }),
-        )
-      } catch (e) {
-        console.error("Error caching posts:", e)
-      }
-    }
-  }, [posts, lastVisible, hasMore, categoryParam, tagParam])
+    if (!showLoadMore) return
 
-  // Cargar desde caché si está disponible
-  useEffect(() => {
-    if (initialPosts.length === 0 && !categoryParam && !tagParam) {
-      try {
-        const cached = sessionStorage.getItem("blog_recent_posts")
-        if (cached) {
-          const {
-            posts: cachedPosts,
-            lastVisible: cachedLastVisible,
-            hasMore: cachedHasMore,
-            timestamp,
-          } = JSON.parse(cached)
-
-          // Usar caché solo si tiene menos de 5 minutos
-          if (Date.now() - timestamp < 5 * 60 * 1000) {
-            setPosts(cachedPosts)
-            setLastVisible(cachedLastVisible)
-            setHasMore(cachedHasMore)
-            setInitialLoad(false)
-            return
-          }
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const [entry] = entries
+        if (entry.isIntersecting && hasMore && !loading && !initialLoad) {
+          loadMorePosts()
         }
-      } catch (e) {
-        console.error("Error reading cached posts:", e)
+      },
+      { rootMargin: "200px" }, // Cargar más contenido cuando estemos a 200px del final
+    )
+
+    const currentLoaderRef = loaderRef.current
+    if (currentLoaderRef) {
+      observer.observe(currentLoaderRef)
+    }
+
+    return () => {
+      if (currentLoaderRef) {
+        observer.unobserve(currentLoaderRef)
       }
     }
-  }, [initialPosts.length, categoryParam, tagParam])
+  }, [hasMore, loading, initialLoad, showLoadMore])
 
   if (posts.length === 0 && !loading && !initialLoad) {
     return (
@@ -157,14 +131,8 @@ export function BlogList({
         {initialLoad
           ? // Mostrar skeletons durante la carga inicial
             Array.from({ length: 6 }).map((_, index) => <BlogCardSkeleton key={`skeleton-${index}`} />)
-          : // Mostrar los posts cargados con optimización de renderizado
-            posts.map((post, index) => (
-              <BlogCard
-                key={post.id}
-                post={post}
-                priority={index < 2} // Priorizar la carga de las primeras imágenes
-              />
-            ))}
+          : // Mostrar los posts cargados
+            posts.map((post) => <BlogCard key={post.id} post={post} />)}
       </div>
 
       {/* Loader invisible que detecta cuando el usuario llega al final */}
