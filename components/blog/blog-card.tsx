@@ -183,6 +183,51 @@ function PostCardReactions({ post }: { post: BlogPost }) {
   const [isOpen, setIsOpen] = useState(false)
   const { toast } = useToast()
 
+  const [hoverTimeoutRef, setHoverTimeoutRef] = useState<NodeJS.Timeout | null>(null)
+  const longPressTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+  const buttonRef = useRef<HTMLButtonElement>(null)
+
+  const handleMouseEnter = useCallback(() => {
+    if (hoverTimeoutRef) {
+      clearTimeout(hoverTimeoutRef)
+      setHoverTimeoutRef(null)
+    }
+    setIsOpen(true)
+  }, [hoverTimeoutRef])
+
+  const handleMouseLeave = useCallback(() => {
+    const timeout = setTimeout(() => {
+      setIsOpen(false)
+    }, 300) // Pequeño retraso para permitir mover el cursor al popover
+    setHoverTimeoutRef(timeout)
+  }, [])
+
+  const handleLongPress = useCallback(() => {
+    setIsOpen(true)
+  }, [setIsOpen])
+
+  const handleMouseDown = useCallback(() => {
+    longPressTimeoutRef.current = setTimeout(handleLongPress, 500) // 500ms for long press
+  }, [handleLongPress])
+
+  const handleMouseUp = useCallback(() => {
+    if (longPressTimeoutRef.current) {
+      clearTimeout(longPressTimeoutRef.current)
+      longPressTimeoutRef.current = null
+    }
+  }, [])
+
+  const handleTouchStart = useCallback(() => {
+    longPressTimeoutRef.current = setTimeout(handleLongPress, 500)
+  }, [handleLongPress])
+
+  const handleTouchEnd = useCallback(() => {
+    if (longPressTimeoutRef.current) {
+      clearTimeout(longPressTimeoutRef.current)
+      longPressTimeoutRef.current = null
+    }
+  }, [])
+
   // Load the user's current reaction when the component mounts
   useEffect(() => {
     const loadUserReaction = async () => {
@@ -247,35 +292,6 @@ function PostCardReactions({ post }: { post: BlogPost }) {
     }
   }
 
-  const longPressTimeoutRef = useRef<NodeJS.Timeout | null>(null)
-  const buttonRef = useRef<HTMLButtonElement>(null)
-
-  const handleLongPress = useCallback(() => {
-    setIsOpen(true)
-  }, [setIsOpen])
-
-  const handleMouseDown = useCallback(() => {
-    longPressTimeoutRef.current = setTimeout(handleLongPress, 500) // 500ms for long press
-  }, [handleLongPress])
-
-  const handleMouseUp = useCallback(() => {
-    if (longPressTimeoutRef.current) {
-      clearTimeout(longPressTimeoutRef.current)
-      longPressTimeoutRef.current = null
-    }
-  }, [])
-
-  const handleTouchStart = useCallback(() => {
-    longPressTimeoutRef.current = setTimeout(handleLongPress, 500)
-  }, [handleLongPress])
-
-  const handleTouchEnd = useCallback(() => {
-    if (longPressTimeoutRef.current) {
-      clearTimeout(longPressTimeoutRef.current)
-      longPressTimeoutRef.current = null
-    }
-  }, [])
-
   // Get the current reaction emoji if user has reacted
   const currentReactionEmoji = userReaction ? reactionEmojis[userReaction] : null
 
@@ -284,13 +300,14 @@ function PostCardReactions({ post }: { post: BlogPost }) {
       <PopoverTrigger asChild>
         <button
           ref={buttonRef}
-          className={`flex-1 flex items-center justify-center gap-1 text-gray-600 hover:bg-gray-100 py-1 rounded transition-all duration-200 ${userReaction ? "text-primary" : ""}`}
+          className={`flex-1 flex items-center justify-center gap-1 text-gray-600 hover:bg-gray-100 py-1 rounded transition-all duration-200 ${userReaction ? "text-primary" : ""} px-1`}
           disabled={isLoading}
           onMouseDown={handleMouseDown}
           onMouseUp={handleMouseUp}
-          onMouseLeave={handleMouseUp}
           onTouchStart={handleTouchStart}
           onTouchEnd={handleTouchEnd}
+          onMouseEnter={handleMouseEnter}
+          onMouseLeave={handleMouseLeave}
         >
           {isLoading ? (
             <div className="animate-pulse flex items-center gap-1">
@@ -301,7 +318,11 @@ function PostCardReactions({ post }: { post: BlogPost }) {
             <>
               {currentReactionEmoji ? <span className="text-lg">{currentReactionEmoji}</span> : <SmilePlus size={18} />}
               <span
-                className={`select-none ${userReaction ? reactionColors[userReaction].replace("bg-", "text-") : ""}`}
+                className={`select-none truncate max-w-[80px] sm:max-w-none ${
+                  userReaction
+                    ? `font-medium ${reactionColors[userReaction].replace("bg-", "text-").replace("200", "600").replace("100", "500")}`
+                    : ""
+                }`}
               >
                 {userReaction ? reactionLabels[userReaction] : "Reacciona"}
               </span>
@@ -313,7 +334,7 @@ function PostCardReactions({ post }: { post: BlogPost }) {
       {/* Replace the PopoverContent with this animated version */}
       <AnimatePresence>
         {isOpen && (
-          <PopoverContent className="w-auto p-2" align="center" forceMount>
+          <PopoverContent className="w-auto p-2" align="center" forceMount sideOffset={5}>
             <motion.div
               className="grid grid-cols-4 grid-rows-3 gap-2"
               initial={{ scale: 0.8, opacity: 0 }}
@@ -512,21 +533,21 @@ export function BlogCard({ post }: BlogCardProps) {
           </div>
         </div>
 
-        <div className="border-t pt-2 flex justify-between">
+        <div className="border-t pt-2 flex justify-between text-xs sm:text-sm">
           <PostCardReactions post={post} />
           <Link
             href={`/blog/${post.slug}`}
-            className="flex-1 flex items-center justify-center gap-1 text-gray-600 hover:bg-gray-100 py-1 rounded text-sm"
+            className="flex-1 flex items-center justify-center gap-1 text-gray-600 hover:bg-gray-100 py-1 rounded px-1"
           >
             <MessageSquare size={14} />
-            <span>Comenta</span>
+            <span className="truncate">Comenta</span>
           </Link>
           <button
             onClick={handleShare}
-            className="flex-1 flex items-center justify-center gap-1 text-gray-600 hover:bg-gray-100 py-1 rounded text-sm"
+            className="flex-1 flex items-center justify-center gap-1 text-gray-600 hover:bg-gray-100 py-1 rounded px-1"
           >
             <Share size={14} />
-            <span>Comparte</span>
+            <span className="truncate">Comparte</span>
           </button>
         </div>
       </div>
