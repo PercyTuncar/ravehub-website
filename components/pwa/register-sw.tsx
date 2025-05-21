@@ -19,14 +19,14 @@ export function RegisterSW() {
       const reg = await navigator.serviceWorker.register("/sw.js")
       setRegistration(reg)
 
-      // Verificar si ya hay una suscripción
+      // Check for existing subscription
       const existingSubscription = await reg.pushManager.getSubscription()
       if (existingSubscription) {
         setIsSubscribed(true)
         setSubscription(existingSubscription)
       }
     } catch (error) {
-      console.error("Error al registrar el Service Worker:", error)
+      console.error("Service Worker registration error:", error)
     }
   }
 
@@ -34,24 +34,24 @@ export function RegisterSW() {
     try {
       if (!registration) return
 
-      // Obtener la clave VAPID pública desde el servidor
-      const response = await fetch("/api/push/vapid-key")
+      // Get push notification key from our secure endpoint
+      const response = await fetch("/api/push/key")
       const data = await response.json()
 
-      if (!data.vapidPublicKey) {
-        throw new Error("No se pudo obtener la clave VAPID pública")
+      if (!data.key) {
+        throw new Error("Could not retrieve public key")
       }
 
-      // Convertir la clave base64 a Uint8Array
-      const vapidPublicKey = urlBase64ToUint8Array(data.vapidPublicKey)
+      // Convert key to proper format
+      const applicationServerKey = convertBase64ToUint8Array(data.key)
 
-      // Suscribir al usuario
+      // Create subscription
       const pushSubscription = await registration.pushManager.subscribe({
         userVisibleOnly: true,
-        applicationServerKey: vapidPublicKey,
+        applicationServerKey,
       })
 
-      // Guardar la suscripción en el servidor
+      // Register subscription with server
       await fetch("/api/push/register", {
         method: "POST",
         headers: {
@@ -67,7 +67,7 @@ export function RegisterSW() {
         description: "Ahora recibirás notificaciones de nuevos eventos y contenido.",
       })
     } catch (error) {
-      console.error("Error al suscribirse a las notificaciones push:", error)
+      console.error("Push subscription error:", error)
       toast({
         title: "Error al activar notificaciones",
         description: "No se pudieron activar las notificaciones. Por favor, inténtalo de nuevo.",
@@ -76,8 +76,8 @@ export function RegisterSW() {
     }
   }
 
-  // Función para convertir base64 a Uint8Array
-  function urlBase64ToUint8Array(base64String: string) {
+  // Utility function to convert base64 string to Uint8Array
+  function convertBase64ToUint8Array(base64String: string) {
     const padding = "=".repeat((4 - (base64String.length % 4)) % 4)
     const base64 = (base64String + padding).replace(/-/g, "+").replace(/_/g, "/")
 
@@ -90,6 +90,6 @@ export function RegisterSW() {
     return outputArray
   }
 
-  // No renderizamos nada visible, este componente solo maneja el registro del SW
+  // No visible UI
   return null
 }

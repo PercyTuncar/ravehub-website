@@ -1,18 +1,6 @@
 import { NextResponse } from "next/server"
 
+// This endpoint is deprecated, redirecting to the new one
 export async function GET() {
-  try {
-    // Obtener la clave VAPID pública desde las variables de entorno
-    const vapidPublicKey = process.env.NEXT_PUBLIC_FIREBASE_VAPID_KEY
-
-    if (!vapidPublicKey) {
-      return NextResponse.json({ error: "La clave VAPID pública no está configurada" }, { status: 500 })
-    }
-
-    // Devolver la clave pública
-    return NextResponse.json({ vapidPublicKey })
-  } catch (error) {
-    console.error("Error al obtener la clave VAPID:", error)
-    return NextResponse.json({ error: "Error al obtener la clave VAPID" }, { status: 500 })
-  }
+  return NextResponse.redirect(new URL("/api/push/key", process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000"))
 }

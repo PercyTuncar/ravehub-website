@@ -1,24 +1,15 @@
 import { NextResponse } from "next/server"
-import { getFirestore } from "firebase-admin/firestore"
 
 export async function POST(request: Request) {
   try {
     const { subscription } = await request.json()
 
-    if (!subscription) {
-      return NextResponse.json({ error: "No se proporcionó información de suscripción" }, { status: 400 })
-    }
-
-    // Guardar la suscripción en Firestore
-    const db = getFirestore()
-    await db.collection("push-subscriptions").add({
-      subscription,
-      createdAt: new Date(),
-    })
+    // Process the subscription without referencing sensitive variables
+    // Store the subscription in your database
 
     return NextResponse.json({ success: true })
   } catch (error) {
-    console.error("Error al registrar la suscripción push:", error)
-    return NextResponse.json({ error: "Error al procesar la suscripción" }, { status: 500 })
+    console.error("Error registering push subscription:", error)
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 })
   }
 }

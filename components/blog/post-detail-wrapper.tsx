@@ -4,7 +4,8 @@ import { useEffect, useState } from "react"
 import { getPostBySlug, incrementPostView } from "@/lib/firebase/blog"
 import { PostDetail } from "@/components/blog/post-detail"
 import { PostDetailSkeleton } from "@/components/blog/post-detail-skeleton"
-import type { BlogPost } from "@/types/blog"
+import { FloatingReactionButton } from "@/components/blog/floating-reaction-button"
+import type { BlogPost } from "@/types"
 
 interface PostDetailWrapperProps {
   slug: string
@@ -47,5 +48,10 @@ export function PostDetailWrapper({ slug, priority = false }: PostDetailWrapperP
     return <div className="text-center py-10">Post no encontrado</div>
   }
 
-  return <PostDetail post={post} priority={priority} />
+  return (
+    <>
+      <PostDetail post={post} priority={priority} />
+      <FloatingReactionButton postId={post.id} />
+    </>
+  )
 }

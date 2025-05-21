@@ -326,6 +326,7 @@ export function PostReactions({ postId }: PostReactionsProps) {
   const longPressProps = useLongPress(() => {
     setShowReactionPicker(true)
   }, 400)
+  let previousReaction: ReactionType | undefined = undefined // Declare previousReaction here
 
   // Registrar cambios en el estado de autenticación y actualizar el ID efectivo
   useEffect(() => {
@@ -361,6 +362,33 @@ export function PostReactions({ postId }: PostReactionsProps) {
   // Cargar las reacciones al montar el componente o cuando cambia el usuario
   useEffect(() => {
     loadReactions()
+
+    // Crear un sistema de escucha para cambios en las reacciones
+    const syncReactions = () => {
+      // Verificar si el documento está visible para optimizar recursos
+      if (document.visibilityState === "visible" && effectiveUserId) {
+        loadReactions(false) // Pasar false para indicar que es una actualización silenciosa
+      }
+    }
+
+    // Escuchar eventos de visibilidad del documento
+    document.addEventListener("visibilitychange", syncReactions)
+
+    // Escuchar un evento personalizado para sincronización de reacciones
+    window.addEventListener("reaction-updated", syncReactions)
+
+    // Sincronizar cada 30 segundos si la página está visible
+    const intervalId = setInterval(() => {
+      if (document.visibilityState === "visible" && effectiveUserId) {
+        loadReactions(false) // Actualización silenciosa
+      }
+    }, 30000)
+
+    return () => {
+      document.removeEventListener("visibilitychange", syncReactions)
+      window.removeEventListener("reaction-updated", syncReactions)
+      clearInterval(intervalId)
+    }
   }, [postId, effectiveUserId])
 
   // Verificar autenticación cuando se monta el componente
@@ -402,9 +430,46 @@ export function PostReactions({ postId }: PostReactionsProps) {
   }, [reactionsSummary])
 
   // Cargar las reacciones del post
-  const loadReactions = async () => {
+  const loadReactions = async (showLoadingState = true) => {
     try {
-      setIsLoading(true)
+      if (showLoadingState) {
+        setIsLoading(true)
+      }
+
+      // Usar un caché local para reducir llamadas a Firestore
+      const cacheKey = `reactions_${postId}`
+      const cachedData = sessionStorage.getItem(cacheKey)
+      const now = Date.now()
+
+      // Si hay datos en caché y tienen menos de 10 segundos, usarlos
+      if (cachedData && !showLoadingState) {
+        try {
+          const { data, timestamp } = JSON.parse(cachedData)
+          // Usar caché solo si tiene menos de 10 segundos
+          if (now - timestamp < 10000) {
+            console.log("Usando datos de reacciones en caché")
+            setReactionsSummary(data.summary)
+
+            // Aún así verificar la reacción del usuario por si cambió
+            if (effectiveUserId) {
+              const userReactionData = await getUserReaction(postId, effectiveUserId)
+              if (userReactionData) {
+                setUserReaction(userReactionData.reactionType)
+              } else {
+                setUserReaction(undefined)
+              }
+            }
+
+            if (showLoadingState) {
+              setIsLoading(false)
+            }
+            return
+          }
+        } catch (e) {
+          console.error("Error parsing cached reactions:", e)
+        }
+      }
+
       console.log("Cargando reacciones para post:", postId)
       const reactionsData = await getPostReactions(postId)
       console.log("Reacciones cargadas:", {
@@ -422,6 +487,19 @@ export function PostReactions({ postId }: PostReactionsProps) {
         topReactions: reactionsData.summary.topReactions,
       })
 
+      // Guardar en caché local
+      try {
+        sessionStorage.setItem(
+          cacheKey,
+          JSON.stringify({
+            data: reactionsData,
+            timestamp: now,
+          }),
+        )
+      } catch (e) {
+        console.error("Error caching reactions:", e)
+      }
+
       // Si tenemos un ID de usuario efectivo, verificar si ya reaccionó
       if (effectiveUserId) {
         console.log("Verificando reacción del usuario:", effectiveUserId)
@@ -438,19 +516,23 @@ export function PostReactions({ postId }: PostReactionsProps) {
       }
     } catch (error) {
       console.error("Error loading reactions:", error)
-      toast({
-        title: "Error",
-        description: "No se pudieron cargar las reacciones. Inténtalo de nuevo más tarde.",
-        variant: "destructive",
-      })
-      // Establecer un estado de error para mostrar un mensaje adecuado en la UI
-      setReactionsSummary({
-        total: 0,
-        types: {},
-        topReactions: [],
-      })
+      if (showLoadingState) {
+        toast({
+          title: "Error",
+          description: "No se pudieron cargar las reacciones. Inténtalo de nuevo más tarde.",
+          variant: "destructive",
+        })
+        // Establecer un estado de error para mostrar un mensaje adecuado en la UI
+        setReactionsSummary({
+          total: 0,
+          types: {},
+          topReactions: [],
+        })
+      }
     } finally {
-      setIsLoading(false)
+      if (showLoadingState) {
+        setIsLoading(false)
+      }
     }
   }
 
@@ -495,6 +577,48 @@ export function PostReactions({ postId }: PostReactionsProps) {
     try {
       setIsProcessing(true)
 
+      // Guardar la reacción anterior para posible reversión
+      previousReaction = userReaction
+
+      // Actualizar el estado local inmediatamente para feedback instantáneo
+      if (userReaction === type) {
+        setUserReaction(undefined)
+      } else {
+        setUserReaction(type)
+      }
+
+      // Actualizar el estado local de reacciones para feedback instantáneo
+      setReactionsSummary((prevSummary) => {
+        const newSummary = { ...prevSummary }
+        const types = { ...newSummary.types }
+
+        // Si estamos eliminando una reacción
+        if (userReaction === type) {
+          if (newSummary.total > 0) newSummary.total -= 1
+          if (types[type] && types[type] > 0) types[type] -= 1
+        }
+        // Si estamos cambiando de una reacción a otra
+        else if (userReaction) {
+          if (types[userReaction] && types[userReaction] > 0) types[userReaction] -= 1
+          types[type] = (types[type] || 0) + 1
+        }
+        // Si estamos añadiendo una nueva reacción
+        else {
+          newSummary.total += 1
+          types[type] = (types[type] || 0) + 1
+        }
+
+        newSummary.types = types
+
+        // Recalcular las reacciones principales
+        newSummary.topReactions = Object.entries(types)
+          .sort(([, countA], [, countB]) => (countB as number) - (countA as number))
+          .slice(0, 3)
+          .map(([type]) => type as ReactionType)
+
+        return newSummary
+      })
+
       // Obtener datos de usuario para la reacción
       const userName = user
         ? `${user.firstName || ""} ${user.lastName || ""}`.trim() || "Usuario"
@@ -509,10 +633,22 @@ export function PostReactions({ postId }: PostReactionsProps) {
         newReaction: type,
       })
 
-      // Si el usuario ya reaccionó con este tipo, eliminar la reacción
+      // Disparar evento de sincronización inmediatamente para otros componentes
+      window.dispatchEvent(
+        new CustomEvent("reaction-updated", {
+          detail: {
+            postId,
+            userId,
+            reactionType: userReaction === type ? null : type,
+            source: "post-reactions",
+            timestamp: Date.now(),
+          },
+        }),
+      )
+
+      // Ahora realizar la operación en la base de datos
       if (userReaction === type) {
         await removeReaction(postId, userId)
-        setUserReaction(undefined)
         toast({
           title: "Reacción eliminada",
           description: "Tu reacción ha sido eliminada correctamente",
@@ -520,20 +656,26 @@ export function PostReactions({ postId }: PostReactionsProps) {
       } else {
         // Añadir o actualizar la reacción (ya sea nueva o cambiando una existente)
         await addOrUpdateReaction(postId, userId, userName, userPhotoURL, type)
-
-        // Actualizar el estado local inmediatamente
-        setUserReaction(type)
-
         toast({
-          title: userReaction ? "Reacción actualizada" : "Reacción añadida",
+          title: previousReaction ? "Reacción actualizada" : "Reacción añadida",
           description: `Has reaccionado con "${getReactionInfo(type).label}"`,
         })
       }
 
-      // Recargar las reacciones para actualizar los contadores
-      await loadReactions()
+      // Recargar las reacciones para actualizar los contadores exactos
+      // Usar un timeout para no bloquear la UI
+      setTimeout(() => {
+        loadReactions(false)
+      }, 1000)
     } catch (error) {
       console.error("Error handling reaction:", error)
+
+      // Revertir cambios locales en caso de error
+      setUserReaction(previousReaction)
+
+      // Recargar las reacciones para restaurar el estado correcto
+      loadReactions()
+
       toast({
         title: "Error",
         description: "Hubo un problema al procesar tu reacción. Inténtalo nuevamente.",
@@ -543,7 +685,7 @@ export function PostReactions({ postId }: PostReactionsProps) {
       setIsProcessing(false)
       setShowReactionPicker(false)
     }
-  }, 300)
+  }, 100)
 
   const handleReactionSelect = (type: ReactionType) => {
     debouncedReactionSelect(type)
@@ -662,6 +804,35 @@ export function PostReactions({ postId }: PostReactionsProps) {
 
     return null
   }
+
+  useEffect(() => {
+    // Escuchar eventos de actualización de reacciones desde otros componentes
+    const handleReactionUpdate = (event: Event) => {
+      const customEvent = event as CustomEvent
+      if (
+        customEvent.detail &&
+        customEvent.detail.postId === postId &&
+        customEvent.detail.source !== "post-reactions"
+      ) {
+        // Si el evento es para el usuario actual, actualizar su reacción
+        if (customEvent.detail.userId === effectiveUserId) {
+          setUserReaction(customEvent.detail.reactionType)
+        }
+
+        // Recargar las reacciones de forma silenciosa después de un breve retraso
+        // para no sobrecargar la base de datos
+        setTimeout(() => {
+          loadReactions(false)
+        }, 500)
+      }
+    }
+
+    window.addEventListener("reaction-updated", handleReactionUpdate)
+
+    return () => {
+      window.removeEventListener("reaction-updated", handleReactionUpdate)
+    }
+  }, [postId, effectiveUserId])
 
   return (
     <div className="space-y-2">

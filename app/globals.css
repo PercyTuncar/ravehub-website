@@ -9,7 +9,7 @@
     --card: 0 0% 100%;
     --card-foreground: 222.2 84% 4.9%;
     --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
+    --popover-foreground: 222.2 47.4% 11.2%;
     --primary: 221.2 83.2% 53.3%;
     --primary-foreground: 210 40% 98%;
     --secondary: 210 40% 96.1%;
@@ -78,7 +78,7 @@
   .fade-in {
     opacity: 0;
     animation: fadeIn 0.5s ease-out forwards;
-    will-change: opacity;
+    will-change: opacity, transform;
   }
 
   .fade-in-up {
@@ -148,9 +148,11 @@
   @keyframes fadeIn {
     from {
       opacity: 0;
+      transform: translateY(20px) scale(0.9);
     }
     to {
       opacity: 1;
+      transform: translateY(0) scale(1);
     }
   }
 
@@ -200,6 +202,10 @@
   /* Longer duration for image hover effects */
   .duration-3000 {
     transition-duration: 3000ms;
+  }
+
+  .animate-fade-in {
+    animation: fadeIn 0.5s ease-out forwards;
   }
 }
 

@@ -13,7 +13,6 @@ import {
   increment,
   startAfter,
   Timestamp,
-  runTransaction,
 } from "firebase/firestore"
 import { db } from "@/lib/firebase/config"
 // Importar el tipo Event
@@ -1445,16 +1444,62 @@ export async function getUserReaction(postId: string, userId: string): Promise<P
       return null
     }
 
+    // Usar caché local para reducir llamadas a Firestore
+    const cacheKey = `user_reaction_${postId}_${userId}`
+    const cachedData = sessionStorage.getItem(cacheKey)
+    const now = Date.now()
+
+    // Si hay datos en caché y tienen menos de 5 segundos, usarlos
+    if (cachedData) {
+      try {
+        const { data, timestamp } = JSON.parse(cachedData)
+        // Usar caché solo si tiene menos de 5 segundos
+        if (now - timestamp < 5000) {
+          console.log("Usando reacción de usuario en caché")
+          return data
+        }
+      } catch (e) {
+        console.error("Error parsing cached user reaction:", e)
+      }
+    }
+
     const reactionsRef = collection(db, "blogReactions")
     const q = query(reactionsRef, where("postId", "==", postId), where("userId", "==", userId))
     const querySnapshot = await getDocs(q)
 
     if (querySnapshot.empty) {
+      // Guardar en caché que no hay reacción
+      try {
+        sessionStorage.setItem(
+          cacheKey,
+          JSON.stringify({
+            data: null,
+            timestamp: now,
+          }),
+        )
+      } catch (e) {
+        console.error("Error caching user reaction:", e)
+      }
       return null
     }
 
     const reactionDoc = querySnapshot.docs[0]
-    return { id: reactionDoc.id, ...reactionDoc.data() } as PostReaction
+    const reaction = { id: reactionDoc.id, ...reactionDoc.data() } as PostReaction
+
+    // Guardar en caché
+    try {
+      sessionStorage.setItem(
+        cacheKey,
+        JSON.stringify({
+          data: reaction,
+          timestamp: now,
+        }),
+      )
+    } catch (e) {
+      console.error("Error caching user reaction:", e)
+    }
+
+    return reaction
   } catch (error) {
     console.error(`Error fetching user reaction for post ${postId}:`, error)
     return null
@@ -1488,44 +1533,39 @@ export async function addOrUpdateReaction(
 
     console.log("Adding/updating reaction with:", { postId, userId, reactionType })
 
-    // Usar una transacción para garantizar consistencia
-    await runTransaction(db, async (transaction) => {
-      const postRef = doc(db, "blog", postId)
-      const postDoc = await transaction.get(postRef)
+    // Verificar si el usuario ya reaccionó a este post
+    const reactionsRef = collection(db, "blogReactions")
+    const q = query(reactionsRef, where("postId", "==", postId), where("userId", "==", userId))
+    const querySnapshot = await getDocs(q)
 
-      if (!postDoc.exists()) {
-        throw new Error(`Post not found with ID: ${postId}`)
+    // Preparar la operación de actualización o creación
+    if (!querySnapshot.empty) {
+      // El usuario ya reaccionó, actualizar su reacción
+      const reactionDoc = querySnapshot.docs[0]
+      const oldReaction = reactionDoc.data().reactionType as ReactionType
+
+      // Si la reacción es la misma, no hacer nada
+      if (oldReaction === reactionType) {
+        console.log("User already has the same reaction, no changes needed")
+        return
       }
 
-      // Verificar si el usuario ya reaccionó a este post (dentro de la transacción)
-      const reactionsRef = collection(db, "blogReactions")
-      const q = query(reactionsRef, where("postId", "==", postId), where("userId", "==", userId))
-      const querySnapshot = await getDocs(q)
+      console.log(`Updating reaction from ${oldReaction} to ${reactionType}`)
 
-      const postData = postDoc.data()
-      const reactions = postData.reactions || { total: 0, types: {} }
+      // Actualizar la reacción
+      await updateDoc(doc(db, "blogReactions", reactionDoc.id), {
+        reactionType,
+        updatedAt: new Date(),
+        timestamp: new Date(), // Añadir timestamp para ordenación
+      })
 
-      if (!querySnapshot.empty) {
-        // El usuario ya reaccionó, actualizar su reacción
-        const reactionDoc = querySnapshot.docs[0]
-        const oldReaction = reactionDoc.data().reactionType as ReactionType
+      // Actualizar contadores en el post en una operación separada
+      const postRef = doc(db, "blog", postId)
+      const postDoc = await getDoc(postRef)
 
-        // Si la reacción es la misma, no hacer nada
-        if (oldReaction === reactionType) {
-          console.log("User already has the same reaction, no changes needed")
-          return
-        }
-
-        console.log(`Updating reaction from ${oldReaction} to ${reactionType}`)
-
-        // Actualizar la reacción
-        transaction.update(doc(db, "blogReactions", reactionDoc.id), {
-          reactionType,
-          updatedAt: new Date(),
-          timestamp: new Date(), // Añadir timestamp para ordenación
-        })
-
-        // Actualizar contadores en el post
+      if (postDoc.exists()) {
+        const postData = postDoc.data()
+        const reactions = postData.reactions || { total: 0, types: {} }
         const updatedReactions = { ...reactions }
 
         // Decrementar el contador de la reacción anterior
@@ -1537,32 +1577,39 @@ export async function addOrUpdateReaction(
         updatedReactions.types[reactionType] = (updatedReactions.types[reactionType] || 0) + 1
 
         console.log("Updated reaction counts:", updatedReactions)
-        transaction.update(postRef, { reactions: updatedReactions })
-      } else {
-        // Nueva reacción
-        console.log("Adding new reaction")
-        const newReaction = {
-          postId,
-          userId,
-          userName: userName || "Usuario",
-          userImageUrl,
-          reactionType,
-          createdAt: new Date(),
-          timestamp: new Date(), // Añadir timestamp para ordenación
-        }
+        await updateDoc(postRef, { reactions: updatedReactions })
+      }
+    } else {
+      // Nueva reacción
+      console.log("Adding new reaction")
+      const newReaction = {
+        postId,
+        userId,
+        userName: userName || "Usuario",
+        userImageUrl,
+        reactionType,
+        createdAt: new Date(),
+        timestamp: new Date(), // Añadir timestamp para ordenación
+      }
 
-        const newReactionRef = doc(reactionsRef)
-        transaction.set(newReactionRef, newReaction)
+      await addDoc(collection(db, "blogReactions"), newReaction)
 
-        // Actualizar contadores en el post
+      // Actualizar contadores en el post en una operación separada
+      const postRef = doc(db, "blog", postId)
+      const postDoc = await getDoc(postRef)
+
+      if (postDoc.exists()) {
+        const postData = postDoc.data()
+        const reactions = postData.reactions || { total: 0, types: {} }
         const updatedReactions = { ...reactions }
+
         updatedReactions.total = (updatedReactions.total || 0) + 1
         updatedReactions.types[reactionType] = (updatedReactions.types[reactionType] || 0) + 1
 
         console.log("New reaction counts:", updatedReactions)
-        transaction.update(postRef, { reactions: updatedReactions })
+        await updateDoc(postRef, { reactions: updatedReactions })
       }
-    })
+    }
 
     console.log("Reaction successfully added/updated")
   } catch (error) {
@@ -1579,35 +1626,29 @@ export async function removeReaction(postId: string, userId: string): Promise<vo
       throw new Error("postId and userId are required")
     }
 
-    // Usar una transacción para garantizar consistencia
-    await runTransaction(db, async (transaction) => {
-      // Verificar si el usuario ya reaccionó a este post (dentro de la transacción)
-      const reactionsRef = collection(db, "blogReactions")
-      const q = query(reactionsRef, where("postId", "==", postId), where("userId", "==", userId))
-      const querySnapshot = await getDocs(q)
+    // Verificar si el usuario ya reaccionó a este post
+    const reactionsRef = collection(db, "blogReactions")
+    const q = query(reactionsRef, where("postId", "==", postId), where("userId", "==", userId))
+    const querySnapshot = await getDocs(q)
 
-      if (querySnapshot.empty) {
-        console.log("No reaction found to remove")
-        return // No hay reacción para eliminar
-      }
+    if (querySnapshot.empty) {
+      console.log("No reaction found to remove")
+      return // No hay reacción para eliminar
+    }
 
-      const reactionDoc = querySnapshot.docs[0]
-      const reactionType = reactionDoc.data().reactionType as ReactionType
+    const reactionDoc = querySnapshot.docs[0]
+    const reactionType = reactionDoc.data().reactionType as ReactionType
 
-      const postRef = doc(db, "blog", postId)
-      const postDoc = await transaction.get(postRef)
+    // Eliminar la reacción
+    await deleteDoc(doc(db, "blogReactions", reactionDoc.id))
 
-      if (!postDoc.exists()) {
-        throw new Error("Post not found")
-      }
+    // Actualizar contadores en el post en una operación separada
+    const postRef = doc(db, "blog", postId)
+    const postDoc = await getDoc(postRef)
 
+    if (postDoc.exists()) {
       const postData = postDoc.data()
       const reactions = postData.reactions || { total: 0, types: {} }
-
-      // Eliminar la reacción
-      transaction.delete(doc(db, "blogReactions", reactionDoc.id))
-
-      // Actualizar contadores en el post
       const updatedReactions = { ...reactions }
 
       // Decrementar el total solo si es mayor que 0
@@ -1620,8 +1661,8 @@ export async function removeReaction(postId: string, userId: string): Promise<vo
         updatedReactions.types[reactionType] -= 1
       }
 
-      transaction.update(postRef, { reactions: updatedReactions })
-    })
+      await updateDoc(postRef, { reactions: updatedReactions })
+    }
 
     console.log("Reaction successfully removed")
   } catch (error) {
