@@ -38,9 +38,34 @@ export function BlogList({
 
   // Cuando cambian los parámetros de búsqueda, reiniciamos la lista de posts
   useEffect(() => {
+    const query = searchParams.get("q")
+    const sort = searchParams.get("sort")
+    const category = categoryParam || searchParams.get("categoria")
+    const tag = tagParam || searchParams.get("etiqueta")
+
+    // Crear una clave de caché basada en los parámetros actuales
+    const cacheKey = `posts_${query || ""}_${sort || "recent"}_${category || ""}_${tag || ""}_page1`
+
     const fetchPosts = async () => {
       setLoading(true)
       try {
+        // Intentar obtener de sessionStorage primero
+        const cachedData = sessionStorage.getItem(cacheKey)
+        if (cachedData) {
+          const parsed = JSON.parse(cachedData)
+          const cacheTime = parsed.timestamp
+          // Usar caché si tiene menos de 1 minuto
+          if (Date.now() - cacheTime < 60000) {
+            setPosts(parsed.posts)
+            setLastVisible(parsed.lastVisible)
+            setHasMore(parsed.hasMore)
+            setPage(1)
+            setInitialLoad(false)
+            setLoading(false)
+            return
+          }
+        }
+
         const {
           posts: newPosts,
           lastVisible: newLastVisible,
@@ -52,6 +77,21 @@ export function BlogList({
         setHasMore(newHasMore)
         setPage(1)
         setInitialLoad(false)
+
+        // Guardar en sessionStorage
+        try {
+          sessionStorage.setItem(
+            cacheKey,
+            JSON.stringify({
+              posts: newPosts,
+              lastVisible: newLastVisible,
+              hasMore: newHasMore,
+              timestamp: Date.now(),
+            }),
+          )
+        } catch (e) {
+          console.error("Error caching posts:", e)
+        }
       } catch (error) {
         console.error("Error al obtener posts:", error)
       } finally {
@@ -59,12 +99,12 @@ export function BlogList({
       }
     }
 
-    if (initialPosts.length === 0 || categoryParam || tagParam) {
+    if (initialPosts.length === 0 || categoryParam || tagParam || searchParams.get("q") || searchParams.get("sort")) {
       fetchPosts()
     } else {
       setInitialLoad(false)
     }
-  }, [categoryParam, tagParam, initialPosts.length])
+  }, [categoryParam, tagParam, searchParams, initialPosts.length])
 
   const loadMorePosts = async () => {
     if (!hasMore || loading) return

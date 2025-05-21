@@ -4,11 +4,7 @@ import { es } from "date-fns/locale"
 import type { BlogPost } from "@/types/blog"
 import { OptimizedImage } from "./optimized-image"
 
-interface PostCardProps {
-  post: BlogPost
-}
-
-export function PostCard({ post }: PostCardProps) {
+export function PostCard({ post, index = 0 }: { post: BlogPost; index?: number }) {
   // Formatear la fecha de publicación
   const formattedDate = post.publishDate
     ? format(new Date(post.publishDate), "dd MMMM, yyyy", { locale: es })
@@ -25,6 +21,9 @@ export function PostCard({ post }: PostCardProps) {
             fill
             sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
             className="object-cover"
+            loading="lazy"
+            fetchPriority={index <= 2 ? "high" : "auto"}
+            decoding="async"
           />
         </Link>
       </div>
