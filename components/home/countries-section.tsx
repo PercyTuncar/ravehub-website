@@ -12,12 +12,15 @@ interface CountryData {
   region: string
 }
 
-// Datos de países definidos directamente en el componente
+// Modificar el array de países para eliminar Cuba, Rep. Dominicana y Guinea Ecuatorial
+// y añadir Uruguay, Paraguay y Brasil
+
+// Reemplazar el array countries con esta versión actualizada que incluye Uruguay, Paraguay y Brasil:
+
 const countries: CountryData[] = [
   {
     name: "España",
-    flagUrl:
-      "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/spain-flag-round-icon-128-Hs9Ik2JLpQwEQxnVzDFJpAKrfOU2YW.png",
+    flagUrl: "https://upload.wikimedia.org/wikipedia/commons/8/89/Bandera_de_Espa%C3%B1a.svg",
     events: 30,
     region: "europa",
   },
@@ -35,8 +38,7 @@ const countries: CountryData[] = [
   },
   {
     name: "Argentina",
-    flagUrl:
-      "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/argentina-flag-round-icon-128-Hs9Ik2JLpQwEQxnVzDFJpAKrfOU2YW.png",
+    flagUrl: "/images/flags/argentina-flag.svg",
     events: 22,
     region: "latinamerica",
   },
@@ -49,15 +51,13 @@ const countries: CountryData[] = [
   },
   {
     name: "Venezuela",
-    flagUrl:
-      "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/venezuela-flag-round-icon-128-Hs9Ik2JLpQwEQxnVzDFJpAKrfOU2YW.png",
+    flagUrl: "/images/flags/venezuela-flag.svg",
     events: 10,
     region: "latinamerica",
   },
   {
     name: "Chile",
-    flagUrl:
-      "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/chile-flag-round-icon-128-Hs9Ik2JLpQwEQxnVzDFJpAKrfOU2YW.png",
+    flagUrl: "/images/flags/chile-flag.svg",
     events: 14,
     region: "latinamerica",
   },
@@ -76,13 +76,6 @@ const countries: CountryData[] = [
     region: "latinamerica",
   },
   {
-    name: "Cuba",
-    flagUrl:
-      "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/cuba-flag-round-icon-128-Hs9Ik2JLpQwEQxnVzDFJpAKrfOU2YW.png",
-    events: 8,
-    region: "latinamerica",
-  },
-  {
     name: "Bolivia",
     flagUrl:
       "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/Web_Circle_Flags-03-OHnlUCwx8mbpqh7bdzOllhuenoaIen.png",
@@ -90,18 +83,22 @@ const countries: CountryData[] = [
     region: "latinamerica",
   },
   {
-    name: "Rep. Dominicana",
-    flagUrl:
-      "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/dominican-republic-flag-round-icon-128-Hs9Ik2JLpQwEQxnVzDFJpAKrfOU2YW.png",
-    events: 9,
+    name: "Brasil",
+    flagUrl: "/images/flags/brazil-flag.svg",
+    events: 25,
     region: "latinamerica",
   },
   {
-    name: "Guinea Ecuatorial",
-    flagUrl:
-      "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/equatorial-guinea-flag-round-icon-128-Hs9Ik2JLpQwEQxnVzDFJpAKrfOU2YW.png",
-    events: 2,
-    region: "africa",
+    name: "Uruguay",
+    flagUrl: "https://upload.wikimedia.org/wikipedia/commons/f/fe/Flag_of_Uruguay.svg",
+    events: 7,
+    region: "latinamerica",
+  },
+  {
+    name: "Paraguay",
+    flagUrl: "https://upload.wikimedia.org/wikipedia/commons/2/27/Flag_of_Paraguay.svg",
+    events: 5,
+    region: "latinamerica",
   },
 ]
 
@@ -119,8 +116,11 @@ export function CountriesSection() {
     if (activeRegion === "all") {
       // Mostrar todos los países cuando se selecciona "Todos"
       return countries
+    } else if (activeRegion === "latinamerica") {
+      // Mostrar todos los países de Latinoamérica sin límite
+      return countries.filter((country) => country.region === activeRegion)
     } else {
-      // Para otras regiones, mostrar solo los primeros 8 países de esa región
+      // Para otras regiones, mostrar solo los primeros 8 países
       return countries.filter((country) => country.region === activeRegion).slice(0, 8)
     }
   }, [activeRegion])
@@ -153,8 +153,7 @@ export function CountriesSection() {
               Encuentra Los Mejores Festivales de Música Electrónica
             </h2>
             <p className="text-gray-500 mt-2 max-w-md">
-             Descubre
-              festivales exclusivos, DJs internacionales y experiencias únicas en cada país.
+              Descubre festivales exclusivos, DJs internacionales y experiencias únicas en cada país.
             </p>
           </div>
 
