@@ -482,15 +482,16 @@ export default function EventDetail({ event }: EventDetailProps) {
                       </span>
                     </div>
                   </div>
-
-                  <div className="prose prose-sm max-w-none dark:prose-invert mt-4">
-                    <style dangerouslySetInnerHTML={{ __html: htmlStyles }} />
-                    <div className="html-content">
-                      {/* Render HTML content directly */}
-                      <div dangerouslySetInnerHTML={{ __html: event.description }} />
-                    </div>
-                  </div>
                 </CardContent>
+
+                {/* Contenedor separado para HTML embebido sin padding */}
+                <div className="prose prose-sm max-w-none dark:prose-invert">
+                  <style dangerouslySetInnerHTML={{ __html: htmlStyles }} />
+                  <div className="html-content">
+                    {/* Render HTML content directly */}
+                    <div dangerouslySetInnerHTML={{ __html: event.description }} />
+                  </div>
+                </div>
               </Card>
             </TabsContent>
 
