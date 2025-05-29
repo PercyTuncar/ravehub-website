@@ -331,7 +331,7 @@ export default function EventDetail({ event }: EventDetailProps) {
 
             {/* CTA Button */}
             <a
-              href="https://chat.whatsapp.com/IUs37U1mJq8FZJSQbMUZpc"
+              href="https://linktr.ee/Grupo__WhatsApp?fbclid=PAZXh0bgNhZW0CMTEAAaccynsf3UkhbmLQIUhD8II0TISmzD5E4nMy6usERGSVctgPzZfFhp9Zn584Qw_aem_ZILapw--Jd0H-IjGd72uVw"
               target="_blank"
               rel="noopener noreferrer"
               className="group relative w-full bg-gradient-to-r from-emerald-500 via-green-500 to-emerald-600 hover:from-emerald-600 hover:via-green-600 hover:to-emerald-700 text-white font-semibold py-4 px-6 rounded-2xl flex items-center justify-center space-x-3 transition-all duration-300 shadow-lg hover:shadow-emerald-500/30 transform hover:-translate-y-0.5 overflow-hidden"
