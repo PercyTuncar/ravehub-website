@@ -11,9 +11,10 @@ import { Pre } from "@/components/ui/pre"
 
 interface EventSchemaPreviewProps {
   event: Event
+  currency?: string
 }
 
-export function EventSchemaPreview({ event }: EventSchemaPreviewProps) {
+export function EventSchemaPreview({ event, currency = "USD" }: EventSchemaPreviewProps) {
   const [copied, setCopied] = useState(false)
   const [activeTab, setActiveTab] = useState("preview")
   const [validationResult, setValidationResult] = useState<{ valid: boolean; message?: string } | null>(null)
@@ -169,7 +170,7 @@ export function EventSchemaPreview({ event }: EventSchemaPreviewProps) {
                 availability: "https://schema.org/LimitedAvailability",
                 url: ensureHttpsProtocol(`${baseUrl}/eventos/${event.slug}`),
                 price: phase.zonesPricing && phase.zonesPricing.length > 0 ? phase.zonesPricing[0].price : undefined,
-                priceCurrency: event.currency || "USD",
+                priceCurrency: currency,
                 validFrom: phase.startDate ? new Date(phase.startDate).toISOString() : startDateISO,
                 validThrough: phase.endDate ? new Date(phase.endDate).toISOString() : endDateISO,
               }))
@@ -180,7 +181,7 @@ export function EventSchemaPreview({ event }: EventSchemaPreviewProps) {
                     availability: "https://schema.org/LimitedAvailability",
                     url: ensureHttpsProtocol(`${baseUrl}/eventos/${event.slug}`),
                     price: price,
-                    priceCurrency: event.currency || "USD",
+                    priceCurrency: currency,
                     validFrom: startDateISO,
                     validThrough: endDateISO,
                   },

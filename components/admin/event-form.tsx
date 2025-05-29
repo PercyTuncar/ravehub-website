@@ -92,6 +92,21 @@ export function EventForm({ eventId }: EventFormProps) {
     specifications: [],
     reviews: [],
   })
+  // Add after the existing state declarations (around line 80)
+  const currencyOptions = [
+    { value: "USD", label: "USD - Dólar Estadounidense", symbol: "$" },
+    { value: "PEN", label: "PEN - Sol Peruano", symbol: "S/" },
+    { value: "ARS", label: "ARS - Peso Argentino", symbol: "$" },
+    { value: "CLP", label: "CLP - Peso Chileno", symbol: "$" },
+    { value: "COP", label: "COP - Peso Colombiano", symbol: "$" },
+    { value: "BRL", label: "BRL - Real Brasileño", symbol: "R$" },
+    { value: "MXN", label: "MXN - Peso Mexicano", symbol: "$" },
+    { value: "UYU", label: "UYU - Peso Uruguayo", symbol: "$" },
+    { value: "PYG", label: "PYG - Guaraní Paraguayo", symbol: "₲" },
+    { value: "BOB", label: "BOB - Boliviano", symbol: "Bs" },
+    { value: "VES", label: "VES - Bolívar Venezolano", symbol: "Bs.S" },
+    { value: "EUR", label: "EUR - Euro", symbol: "€" },
+  ]
   const [mainImage, setMainImage] = useState<File | null>(null)
   const [bannerImage, setBannerImage] = useState<File | null>(null)
   const [mainImagePreview, setMainImagePreview] = useState<string>("")
@@ -708,6 +723,23 @@ export function EventForm({ eventId }: EventFormProps) {
                       <SelectItem value="published">Publicado</SelectItem>
                       <SelectItem value="cancelled">Cancelado</SelectItem>
                       <SelectItem value="completed">Completado</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* Update the currency field in the basic information tab to use a Select component instead of Input. Replace the existing currency input (around line 450) with: */}
+                <div className="space-y-2">
+                  <Label htmlFor="currency">Moneda *</Label>
+                  <Select value={formData.currency || "USD"} onValueChange={(value) => handleChange("currency", value)}>
+                    <SelectTrigger id="currency">
+                      <SelectValue placeholder="Selecciona moneda" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {currencyOptions.map((currency) => (
+                        <SelectItem key={currency.value} value={currency.value}>
+                          {currency.label}
+                        </SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                 </div>
@@ -1702,18 +1734,31 @@ export function EventForm({ eventId }: EventFormProps) {
                                     <Label className="text-muted-foreground">Zona</Label>
                                     <p className="font-medium">{zone?.name}</p>
                                   </div>
+                                  {/* In the pricing section for zones, update the price input to show the currency symbol. Replace the existing price input div (around line 1050) with: */}
                                   <div className="space-y-2">
-                                    <Label htmlFor={`pricing-price-${phase.id}-${pricing.zoneId}`}>Precio</Label>
-                                    <Input
-                                      id={`pricing-price-${phase.id}-${pricing.zoneId}`}
-                                      type="number"
-                                      min="0"
-                                      step="0.01"
-                                      value={pricing.price}
-                                      onChange={(e) =>
-                                        updatePricing(phase.id, pricing.zoneId, "price", Number(e.target.value))
-                                      }
-                                    />
+                                    <Label htmlFor={`pricing-price-${phase.id}-${pricing.zoneId}`}>
+                                      Precio (
+                                      {currencyOptions.find((c) => c.value === (formData.currency || "USD"))?.symbol ||
+                                        "$"}
+                                      )
+                                    </Label>
+                                    <div className="relative">
+                                      <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground">
+                                        {currencyOptions.find((c) => c.value === (formData.currency || "USD"))
+                                          ?.symbol || "$"}
+                                      </span>
+                                      <Input
+                                        id={`pricing-price-${phase.id}-${pricing.zoneId}`}
+                                        type="number"
+                                        min="0"
+                                        step="0.01"
+                                        value={pricing.price}
+                                        onChange={(e) =>
+                                          updatePricing(phase.id, pricing.zoneId, "price", Number(e.target.value))
+                                        }
+                                        className="pl-8"
+                                      />
+                                    </div>
                                   </div>
                                   <div className="space-y-2">
                                     <Label htmlFor={`pricing-available-${phase.id}-${pricing.zoneId}`}>
@@ -2012,7 +2057,8 @@ export function EventForm({ eventId }: EventFormProps) {
         </TabsContent>
       </Tabs>
 
-      {showSchemaPreview && <EventSchemaPreview event={formData as Event} />}
+      {/* Update the EventSchemaPreview component import and usage. Add the currency prop when calling EventSchemaPreview (around line 1200): */}
+      {showSchemaPreview && <EventSchemaPreview event={formData as Event} currency={formData.currency || "USD"} />}
       <div className="flex justify-end gap-2">
         <Button type="button" variant="outline" onClick={() => router.push("/admin?tab=events")}>
           Cancelar
