@@ -244,7 +244,7 @@ export default function EventDetail({ event }: EventDetailProps) {
           <div className="absolute inset-0 overflow-hidden pointer-events-none">
             <div className="absolute top-4 right-4 w-32 h-32 bg-gradient-to-br from-emerald-200/30 to-green-300/20 dark:from-emerald-700/20 dark:to-green-600/10 rounded-full blur-2xl animate-pulse"></div>
             <div
-              className="absolute -bottom-8 -left-8 w-40 h-40 bg-gradient-to-tr from-teal-200/20 to-emerald-300/15 dark:from-teal-700/15 dark:to-emerald-600/10 rounded-full blur-3xl animate-pulse"
+              className="absolute -bottom-8 -left-8 w-40 h-40 bg-gradient-to-tr from-teal-200/20 to-emerald-300/20 dark:from-teal-700/10 dark:to-emerald-600/10 rounded-full blur-3xl animate-pulse"
               style={{ animationDelay: "1.5s" }}
             ></div>
             <div
@@ -272,30 +272,27 @@ export default function EventDetail({ event }: EventDetailProps) {
                     />
                   </svg>
                 </div>
-                <div className="absolute -top-1 -right-1 w-4 h-4 bg-orange-400 rounded-full flex items-center justify-center">
-                  <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>
+                {/* Pulse indicator */}
+                <div className="absolute -top-1 -right-1 w-4 h-4">
+                  <div className="absolute inset-0 bg-emerald-400 rounded-full animate-ping opacity-75"></div>
+                  <div className="absolute inset-0 bg-emerald-500 rounded-full"></div>
                 </div>
               </div>
               <div className="text-center">
-                <h3 className="text-lg font-bold text-gray-800 dark:text-gray-100">Únete a nuestra</h3>
-                <p className="text-sm text-emerald-600 dark:text-emerald-400 font-semibold">comunidad exclusiva</p>
+                <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100">
+                  Únete a nuestra{" "}
+                  <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-600 to-green-600 dark:from-emerald-400 dark:to-green-400">
+                    comunidad
+                  </span>
+                </h3>
+                <p className="text-sm text-gray-600 dark:text-gray-400 font-medium">Grupo oficial de WhatsApp</p>
               </div>
-            </div>
-
-            {/* Description */}
-            <div className="text-center space-y-2">
-              <p className="text-gray-700 dark:text-gray-300 text-sm leading-relaxed">
-                Sé el primero en enterarte de{" "}
-                <span className="font-semibold text-emerald-700 dark:text-emerald-400">eventos exclusivos</span>,
-                <span className="font-semibold text-emerald-700 dark:text-emerald-400"> descuentos especiales</span> y
-                <span className="font-semibold text-emerald-700 dark:text-emerald-400"> contenido único</span>
-              </p>
             </div>
 
             {/* Benefits */}
             <div className="grid grid-cols-2 gap-3">
-              <div className="flex items-center space-x-2 bg-white/60 dark:bg-gray-800/40 rounded-xl p-3 backdrop-blur-sm border border-emerald-100 dark:border-emerald-800/30">
-                <div className="w-8 h-8 bg-emerald-100 dark:bg-emerald-900/50 rounded-lg flex items-center justify-center">
+              <div className="flex items-center space-x-2 p-3 bg-white/60 dark:bg-gray-800/40 rounded-xl backdrop-blur-sm border border-emerald-100/50 dark:border-emerald-800/30">
+                <div className="w-8 h-8 bg-gradient-to-br from-emerald-100 to-green-100 dark:from-emerald-900/50 dark:to-green-900/50 rounded-lg flex items-center justify-center">
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
                     className="h-4 w-4 text-emerald-600 dark:text-emerald-400"
@@ -306,10 +303,14 @@ export default function EventDetail({ event }: EventDetailProps) {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
                   </svg>
                 </div>
-                <span className="text-xs font-medium text-gray-700 dark:text-gray-300">Noticias al instante</span>
+                <div>
+                  <p className="text-xs font-semibold text-gray-900 dark:text-gray-100">Noticias</p>
+                  <p className="text-xs text-gray-600 dark:text-gray-400">al instante</p>
+                </div>
               </div>
-              <div className="flex items-center space-x-2 bg-white/60 dark:bg-gray-800/40 rounded-xl p-3 backdrop-blur-sm border border-emerald-100 dark:border-emerald-800/30">
-                <div className="w-8 h-8 bg-emerald-100 dark:bg-emerald-900/50 rounded-lg flex items-center justify-center">
+
+              <div className="flex items-center space-x-2 p-3 bg-white/60 dark:bg-gray-800/40 rounded-xl backdrop-blur-sm border border-emerald-100/50 dark:border-emerald-800/30">
+                <div className="w-8 h-8 bg-gradient-to-br from-emerald-100 to-green-100 dark:from-emerald-900/50 dark:to-green-900/50 rounded-lg flex items-center justify-center">
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
                     className="h-4 w-4 text-emerald-600 dark:text-emerald-400"
@@ -321,31 +322,65 @@ export default function EventDetail({ event }: EventDetailProps) {
                       strokeLinecap="round"
                       strokeLinejoin="round"
                       strokeWidth={2}
-                      d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                      d="M12 8v13m0-13V6a2 2 0 112 2h-2zm0 0V5.5A2.5 2.5 0 109.5 8H12zm-7 4h14M5 12a2 2 0 110-4h14a2 2 0 110 4M5 12v7a2 2 0 002 2h10a2 2 0 002-2v-7"
                     />
                   </svg>
                 </div>
-                <span className="text-xs font-medium text-gray-700 dark:text-gray-300">Ofertas exclusivas</span>
+                <div>
+                  <p className="text-xs font-semibold text-gray-900 dark:text-gray-100">Ofertas</p>
+                  <p className="text-xs text-gray-600 dark:text-gray-400">exclusivas</p>
+                </div>
+              </div>
+
+              <div className="flex items-center space-x-2 p-3 bg-white/60 dark:bg-gray-800/40 rounded-xl backdrop-blur-sm border border-emerald-100/50 dark:border-emerald-800/30">
+                <div className="w-8 h-8 bg-gradient-to-br from-emerald-100 to-green-100 dark:from-emerald-900/50 dark:to-green-900/50 rounded-lg flex items-center justify-center">
+                  <Users className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+                </div>
+                <div>
+                  <p className="text-xs font-semibold text-gray-900 dark:text-gray-100">Comunidad</p>
+                  <p className="text-xs text-gray-600 dark:text-gray-400">activa</p>
+                </div>
+              </div>
+
+              <div className="flex items-center space-x-2 p-3 bg-white/60 dark:bg-gray-800/40 rounded-xl backdrop-blur-sm border border-emerald-100/50 dark:border-emerald-800/30">
+                <div className="w-8 h-8 bg-gradient-to-br from-emerald-100 to-green-100 dark:from-emerald-900/50 dark:to-green-900/50 rounded-lg flex items-center justify-center">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="h-4 w-4 text-emerald-600 dark:text-emerald-400"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M15 17h5l-5 5v-5zM4 19h5v-5H4v5zM13 7h5l-5-5v5zM4 1h5v5H4V1z"
+                    />
+                  </svg>
+                </div>
+                <div>
+                  <p className="text-xs font-semibold text-gray-900 dark:text-gray-100">Eventos</p>
+                  <p className="text-xs text-gray-600 dark:text-gray-400">primero</p>
+                </div>
               </div>
             </div>
 
             {/* CTA Button */}
             <a
-              href="https://linktr.ee/Grupo__WhatsApp?fbclid=PAZXh0bgNhZW0CMTEAAaccynsf3UkhbmLQIUhD8II0TISmzD5E4nMy6usERGSVctgPzZfFhp9Zn584Qw_aem_ZILapw--Jd0H-IjGd72uVw"
+              href="https://chat.whatsapp.com/IUs37U1mJq8FZJSQbMUZpc"
               target="_blank"
               rel="noopener noreferrer"
-              className="group relative w-full bg-gradient-to-r from-emerald-500 via-green-500 to-emerald-600 hover:from-emerald-600 hover:via-green-600 hover:to-emerald-700 text-white font-semibold py-4 px-6 rounded-2xl flex items-center justify-center space-x-3 transition-all duration-300 shadow-lg hover:shadow-emerald-500/30 transform hover:-translate-y-0.5 overflow-hidden"
+              className="group relative w-full bg-gradient-to-r from-emerald-500 via-green-500 to-emerald-600 hover:from-emerald-600 hover:via-green-600 hover:to-emerald-700 text-white font-bold py-4 px-6 rounded-2xl flex items-center justify-center space-x-3 transition-all duration-300 shadow-lg hover:shadow-emerald-500/30 transform hover:-translate-y-0.5 overflow-hidden"
             >
               {/* Shine effect */}
-              <span className="absolute top-0 left-0 w-full h-full overflow-hidden">
-                <span className="absolute top-0 left-[-100%] w-[120%] h-full bg-gradient-to-r from-transparent via-white/20 to-transparent transform skew-x-[-20deg] group-hover:animate-shine"></span>
-              </span>
+              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent transform -skew-x-12 -translate-x-full group-hover:translate-x-full transition-transform duration-700"></div>
 
-              <Users className="h-5 w-5 relative z-10" />
-              <span className="relative z-10 text-base">Unirse al grupo</span>
+              <Users className="w-5 h-5 relative z-10" />
+              <span className="text-base relative z-10 tracking-wide">Unirse al grupo</span>
               <svg
                 xmlns="http://www.w3.org/2000/svg"
-                className="h-5 w-5 relative z-10 group-hover:translate-x-1 transition-transform duration-300"
+                className="w-5 h-5 relative z-10 group-hover:translate-x-1 transition-transform duration-300"
                 fill="none"
                 viewBox="0 0 24 24"
                 stroke="currentColor"
@@ -357,8 +392,10 @@ export default function EventDetail({ event }: EventDetailProps) {
             {/* Member count */}
             <div className="text-center">
               <p className="text-xs text-gray-500 dark:text-gray-400">
-                Únete a más de <span className="font-semibold text-emerald-600 dark:text-emerald-400">5000+ ravers</span>{" "}
-                🎉
+                <span className="inline-flex items-center">
+                  <span className="w-2 h-2 bg-emerald-500 rounded-full mr-1 animate-pulse"></span>
+                  Más de 500+ miembros activos
+                </span>
               </p>
             </div>
           </div>
