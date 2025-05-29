@@ -237,197 +237,129 @@ export default function EventDetail({ event }: EventDetailProps) {
         </div>
       </div>
 
-      {/* Mobile WhatsApp CTA - Only visible on mobile and if event hasn't passed yet */}
+      {/* Mobile WhatsApp Group CTA - Only visible on mobile and if event hasn't passed yet */}
       {(event.endDate ? new Date(event.endDate) > new Date() : new Date(event.startDate) > new Date()) && (
-        <div className="md:hidden backdrop-blur-md bg-white/10 dark:bg-black/30 border border-green-400/50 rounded-2xl shadow-xl overflow-hidden animate-fadeIn relative">
-          {/* Animated background elements */}
+        <div className="md:hidden relative overflow-hidden rounded-3xl bg-gradient-to-br from-emerald-50 via-green-50 to-teal-50 dark:from-emerald-950/30 dark:via-green-950/20 dark:to-teal-950/30 border border-emerald-200/60 dark:border-emerald-800/40 shadow-lg backdrop-blur-sm">
+          {/* Subtle animated background pattern */}
           <div className="absolute inset-0 overflow-hidden pointer-events-none">
-            <div className="absolute -top-10 -left-10 w-40 h-40 bg-green-400/20 rounded-full blur-2xl animate-pulse"></div>
+            <div className="absolute top-4 right-4 w-32 h-32 bg-gradient-to-br from-emerald-200/30 to-green-300/20 dark:from-emerald-700/20 dark:to-green-600/10 rounded-full blur-2xl animate-pulse"></div>
             <div
-              className="absolute -bottom-20 -right-10 w-60 h-60 bg-emerald-400/20 rounded-full blur-2xl animate-pulse"
-              style={{ animationDelay: "1s" }}
+              className="absolute -bottom-8 -left-8 w-40 h-40 bg-gradient-to-tr from-teal-200/20 to-emerald-300/15 dark:from-teal-700/15 dark:to-emerald-600/10 rounded-full blur-3xl animate-pulse"
+              style={{ animationDelay: "1.5s" }}
             ></div>
             <div
-              className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-40 h-40 bg-yellow-300/10 rounded-full blur-3xl animate-pulse"
-              style={{ animationDelay: "2s" }}
+              className="absolute top-1/2 left-1/4 w-24 h-24 bg-green-200/20 dark:bg-green-600/10 rounded-full blur-xl animate-pulse"
+              style={{ animationDelay: "3s" }}
             ></div>
           </div>
 
-          {/* Header with glass effect */}
-          <div className="backdrop-blur-lg bg-gradient-to-r from-green-500 to-green-600 p-4 text-white relative">
-            <h3 className="font-bold text-center text-xl flex items-center justify-center">
-              <Ticket className="h-5 w-5 mr-2 animate-bounce" style={{ animationDuration: "2s" }} />
-              <span className="relative">
-                Compra tus <span className="font-extrabold text-yellow-300 animate-pulse">entradas</span> por WhatsApp
-                <span className="absolute -bottom-1 left-0 w-full h-0.5 bg-white/50 rounded-full"></span>
-              </span>
-            </h3>
-          </div>
-
-          {/* Content with glass effect */}
-          <div className="p-5 space-y-5 backdrop-blur-sm bg-white/5 dark:bg-black/5">
-            {/* Countdown Timer with glass effect */}
-            <div className="backdrop-blur-md bg-white/20 dark:bg-zinc-800/40 rounded-xl p-4 border border-white/20 shadow-inner transform hover:scale-[1.01] transition-transform duration-300">
-              <h4 className="text-center font-medium text-sm mb-3 text-transparent bg-clip-text bg-gradient-to-r from-green-400 to-emerald-500 uppercase tracking-wider">
-                La oferta termina en:
-              </h4>
-              <div className="grid grid-cols-4 gap-3 text-center">
-                <div className="backdrop-blur-lg bg-white/30 dark:bg-zinc-900/50 rounded-lg p-2 shadow-lg border border-white/20 dark:border-zinc-700/30 transform hover:translate-y-[-2px] transition-transform duration-300">
-                  <div className="text-xl font-bold text-transparent bg-clip-text bg-gradient-to-br from-green-400 to-emerald-600 dark:from-green-300 dark:to-emerald-500">
-                    {Math.floor(new Date(event.startDate).getTime() / 86400000 - new Date().getTime() / 86400000)}
-                  </div>
-                  <div className="text-xs text-gray-600 dark:text-gray-300 font-medium">Días</div>
+          {/* Content */}
+          <div className="relative p-6 space-y-4">
+            {/* Header with icon */}
+            <div className="flex items-center justify-center space-x-3">
+              <div className="relative">
+                <div className="w-12 h-12 bg-gradient-to-br from-emerald-500 to-green-600 rounded-2xl flex items-center justify-center shadow-lg">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="24"
+                    height="24"
+                    viewBox="0 0 24 24"
+                    className="w-6 h-6 text-white"
+                  >
+                    <path
+                      fill="white"
+                      d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.148-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372s-1.04 1.016-1.04 2.479 1.065 2.876 1.213 3.074c.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.695.248-1.29.173-1.414z"
+                    />
+                  </svg>
                 </div>
-                <div className="backdrop-blur-lg bg-white/30 dark:bg-zinc-900/50 rounded-lg p-2 shadow-lg border border-white/20 dark:border-zinc-700/30 transform hover:translate-y-[-2px] transition-transform duration-300">
-                  <div className="text-xl font-bold text-transparent bg-clip-text bg-gradient-to-br from-green-400 to-emerald-600 dark:from-green-300 dark:to-emerald-500">
-                    {new Date(event.startDate).getHours() < new Date().getHours()
-                      ? 24 - (new Date().getHours() - new Date(event.startDate).getHours())
-                      : new Date(event.startDate).getHours() - new Date().getHours()}
-                  </div>
-                  <div className="text-xs text-gray-600 dark:text-gray-300 font-medium">Horas</div>
+                <div className="absolute -top-1 -right-1 w-4 h-4 bg-orange-400 rounded-full flex items-center justify-center">
+                  <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>
                 </div>
-                <div className="backdrop-blur-lg bg-white/30 dark:bg-zinc-900/50 rounded-lg p-2 shadow-lg border border-white/20 dark:border-zinc-700/30 transform hover:translate-y-[-2px] transition-transform duration-300">
-                  <div className="text-xl font-bold text-transparent bg-clip-text bg-gradient-to-br from-green-400 to-emerald-600 dark:from-green-300 dark:to-emerald-500">
-                    {new Date(event.startDate).getMinutes() < new Date().getMinutes()
-                      ? 60 - (new Date().getMinutes() - new Date(event.startDate).getMinutes())
-                      : new Date(event.startDate).getMinutes() - new Date().getMinutes()}
-                  </div>
-                  <div className="text-xs text-gray-600 dark:text-gray-300 font-medium">Min</div>
-                </div>
-                <div className="backdrop-blur-lg bg-white/30 dark:bg-zinc-900/50 rounded-lg p-2 shadow-lg border border-white/20 dark:border-zinc-700/30 transform hover:translate-y-[-2px] transition-transform duration-300">
-                  <div className="text-xl font-bold text-transparent bg-clip-text bg-gradient-to-br from-green-400 to-emerald-600 dark:from-green-300 dark:to-emerald-500">
-                    {new Date(event.startDate).getSeconds() < new Date().getSeconds()
-                      ? 60 - (new Date().getSeconds() - new Date(event.startDate).getSeconds())
-                      : new Date(event.startDate).getSeconds() - new Date().getSeconds()}
-                  </div>
-                  <div className="text-xs text-gray-600 dark:text-gray-300 font-medium">Seg</div>
-                </div>
+              </div>
+              <div className="text-center">
+                <h3 className="text-lg font-bold text-gray-800 dark:text-gray-100">Únete a nuestra</h3>
+                <p className="text-sm text-emerald-600 dark:text-emerald-400 font-semibold">comunidad exclusiva</p>
               </div>
             </div>
 
-            {/* Benefits with modern pill design */}
+            {/* Description */}
+            <div className="text-center space-y-2">
+              <p className="text-gray-700 dark:text-gray-300 text-sm leading-relaxed">
+                Sé el primero en enterarte de{" "}
+                <span className="font-semibold text-emerald-700 dark:text-emerald-400">eventos exclusivos</span>,
+                <span className="font-semibold text-emerald-700 dark:text-emerald-400"> descuentos especiales</span> y
+                <span className="font-semibold text-emerald-700 dark:text-emerald-400"> contenido único</span>
+              </p>
+            </div>
+
+            {/* Benefits */}
             <div className="grid grid-cols-2 gap-3">
-              <div className="flex items-center backdrop-blur-md bg-gradient-to-br from-white/20 to-white/5 dark:from-zinc-800/30 dark:to-zinc-800/10 p-3 rounded-xl shadow-sm border border-white/10 dark:border-zinc-700/20 transform hover:translate-y-[-2px] transition-all duration-300">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="h-5 w-5 text-green-400 mr-2 flex-shrink-0 animate-pulse"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-                  />
-                </svg>
-                <span className="text-sm font-medium">
-                  Entradas <span className="font-bold text-green-500 dark:text-green-400">seguras</span>
-                </span>
+              <div className="flex items-center space-x-2 bg-white/60 dark:bg-gray-800/40 rounded-xl p-3 backdrop-blur-sm border border-emerald-100 dark:border-emerald-800/30">
+                <div className="w-8 h-8 bg-emerald-100 dark:bg-emerald-900/50 rounded-lg flex items-center justify-center">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="h-4 w-4 text-emerald-600 dark:text-emerald-400"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                  </svg>
+                </div>
+                <span className="text-xs font-medium text-gray-700 dark:text-gray-300">Noticias al instante</span>
               </div>
-              <div className="flex items-center backdrop-blur-md bg-gradient-to-br from-white/20 to-white/5 dark:from-zinc-800/30 dark:to-zinc-800/10 p-3 rounded-xl shadow-sm border border-white/10 dark:border-zinc-700/20 transform hover:translate-y-[-2px] transition-all duration-300">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="h-5 w-5 text-green-400 mr-2 flex-shrink-0 animate-pulse"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                </svg>
-                <span className="text-sm font-medium">
-                  Envío <span className="font-bold text-green-500 dark:text-green-400">inmediato</span>
-                </span>
-              </div>
-              <div className="flex items-center backdrop-blur-md bg-gradient-to-br from-white/20 to-white/5 dark:from-zinc-800/30 dark:to-zinc-800/10 p-3 rounded-xl shadow-sm border border-white/10 dark:border-zinc-700/20 transform hover:translate-y-[-2px] transition-all duration-300">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="h-5 w-5 text-green-400 mr-2 flex-shrink-0 animate-pulse"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                  />
-                </svg>
-                <span className="text-sm font-medium">
-                  Precios <span className="font-bold text-green-500 dark:text-green-400">especiales</span>
-                </span>
-              </div>
-              <div className="flex items-center backdrop-blur-md bg-gradient-to-br from-white/20 to-white/5 dark:from-zinc-800/30 dark:to-zinc-800/10 p-3 rounded-xl shadow-sm border border-white/10 dark:border-zinc-700/20 transform hover:translate-y-[-2px] transition-all duration-300">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="h-5 w-5 text-green-400 mr-2 flex-shrink-0 animate-pulse"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-                  />
-                </svg>
-                <span className="text-sm font-medium">
-                  Atención <span className="font-bold text-green-500 dark:text-green-400">24/7</span>
-                </span>
+              <div className="flex items-center space-x-2 bg-white/60 dark:bg-gray-800/40 rounded-xl p-3 backdrop-blur-sm border border-emerald-100 dark:border-emerald-800/30">
+                <div className="w-8 h-8 bg-emerald-100 dark:bg-emerald-900/50 rounded-lg flex items-center justify-center">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="h-4 w-4 text-emerald-600 dark:text-emerald-400"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                    />
+                  </svg>
+                </div>
+                <span className="text-xs font-medium text-gray-700 dark:text-gray-300">Ofertas exclusivas</span>
               </div>
             </div>
 
-            {/* CTA Button with shine effect */}
+            {/* CTA Button */}
             <a
-              href="https://wa.me/51944784488"
+              href="https://chat.whatsapp.com/IUs37U1mJq8FZJSQbMUZpc"
               target="_blank"
               rel="noopener noreferrer"
-              className="relative bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white font-bold py-4 px-4 rounded-xl flex items-center justify-center space-x-2 transition-all duration-300 shadow-lg hover:shadow-green-500/30 transform hover:-translate-y-1 overflow-hidden group"
+              className="group relative w-full bg-gradient-to-r from-emerald-500 via-green-500 to-emerald-600 hover:from-emerald-600 hover:via-green-600 hover:to-emerald-700 text-white font-semibold py-4 px-6 rounded-2xl flex items-center justify-center space-x-3 transition-all duration-300 shadow-lg hover:shadow-emerald-500/30 transform hover:-translate-y-0.5 overflow-hidden"
             >
-              {/* Shine effect overlay */}
+              {/* Shine effect */}
               <span className="absolute top-0 left-0 w-full h-full overflow-hidden">
-                <span className="absolute top-0 left-[-100%] w-[120%] h-full bg-gradient-to-r from-transparent via-white/30 to-transparent transform skew-x-[-20deg] animate-shine"></span>
+                <span className="absolute top-0 left-[-100%] w-[120%] h-full bg-gradient-to-r from-transparent via-white/20 to-transparent transform skew-x-[-20deg] group-hover:animate-shine"></span>
               </span>
 
+              <Users className="h-5 w-5 relative z-10" />
+              <span className="relative z-10 text-base">Unirse al grupo</span>
               <svg
                 xmlns="http://www.w3.org/2000/svg"
-                width="24"
-                height="24"
+                className="h-5 w-5 relative z-10 group-hover:translate-x-1 transition-transform duration-300"
+                fill="none"
                 viewBox="0 0 24 24"
-                className="w-6 h-6 mr-2 relative z-10"
+                stroke="currentColor"
               >
-                <path
-                  fill="white"
-                  d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.148-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372s-1.04 1.016-1.04 2.479 1.065 2.876 1.213 3.074c.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.695.248-1.29.173-1.414z"
-                />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
               </svg>
-              <span className="tracking-wide text-lg relative z-10">
-                <span className="absolute -top-1 -right-1 flex h-3 w-3">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-yellow-400 opacity-75"></span>
-                  <span className="relative inline-flex rounded-full h-3 w-3 bg-yellow-500"></span>
-                </span>
-                COMPRAR <span className="text-yellow-300 font-extrabold">AHORA</span>
-              </span>
             </a>
 
-            {/* Group Link with hover effect */}
-            <div className="text-center backdrop-blur-sm bg-white/5 dark:bg-black/5 rounded-xl p-3 border border-white/10 dark:border-zinc-700/20">
-              <a
-                href="https://chat.whatsapp.com/IUs37U1mJq8FZJSQbMUZpc"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-sm text-gray-700 dark:text-gray-300 hover:text-green-600 dark:hover:text-green-400 transition-colors duration-300 inline-flex items-center group"
-              >
-                <Users className="h-4 w-4 mr-1 group-hover:animate-bounce" />
-                <span className="relative">
-                  Únete a nuestro{" "}
-                  <span className="font-bold text-green-600 dark:text-green-400">grupo de WhatsApp</span>
-                  <span className="absolute -bottom-0.5 left-0 w-0 h-0.5 bg-green-400 group-hover:w-full transition-all duration-300 rounded-full"></span>
-                </span>
-              </a>
+            {/* Member count */}
+            <div className="text-center">
+              <p className="text-xs text-gray-500 dark:text-gray-400">
+                Únete a más de <span className="font-semibold text-emerald-600 dark:text-emerald-400">5000+ ravers</span>{" "}
+                🎉
+              </p>
             </div>
           </div>
         </div>
