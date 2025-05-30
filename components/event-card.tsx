@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useMemo, memo } from "react"
 import Link from "next/link"
 import Image from "next/image"
 import { MapPin, Calendar, Clock, Ticket } from "lucide-react"
@@ -11,21 +11,24 @@ interface EventCardProps {
   event: Event
 }
 
-export function EventCard({ event }: EventCardProps) {
+// Memoizar el componente para evitar re-renders innecesarios
+export const EventCard = memo(({ event }: EventCardProps) => {
   const { currency, exchangeRates } = useCurrency()
   const [isHovered, setIsHovered] = useState(false)
 
-  // Find the cheapest ticket price across all sales phases and zones, regardless of availability
-  const cheapestTicket = event.salesPhases
-    .flatMap((phase) =>
-      phase.zonesPricing.map((zone) => ({
-        price: zone.price,
-        available: zone.available,
-        phaseName: phase.name,
-        zoneName: event.zones.find((z) => z.id === zone.zoneId)?.name || "",
-      })),
-    )
-    .sort((a, b) => a.price - b.price)[0]
+  // Memoizar cálculos pesados
+  const cheapestTicket = useMemo(() => {
+    return event.salesPhases
+      .flatMap((phase) =>
+        phase.zonesPricing.map((zone) => ({
+          price: zone.price,
+          available: zone.available,
+          phaseName: phase.name,
+          zoneName: event.zones.find((z) => z.id === zone.zoneId)?.name || "",
+        })),
+      )
+      .sort((a, b) => a.price - b.price)[0]
+  }, [event.salesPhases, event.zones])
 
   // Check if all tickets are sold out (keep this logic)
   const isSoldOut = event.salesPhases.flatMap((phase) => phase.zonesPricing).every((zone) => zone.available <= 0)
@@ -172,6 +175,7 @@ export function EventCard({ event }: EventCardProps) {
 
         {/* Top section with image */}
         <div className="relative h-48 overflow-hidden">
+          {/* Optimizar imagen con lazy loading inteligente */}
           <Image
             src={event.mainImageUrl || "/placeholder.svg?height=200&width=400"}
             alt={event.name}
@@ -181,6 +185,9 @@ export function EventCard({ event }: EventCardProps) {
               isHovered ? "scale-110" : "scale-100"
             }`}
             loading="lazy"
+            quality={60} // Reducir calidad para cards
+            placeholder="blur"
+            blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAABAAEDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAUEAEAAAAAAAAAAAAAAAAAAAAA/8QAFQEBAQAAAAAAAAAAAAAAAAAAAAX/xAAUEQEAAAAAAAAAAAAAAAAAAAAA/9oADAMBAAIRAxEAPwCdABmX/9k="
           />
 
           {/* Overlay for better text visibility */}
@@ -324,4 +331,4 @@ export function EventCard({ event }: EventCardProps) {
       </div>
     </Link>
   )
-}
+})

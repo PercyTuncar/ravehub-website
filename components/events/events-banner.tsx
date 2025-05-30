@@ -4,9 +4,9 @@ import { useState, useEffect } from "react"
 import Image from "next/image"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
-import { getFeaturedEvents } from "@/lib/firebase/events"
 import type { Event } from "@/types"
 import { ChevronLeft, ChevronRight } from "lucide-react"
+import { getFeaturedEventsOptimized } from "@/lib/firebase/events" // Declare the variable before using it
 
 export function EventsBanner() {
   const [featuredEvents, setFeaturedEvents] = useState<Event[]>([])
@@ -16,7 +16,8 @@ export function EventsBanner() {
   useEffect(() => {
     const loadFeaturedEvents = async () => {
       try {
-        const events = await getFeaturedEvents(3)
+        // Usar la función optimizada
+        const events = await getFeaturedEventsOptimized(3)
         setFeaturedEvents(events)
       } catch (error) {
         console.error("Error loading featured events:", error)
@@ -69,10 +70,12 @@ export function EventsBanner() {
         src={currentEvent.bannerImageUrl || currentEvent.mainImageUrl || "/placeholder.svg?height=400&width=1200"}
         alt={currentEvent.name}
         fill
-        priority={currentIndex === 0}
+        priority={currentIndex === 0} // Solo priority para la primera
         sizes="100vw"
         className="object-cover object-center"
-        quality={85}
+        quality={75} // Reducir calidad para mejor performance
+        placeholder="blur"
+        blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAABAAEDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAUEAEAAAAAAAAAAAAAAAAAAAAA/8QAFQEBAQAAAAAAAAAAAAAAAAAAAAX/xAAUEQEAAAAAAAAAAAAAAAAAAAAA/9oADAMBAAIRAxEAPwCdABmX/9k="
       />
 
       <div className="absolute bottom-8 left-8 right-8 z-20 text-white">

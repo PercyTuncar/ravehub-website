@@ -1,9 +1,9 @@
 "use client"
 
-import { useCallback, useEffect, useState } from "react"
+import { useCallback, useEffect, useState, useMemo } from "react"
 import { useSearchParams } from "next/navigation"
 import { EventCard } from "@/components/event-card"
-import { getAllEvents, getEventsByCountry } from "@/lib/firebase/events"
+import { getEventsForPage } from "@/lib/firebase/events"
 import type { Event } from "@/types"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { AlertCircle } from "lucide-react"
@@ -18,9 +18,11 @@ import {
 
 export function EventsList() {
   const searchParams = useSearchParams()
+  // Reemplazar la lógica de carga de eventos
   const [events, setEvents] = useState<Event[]>([])
-  const [filteredEvents, setFilteredEvents] = useState<Event[]>([])
   const [loading, setLoading] = useState(true)
+  const [hasMore, setHasMore] = useState(true)
+  const [lastDoc, setLastDoc] = useState<any>(null)
   const [error, setError] = useState<string | null>(null)
   const [renderedEvents, setRenderedEvents] = useState<Event[]>([])
 
@@ -117,50 +119,58 @@ export function EventsList() {
     [dateParam, category, minPrice, maxPrice, search],
   )
 
-  useEffect(() => {
-    const fetchEvents = async () => {
+  // Función optimizada para cargar eventos
+  const loadEvents = useCallback(
+    async (reset = false) => {
       try {
         setLoading(true)
-        setError(null)
 
-        // Fetch events based on country filter
-        let fetchedEvents: Event[]
-        if (country) {
-          fetchedEvents = await getEventsByCountry(country)
+        const {
+          events: newEvents,
+          hasMore: moreAvailable,
+          lastDoc: newLastDoc,
+        } = await getEventsForPage(12, reset ? null : lastDoc)
+
+        if (reset) {
+          setEvents(newEvents)
         } else {
-          fetchedEvents = await getAllEvents()
+          setEvents((prev) => [...prev, ...newEvents])
         }
 
-        // Guardar todos los eventos
-        setEvents(fetchedEvents)
-
-        // Aplicar filtros
-        const filtered = applyFilters(fetchedEvents)
-        setFilteredEvents(filtered)
-
-        // Calcular el total de páginas
-        setTotalPages(Math.ceil(filtered.length / eventsPerPage))
-
-        // Resetear a la primera página cuando cambian los filtros
-        setCurrentPage(1)
-      } catch (err) {
-        console.error("Error fetching events:", err)
-        setError("Ocurrió un error al cargar los eventos. Por favor, intenta de nuevo más tarde.")
+        setHasMore(moreAvailable)
+        setLastDoc(newLastDoc)
+      } catch (error) {
+        console.error("Error loading events:", error)
+        setError("Error loading events")
       } finally {
         setLoading(false)
       }
-    }
+    },
+    [lastDoc],
+  )
 
-    fetchEvents()
-  }, [country, dateParam, minPrice, maxPrice, search, category, applyFilters])
+  // Cargar eventos iniciales
+  useEffect(() => {
+    loadEvents(true)
+  }, [])
+
+  // Aplicar filtros solo a eventos ya cargados
+  const eventsAfterFilter = useMemo(() => {
+    return applyFilters(events)
+  }, [events, dateParam, category, minPrice, maxPrice, search, applyFilters])
+
+  useEffect(() => {
+    // Calcular el total de páginas
+    setTotalPages(Math.ceil(eventsAfterFilter.length / eventsPerPage))
+  }, [eventsAfterFilter, eventsPerPage])
 
   // Efecto para actualizar los eventos renderizados cuando cambia la página
   useEffect(() => {
-    if (filteredEvents.length === 0) return
+    if (eventsAfterFilter.length === 0) return
 
     const startIndex = (currentPage - 1) * eventsPerPage
     const endIndex = startIndex + eventsPerPage
-    const paginatedEvents = filteredEvents.slice(startIndex, endIndex)
+    const paginatedEvents = eventsAfterFilter.slice(startIndex, endIndex)
 
     // Renderizar los eventos con un pequeño retraso para mejorar la experiencia
     setRenderedEvents([])
@@ -177,7 +187,7 @@ export function EventsList() {
 
       return () => clearTimeout(timer)
     }
-  }, [filteredEvents, currentPage])
+  }, [eventsAfterFilter, currentPage])
 
   // Función para cambiar de página
   const goToPage = (page: number) => {
@@ -248,7 +258,7 @@ export function EventsList() {
     )
   }
 
-  if (filteredEvents.length === 0) {
+  if (eventsAfterFilter.length === 0) {
     return (
       <Alert className="mt-6">
         <AlertCircle className="h-4 w-4" />

@@ -12,6 +12,7 @@ import {
   deleteDoc,
   serverTimestamp,
   writeBatch,
+  startAfter,
 } from "firebase/firestore"
 import { db } from "@/lib/firebase/config"
 import type { Event } from "@/types"
@@ -385,6 +386,85 @@ export async function getEventsForAdmin(): Promise<Event[]> {
     return events
   } catch (error) {
     console.error("Error fetching events for admin:", error)
+    return []
+  }
+}
+
+// Función optimizada para página de eventos con límite y cache
+export async function getEventsForPage(
+  limit = 12,
+  lastDoc?: any,
+): Promise<{ events: Event[]; hasMore: boolean; lastDoc: any }> {
+  try {
+    const eventsRef = collection(db, "events")
+    let q = query(eventsRef, where("status", "==", "published"), orderBy("startDate", "asc"), limit(limit))
+
+    if (lastDoc) {
+      q = query(q, startAfter(lastDoc))
+    }
+
+    const querySnapshot = await getDocs(q)
+    const events: Event[] = []
+    let lastDocument = null
+
+    querySnapshot.forEach((doc) => {
+      const data = doc.data()
+      const event = {
+        id: doc.id,
+        ...data,
+        startDate: data.startDate?.toDate?.() || new Date(data.startDate),
+        endDate: data.endDate?.toDate?.() || (data.endDate ? new Date(data.endDate) : undefined),
+        createdAt: data.createdAt?.toDate?.() || new Date(data.createdAt || Date.now()),
+        updatedAt: data.updatedAt?.toDate?.() || new Date(data.updatedAt || Date.now()),
+      } as Event
+      events.push(event)
+      lastDocument = doc
+    })
+
+    return {
+      events,
+      hasMore: querySnapshot.docs.length === limit,
+      lastDoc: lastDocument,
+    }
+  } catch (error) {
+    console.error("Error fetching events for page:", error)
+    return { events: [], hasMore: false, lastDoc: null }
+  }
+}
+
+// Función para obtener eventos destacados con cache
+export async function getFeaturedEventsOptimized(limitCount = 3): Promise<Event[]> {
+  try {
+    const eventsRef = collection(db, "events")
+    const q = query(
+      eventsRef,
+      where("status", "==", "published"),
+      where("isHighlighted", "==", true),
+      orderBy("startDate", "asc"),
+      limit(limitCount),
+    )
+
+    const querySnapshot = await getDocs(q)
+    const events: Event[] = []
+
+    querySnapshot.forEach((doc) => {
+      const data = doc.data()
+      const event = {
+        id: doc.id,
+        name: data.name,
+        slug: data.slug,
+        mainImageUrl: data.mainImageUrl,
+        bannerImageUrl: data.bannerImageUrl,
+        shortDescription: data.shortDescription,
+        startDate: data.startDate?.toDate?.() || new Date(data.startDate),
+        // Solo campos necesarios para el banner
+      } as Event
+      events.push(event)
+    })
+
+    return events
+  } catch (error) {
+    console.error("Error fetching featured events:", error)
     return []
   }
 }
