@@ -9,7 +9,7 @@ import {
   getSitemapBlogTags,
 } from "@/lib/firebase/optimized-queries"
 
-const SITE_URL = "https://www.ravehublatam.com"
+const SITE_URL = "https://www.weareravehub.com"
 
 export const revalidate = 3600 // Revalidate every hour
 

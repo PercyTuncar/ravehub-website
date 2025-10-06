@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server"
 
 // Dominio base del sitio
-const SITE_URL = "https://ravehublatam.com"
+const SITE_URL = "https://weareravehub.com"
 
 export async function GET() {
   // Contenido del archivo robots.txt

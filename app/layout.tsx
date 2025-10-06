@@ -46,22 +46,22 @@ export const metadata: Metadata = {
     apple: "/icons/icon-192x192.png",
   },
   alternates: {
-    canonical: "https://www.ravehublatam.com",
+    canonical: "https://www.weareravehub.com",
     languages: {
-      es: "https://www.ravehublatam.com",
+      es: "https://www.weareravehub.com",
     },
   },
   openGraph: {
     type: "website",
     locale: "es_LA",
-    url: "https://www.ravehublatam.com",
+    url: "https://www.weareravehub.com",
     title: "RaveHub - Eventos de música electrónica en Latinoamérica",
     description:
       "Encuentra los mejores eventos de música electrónica, compra entradas y merchandise oficial. La plataforma líder para festivales y fiestas electrónicas en Latinoamérica.",
     siteName: "RaveHub",
     images: [
       {
-        url: "https://www.ravehublatam.com/electronic-music-festival-night.png",
+        url: "https://www.weareravehub.com/electronic-music-festival-night.png",
         width: 1200,
         height: 630,
         alt: "RaveHub - Eventos de música electrónica",
@@ -72,7 +72,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "RaveHub - Eventos de música electrónica en Latinoamérica",
     description: "Encuentra los mejores eventos de música electrónica, compra entradas y merchandise oficial.",
-    images: ["https://www.ravehublatam.com/electronic-music-festival-night.png"],
+    images: ["https://www.weareravehub.com/electronic-music-festival-night.png"],
   },
   keywords: [
     "eventos música electrónica",

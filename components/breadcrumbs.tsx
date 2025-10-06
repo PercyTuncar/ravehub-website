@@ -70,7 +70,7 @@ export function Breadcrumbs({ className = "" }: BreadcrumbsProps) {
       "@type": "ListItem",
       position: idx + 1,
       name: crumb.label,
-      item: `https://www.ravehublatam.com${crumb.href}`,
+      item: `https://www.weareravehub.com${crumb.href}`,
     })),
   }
 

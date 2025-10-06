@@ -417,7 +417,7 @@ export default function ContactPage() {
                     <div>
                       <h4 className="text-lg font-medium mb-2">Correo electrónico</h4>
                       <motion.a
-                        href="mailto:contacto@ravehublatam.com"
+                        href="mailto:contacto@weareravehub.com"
                         className="flex items-center p-3 rounded-lg border border-border hover:border-primary hover:bg-amber-50 dark:hover:bg-amber-900/10 transition-all duration-300"
                         initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}
@@ -438,7 +438,7 @@ export default function ContactPage() {
                           <rect width="20" height="16" x="2" y="4" rx="2" />
                           <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" />
                         </svg>
-                        <span className="font-medium">contacto@ravehublatam.com</span>
+                        <span className="font-medium">contacto@weareravehub.com</span>
                       </motion.a>
                     </div>
                   </div>

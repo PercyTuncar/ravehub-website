@@ -14,12 +14,12 @@ export const metadata: Metadata = {
     title: "Tienda | RaveHub - Merchandise Oficial de Eventos",
     description:
       "Descubre nuestra selección de productos oficiales para eventos y fiestas electrónicas. Merchandise exclusivo, ropa y accesorios con opciones de pago en cuotas.",
-    url: "https://www.ravehublatam.com/tienda",
+    url: "https://www.weareravehub.com/tienda",
     siteName: "RaveHub",
     type: "website",
     images: [
       {
-        url: "https://www.ravehublatam.com/electronic-music-festival-night.png",
+        url: "https://www.weareravehub.com/electronic-music-festival-night.png",
         width: 1200,
         height: 630,
         alt: "RaveHub Tienda - Merchandise Oficial",
@@ -31,10 +31,10 @@ export const metadata: Metadata = {
     title: "Tienda | RaveHub - Merchandise Oficial de Eventos",
     description:
       "Descubre nuestra selección de productos oficiales para eventos y fiestas electrónicas. Merchandise exclusivo, ropa y accesorios.",
-    images: ["https://www.ravehublatam.com/electronic-music-festival-night.png"],
+    images: ["https://www.weareravehub.com/electronic-music-festival-night.png"],
   },
   alternates: {
-    canonical: "https://www.ravehublatam.com/tienda",
+    canonical: "https://www.weareravehub.com/tienda",
   },
 }
 

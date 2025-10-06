@@ -8,7 +8,7 @@ interface EventSchemaProps {
 }
 
 export function EventSchema({ event }: EventSchemaProps) {
-  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://ravehublatam.com"
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://weareravehub.com"
 
   // Función para asegurarse de que la URL tiene el protocolo 'https://'
   const ensureHttpsProtocol = (url: string) => {

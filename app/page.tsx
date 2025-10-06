@@ -19,7 +19,7 @@ export const metadata: Metadata = {
     images: [
       "https://firebasestorage.googleapis.com/v0/b/event-ticket-website-6b541.firebasestorage.app/o/ravehubultra.webp?alt=media&token=126bf601-f0dd-463e-9661-4665ba50e015",
     ],
-    url: "https://ravehublatam.com",
+    url: "https://weareravehub.com",
     type: "website",
   },
   twitter: {

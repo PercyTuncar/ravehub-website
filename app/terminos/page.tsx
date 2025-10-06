@@ -121,7 +121,7 @@ export default function TermsPage() {
         <h2>13. Contacto</h2>
         <p>Si tiene alguna pregunta sobre estos Términos y Condiciones, por favor contáctenos a través de:</p>
         <ul>
-          <li>Email: info@ravehublatam.com</li>
+          <li>Email: info@weareravehub.com</li>
           <li>
             Formulario de contacto:{" "}
             <a href="/contacto" className="text-primary hover:underline">

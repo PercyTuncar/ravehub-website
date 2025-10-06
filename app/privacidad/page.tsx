@@ -92,7 +92,7 @@ export default function PrivacyPolicyPage() {
           <li>Solicitar la portabilidad de tus datos.</li>
           <li>Retirar tu consentimiento en cualquier momento.</li>
         </ul>
-        <p>Para ejercer estos derechos, contáctanos a través de info@ravehublatam.com.</p>
+        <p>Para ejercer estos derechos, contáctanos a través de info@weareravehub.com.</p>
 
         <h2>7. Cookies y Tecnologías Similares</h2>
         <p>
@@ -127,7 +127,7 @@ export default function PrivacyPolicyPage() {
           a:
         </p>
         <ul>
-          <li>Email: info@ravehublatam.com</li>
+          <li>Email: info@weareravehub.com</li>
           <li>
             Formulario de contacto:{" "}
             <a href="/contacto" className="text-primary hover:underline">

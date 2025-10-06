@@ -127,8 +127,8 @@ export default function HelpCenterPage() {
               </Link>
             </li>
             <li>
-              <a href="mailto:info@ravehublatam.com" className="text-primary hover:underline">
-                Email: info@ravehublatam.com
+              <a href="mailto:info@weareravehub.com" className="text-primary hover:underline">
+                Email: info@weareravehub.com
               </a>
             </li>
             <li>

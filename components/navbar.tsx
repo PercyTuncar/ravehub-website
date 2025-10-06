@@ -624,7 +624,7 @@ export default function Navbar() {
             "@context": "https://schema.org",
             "@type": "SiteNavigationElement",
             name: navLinks.map((link) => link.name),
-            url: navLinks.map((link) => `https://www.ravehublatam.com${link.href}`),
+            url: navLinks.map((link) => `https://www.weareravehub.com${link.href}`),
           }),
         }}
       />

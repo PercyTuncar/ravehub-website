@@ -20,8 +20,8 @@ export async function POST(request: Request) {
 
     // Send email using Resend
     const { data, error } = await resend.emails.send({
-      from: "Contacto RaveHub <no-reply@ravehublatam.com>",
-      to: "percy@ravehublatam.com",
+      from: "Contacto RaveHub <no-reply@weareravehub.com>",
+      to: "percy@weareravehub.com",
       subject: `Nuevo mensaje de contacto de ${name}`,
       html: `
         <h2>Nuevo mensaje de contacto</h2>

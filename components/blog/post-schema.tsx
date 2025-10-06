@@ -75,7 +75,7 @@ export function PostSchema({ post, category, url, comments = [], reactions = [] 
   const modifiedDate = safeISOString(post.updatedAt) || safeISOString(post.updatedDate) || publishDate
 
   // Get the base URL for the website
-  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://www.ravehublatam.com"
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://www.weareravehub.com"
 
   // Generate multiple schemas for better SEO coverage
   const schemas = []
@@ -124,10 +124,10 @@ export function PostSchema({ post, category, url, comments = [], reactions = [] 
       height: 60,
     },
     sameAs: [
-      "https://www.facebook.com/ravehublatam",
-      "https://www.instagram.com/ravehublatam",
-      "https://twitter.com/ravehublatam",
-      "https://www.tiktok.com/@ravehublatam",
+      "https://www.facebook.com/weareravehub",
+      "https://www.instagram.com/weareravehub",
+      "https://twitter.com/weareravehub",
+      "https://www.tiktok.com/@weareravehub",
     ],
     contactPoint: {
       "@type": "ContactPoint",

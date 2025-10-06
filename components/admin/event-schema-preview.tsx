@@ -19,7 +19,7 @@ export function EventSchemaPreview({ event, currency = "USD" }: EventSchemaPrevi
   const [activeTab, setActiveTab] = useState("preview")
   const [validationResult, setValidationResult] = useState<{ valid: boolean; message?: string } | null>(null)
 
-  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://ravehublatam.com"
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://weareravehub.com"
 
   // Función para asegurarse de que la URL tiene el protocolo 'https://'
   const ensureHttpsProtocol = (url: string) => {
