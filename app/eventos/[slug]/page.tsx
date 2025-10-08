@@ -14,17 +14,18 @@ interface EventPageProps {
 
 export async function generateMetadata({ params }: EventPageProps) {
   try {
-    const event = await getEventBySlug(params.slug)
+    const { slug } = await params
+    const event = await getEventBySlug(slug)
 
     if (!event) {
       return {
-        title: "Evento no encontrado | RaveHub",
+        title: "Evento no encontrado | Ravehub",
         description: "El evento que buscas no existe o ha sido eliminado.",
       }
     }
 
     return {
-      title: `${event.name} | RaveHub`,
+      title: `${event.name} | Ravehub`,
       description: event.shortDescription,
       openGraph: {
         title: event.name,
@@ -35,7 +36,7 @@ export async function generateMetadata({ params }: EventPageProps) {
   } catch (error) {
     console.error("Error generating metadata:", error)
     return {
-      title: "Error | RaveHub",
+      title: "Error | Ravehub",
       description: "Ocurrió un error al cargar el evento.",
     }
   }
@@ -43,15 +44,16 @@ export async function generateMetadata({ params }: EventPageProps) {
 
 export default async function EventPage({ params }: EventPageProps) {
   try {
-    if (!params.slug) {
+    const { slug } = await params
+    if (!slug) {
       console.error("Slug parameter is missing")
       notFound()
     }
 
-    const event = await getEventBySlug(params.slug)
+    const event = await getEventBySlug(slug)
 
     if (!event) {
-      console.error(`Event with slug ${params.slug} not found`)
+      console.error(`Event with slug ${slug} not found`)
       notFound()
     }
 

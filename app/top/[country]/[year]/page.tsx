@@ -1,7 +1,7 @@
 import { DJRankingDisplay } from "@/components/dj-ranking/dj-ranking-display"
 
 export const metadata = {
-  title: "Top DJs | RaveHub",
+  title: "Top DJs | Ravehub",
   description: "Ranking de los mejores DJs por país y año",
 }
 

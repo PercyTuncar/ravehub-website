@@ -2,8 +2,8 @@ import type { Metadata } from "next"
 import LoginForm from "@/components/auth/login-form"
 
 export const metadata: Metadata = {
-  title: "Iniciar sesión | RaveHub",
-  description: "Accede a tu cuenta de RaveHub para gestionar tus entradas y compras",
+  title: "Iniciar sesión | Ravehub",
+  description: "Accede a tu cuenta de Ravehub para gestionar tus entradas y compras",
 }
 
 export const viewport = {

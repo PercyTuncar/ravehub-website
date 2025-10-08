@@ -28,7 +28,7 @@ export async function generateProductMetadata({
   const description = product.shortDescription || product.description || `Descubre ${product.name} en nuestra tienda.`
 
   // Construir el título
-  const title = `${product.name} ${category ? `- ${category.name}` : ""} | RaveHub`
+  const title = `${product.name} ${category ? `- ${category.name}` : ""} | Ravehub`
 
   // Obtener la valoración agregada
   const aggregateRating = await getProductAggregateRating(product.id)
@@ -40,7 +40,7 @@ export async function generateProductMetadata({
       title: title,
       description: description,
       url: `${baseUrl}/tienda/${product.slug}`,
-      siteName: "RaveHub",
+      siteName: "Ravehub",
       images: [
         {
           url: mainImage,

@@ -1,0 +1,2807 @@
+[
+  {
+    "file": "app\\admin\\blog\\categorias\\new\\page.tsx",
+    "unused": [
+      {
+        "name": "type { Metadata }",
+        "source": "next"
+      }
+    ]
+  },
+  {
+    "file": "app\\admin\\blog\\categorias\\[id]\\edit\\page.tsx",
+    "unused": [
+      {
+        "name": "type { Metadata }",
+        "source": "next"
+      }
+    ]
+  },
+  {
+    "file": "app\\admin\\blog\\comentarios\\page.tsx",
+    "unused": [
+      {
+        "name": "type { Metadata }",
+        "source": "next"
+      }
+    ]
+  },
+  {
+    "file": "app\\admin\\blog\\etiquetas\\new\\page.tsx",
+    "unused": [
+      {
+        "name": "type { Metadata }",
+        "source": "next"
+      }
+    ]
+  },
+  {
+    "file": "app\\admin\\blog\\etiquetas\\page.tsx",
+    "unused": [
+      {
+        "name": "type { Metadata }",
+        "source": "next"
+      }
+    ]
+  },
+  {
+    "file": "app\\admin\\blog\\etiquetas\\[id]\\edit\\page.tsx",
+    "unused": [
+      {
+        "name": "type { Metadata }",
+        "source": "next"
+      }
+    ]
+  },
+  {
+    "file": "app\\admin\\blog\\new\\page.tsx",
+    "unused": [
+      {
+        "name": "type { Metadata }",
+        "source": "next"
+      }
+    ]
+  },
+  {
+    "file": "app\\admin\\blog\\page.tsx",
+    "unused": [
+      {
+        "name": "type { Metadata }",
+        "source": "next"
+      }
+    ]
+  },
+  {
+    "file": "app\\admin\\blog\\[id]\\edit\\page.tsx",
+    "unused": [
+      {
+        "name": "type { Metadata }",
+        "source": "next"
+      }
+    ]
+  },
+  {
+    "file": "app\\admin\\galeria\\new\\page.tsx",
+    "unused": [
+      {
+        "name": "type { Metadata }",
+        "source": "next"
+      }
+    ]
+  },
+  {
+    "file": "app\\admin\\galeria\\page.tsx",
+    "unused": [
+      {
+        "name": "type { Metadata }",
+        "source": "next"
+      }
+    ]
+  },
+  {
+    "file": "app\\admin\\galeria\\[id]\\edit\\page.tsx",
+    "unused": [
+      {
+        "name": "type { Metadata }",
+        "source": "next"
+      }
+    ]
+  },
+  {
+    "file": "app\\admin\\galeria\\[id]\\page.tsx",
+    "unused": [
+      {
+        "name": "type { Metadata }",
+        "source": "next"
+      }
+    ]
+  },
+  {
+    "file": "app\\admin\\layout.tsx",
+    "unused": [
+      {
+        "name": "type React",
+        "source": "react"
+      },
+      {
+        "name": "type { Metadata }",
+        "source": "next"
+      }
+    ]
+  },
+  {
+    "file": "app\\admin\\page.tsx",
+    "unused": [
+      {
+        "name": "type { Metadata }",
+        "source": "next"
+      }
+    ]
+  },
+  {
+    "file": "app\\admin\\settings\\api\\page.tsx",
+    "unused": [
+      {
+        "name": "type { Metadata }",
+        "source": "next"
+      }
+    ]
+  },
+  {
+    "file": "app\\admin\\settings\\currency-settings\\page.tsx",
+    "unused": [
+      {
+        "name": "type { Metadata }",
+        "source": "next"
+      }
+    ]
+  },
+  {
+    "file": "app\\admin\\settings\\general\\page.tsx",
+    "unused": [
+      {
+        "name": "type { Metadata }",
+        "source": "next"
+      }
+    ]
+  },
+  {
+    "file": "app\\admin\\settings\\layout.tsx",
+    "unused": [
+      {
+        "name": "type React",
+        "source": "react"
+      },
+      {
+        "name": "type { Metadata }",
+        "source": "next"
+      }
+    ]
+  },
+  {
+    "file": "app\\admin\\settings\\settings-layout-client.tsx",
+    "unused": [
+      {
+        "name": "type React",
+        "source": "react"
+      }
+    ]
+  },
+  {
+    "file": "app\\api\\revalidate-sitemap\\route.ts",
+    "unused": [
+      {
+        "name": "type NextRequest",
+        "source": "next/server"
+      }
+    ]
+  },
+  {
+    "file": "app\\api\\webhooks\\content-updated\\route.ts",
+    "unused": [
+      {
+        "name": "type NextRequest",
+        "source": "next/server"
+      }
+    ]
+  },
+  {
+    "file": "app\\autores\\[slug]\\page.tsx",
+    "unused": [
+      {
+        "name": "type { Metadata }",
+        "source": "next"
+      }
+    ]
+  },
+  {
+    "file": "app\\ayuda\\page.tsx",
+    "unused": [
+      {
+        "name": "type { Metadata }",
+        "source": "next"
+      }
+    ]
+  },
+  {
+    "file": "app\\blog\\blog-list.tsx",
+    "unused": [
+      {
+        "name": "type { BlogPost }",
+        "source": "@/types/blog"
+      }
+    ]
+  },
+  {
+    "file": "app\\blog\\categorias\\[slug]\\page.tsx",
+    "unused": [
+      {
+        "name": "type { Metadata }",
+        "source": "next"
+      }
+    ]
+  },
+  {
+    "file": "app\\blog\\etiquetas\\[slug]\\page.tsx",
+    "unused": [
+      {
+        "name": "type { Metadata }",
+        "source": "next"
+      }
+    ]
+  },
+  {
+    "file": "app\\blog\\etiquetas\\[slug]\\TagClientPage.tsx",
+    "unused": [
+      {
+        "name": "type { BlogTag }",
+        "source": "@/types/blog"
+      }
+    ]
+  },
+  {
+    "file": "app\\blog\\page.tsx",
+    "unused": [
+      {
+        "name": "type { Metadata }",
+        "source": "next"
+      }
+    ]
+  },
+  {
+    "file": "app\\blog\\[slug]\\page.tsx",
+    "unused": [
+      {
+        "name": "type { Metadata }",
+        "source": "next"
+      }
+    ]
+  },
+  {
+    "file": "app\\completar-registro\\page.tsx",
+    "unused": [
+      {
+        "name": "type { Metadata }",
+        "source": "next"
+      }
+    ]
+  },
+  {
+    "file": "app\\contacto\\page.tsx",
+    "unused": [
+      {
+        "name": "type { Metadata }",
+        "source": "next"
+      }
+    ]
+  },
+  {
+    "file": "app\\faq\\page.tsx",
+    "unused": [
+      {
+        "name": "type { Metadata }",
+        "source": "next"
+      }
+    ]
+  },
+  {
+    "file": "app\\galeria\\layout.tsx",
+    "unused": [
+      {
+        "name": "type React",
+        "source": "react"
+      }
+    ]
+  },
+  {
+    "file": "app\\galeria\\page.tsx",
+    "unused": [
+      {
+        "name": "type { Metadata }",
+        "source": "next"
+      }
+    ]
+  },
+  {
+    "file": "app\\galeria\\[slug]\\page.tsx",
+    "unused": [
+      {
+        "name": "type { Album",
+        "source": "@/types/gallery"
+      }
+    ]
+  },
+  {
+    "file": "app\\layout.tsx",
+    "unused": [
+      {
+        "name": "type React",
+        "source": "react"
+      },
+      {
+        "name": "type { Metadata }",
+        "source": "next"
+      }
+    ]
+  },
+  {
+    "file": "app\\login\\page.tsx",
+    "unused": [
+      {
+        "name": "type { Metadata }",
+        "source": "next"
+      }
+    ]
+  },
+  {
+    "file": "app\\offline\\page.tsx",
+    "unused": [
+      {
+        "name": "type { Metadata }",
+        "source": "next"
+      }
+    ]
+  },
+  {
+    "file": "app\\page.tsx",
+    "unused": [
+      {
+        "name": "type { Metadata }",
+        "source": "next"
+      }
+    ]
+  },
+  {
+    "file": "app\\perfil\\ajustes\\page.tsx",
+    "unused": [
+      {
+        "name": "type { Metadata }",
+        "source": "next"
+      }
+    ]
+  },
+  {
+    "file": "app\\perfil\\compras\\page.tsx",
+    "unused": [
+      {
+        "name": "type { Metadata }",
+        "source": "next"
+      }
+    ]
+  },
+  {
+    "file": "app\\perfil\\entradas\\page.tsx",
+    "unused": [
+      {
+        "name": "type { TicketTransaction",
+        "source": "@/types"
+      }
+    ]
+  },
+  {
+    "file": "app\\perfil\\layout.tsx",
+    "unused": [
+      {
+        "name": "type { ReactNode }",
+        "source": "react"
+      },
+      {
+        "name": "type { Metadata }",
+        "source": "next"
+      }
+    ]
+  },
+  {
+    "file": "app\\perfil\\page.tsx",
+    "unused": [
+      {
+        "name": "type { Metadata }",
+        "source": "next"
+      }
+    ]
+  },
+  {
+    "file": "app\\perfil\\pagos\\page.tsx",
+    "unused": [
+      {
+        "name": "type { TicketTransaction",
+        "source": "@/types"
+      }
+    ]
+  },
+  {
+    "file": "app\\privacidad\\page.tsx",
+    "unused": [
+      {
+        "name": "type { Metadata }",
+        "source": "next"
+      }
+    ]
+  },
+  {
+    "file": "app\\recuperar-password\\page.tsx",
+    "unused": [
+      {
+        "name": "type { Metadata }",
+        "source": "next"
+      }
+    ]
+  },
+  {
+    "file": "app\\reembolsos\\page.tsx",
+    "unused": [
+      {
+        "name": "type { Metadata }",
+        "source": "next"
+      }
+    ]
+  },
+  {
+    "file": "app\\registro\\page.tsx",
+    "unused": [
+      {
+        "name": "type { Metadata }",
+        "source": "next"
+      }
+    ]
+  },
+  {
+    "file": "app\\restablecer-password\\page.tsx",
+    "unused": [
+      {
+        "name": "type { Metadata }",
+        "source": "next"
+      }
+    ]
+  },
+  {
+    "file": "app\\robots.ts",
+    "unused": [
+      {
+        "name": "type { MetadataRoute }",
+        "source": "next"
+      }
+    ]
+  },
+  {
+    "file": "app\\sitemap.ts",
+    "unused": [
+      {
+        "name": "type { MetadataRoute }",
+        "source": "next"
+      }
+    ]
+  },
+  {
+    "file": "app\\sorteo\\components\\password-entry.tsx",
+    "unused": [
+      {
+        "name": "type React",
+        "source": "react"
+      }
+    ]
+  },
+  {
+    "file": "app\\sorteo\\components\\post-selector.tsx",
+    "unused": [
+      {
+        "name": "type { BlogPost }",
+        "source": "@/types/blog"
+      }
+    ]
+  },
+  {
+    "file": "app\\sorteo\\components\\winner-display.tsx",
+    "unused": [
+      {
+        "name": "type React",
+        "source": "react"
+      }
+    ]
+  },
+  {
+    "file": "app\\sorteo\\layout.tsx",
+    "unused": [
+      {
+        "name": "type React",
+        "source": "react"
+      },
+      {
+        "name": "type { Metadata }",
+        "source": "next"
+      }
+    ]
+  },
+  {
+    "file": "app\\sorteo\\page.tsx",
+    "unused": [
+      {
+        "name": "type { Metadata }",
+        "source": "next"
+      }
+    ]
+  },
+  {
+    "file": "app\\sorteo\\sorteo-client.tsx",
+    "unused": [
+      {
+        "name": "type { BlogPost",
+        "source": "@/types/blog"
+      }
+    ]
+  },
+  {
+    "file": "app\\team\\page.tsx",
+    "unused": [
+      {
+        "name": "type { Metadata }",
+        "source": "next"
+      }
+    ]
+  },
+  {
+    "file": "app\\terminos\\page.tsx",
+    "unused": [
+      {
+        "name": "type { Metadata }",
+        "source": "next"
+      }
+    ]
+  },
+  {
+    "file": "app\\tienda\\categorias\\page.tsx",
+    "unused": [
+      {
+        "name": "type { Metadata }",
+        "source": "next"
+      }
+    ]
+  },
+  {
+    "file": "app\\tienda\\categorias\\[slug]\\page.tsx",
+    "unused": [
+      {
+        "name": "type { Metadata }",
+        "source": "next"
+      },
+      {
+        "name": "type { ProductCategory }",
+        "source": "@/lib/firebase/types"
+      }
+    ]
+  },
+  {
+    "file": "app\\tienda\\checkout\\page.tsx",
+    "unused": [
+      {
+        "name": "type { Metadata }",
+        "source": "next"
+      }
+    ]
+  },
+  {
+    "file": "app\\tienda\\layout.tsx",
+    "unused": [
+      {
+        "name": "type { ReactNode }",
+        "source": "react"
+      },
+      {
+        "name": "type { Metadata }",
+        "source": "next"
+      }
+    ]
+  },
+  {
+    "file": "app\\tienda\\page.tsx",
+    "unused": [
+      {
+        "name": "type { Metadata }",
+        "source": "next"
+      }
+    ]
+  },
+  {
+    "file": "app\\tienda\\[slug]\\layout.tsx",
+    "unused": [
+      {
+        "name": "type { ReactNode }",
+        "source": "react"
+      }
+    ]
+  },
+  {
+    "file": "app\\tienda\\[slug]\\page.tsx",
+    "unused": [
+      {
+        "name": "type { Metadata",
+        "source": "next"
+      }
+    ]
+  },
+  {
+    "file": "components\\admin\\admin-albums-list.tsx",
+    "unused": [
+      {
+        "name": "type { Album }",
+        "source": "@/types/gallery"
+      }
+    ]
+  },
+  {
+    "file": "components\\admin\\admin-banners-list.tsx",
+    "unused": [
+      {
+        "name": "type DropResult",
+        "source": "@hello-pangea/dnd"
+      },
+      {
+        "name": "type { StoreBanner }",
+        "source": "@/types"
+      }
+    ]
+  },
+  {
+    "file": "components\\admin\\admin-categories-form.tsx",
+    "unused": [
+      {
+        "name": "type React",
+        "source": "react"
+      },
+      {
+        "name": "type { BlogCategory }",
+        "source": "@/types"
+      }
+    ]
+  },
+  {
+    "file": "components\\admin\\admin-categories-list.tsx",
+    "unused": [
+      {
+        "name": "type { ProductCategory }",
+        "source": "@/types"
+      }
+    ]
+  },
+  {
+    "file": "components\\admin\\admin-comments-list.tsx",
+    "unused": [
+      {
+        "name": "type { BlogComment }",
+        "source": "@/types"
+      }
+    ]
+  },
+  {
+    "file": "components\\admin\\admin-ctas-list.tsx",
+    "unused": [
+      {
+        "name": "type { EventCTA",
+        "source": "@/types"
+      }
+    ]
+  },
+  {
+    "file": "components\\admin\\admin-dashboard-redesigned.tsx",
+    "unused": [
+      {
+        "name": "type React",
+        "source": "react"
+      }
+    ]
+  },
+  {
+    "file": "components\\admin\\admin-dashboard.tsx",
+    "unused": [
+      {
+        "name": "type { BlogCategory }",
+        "source": "@/types"
+      }
+    ]
+  },
+  {
+    "file": "components\\admin\\admin-events-list.tsx",
+    "unused": [
+      {
+        "name": "type { Event }",
+        "source": "@/types"
+      }
+    ]
+  },
+  {
+    "file": "components\\admin\\admin-orders-list.tsx",
+    "unused": [
+      {
+        "name": "type { Order }",
+        "source": "@/types"
+      }
+    ]
+  },
+  {
+    "file": "components\\admin\\admin-posts-list.tsx",
+    "unused": [
+      {
+        "name": "type { BlogPost",
+        "source": "@/types"
+      }
+    ]
+  },
+  {
+    "file": "components\\admin\\admin-products-list.tsx",
+    "unused": [
+      {
+        "name": "type { Product",
+        "source": "@/types"
+      }
+    ]
+  },
+  {
+    "file": "components\\admin\\admin-reviews-list.tsx",
+    "unused": [
+      {
+        "name": "type { ProductReview",
+        "source": "@/types"
+      }
+    ]
+  },
+  {
+    "file": "components\\admin\\admin-tags-list.tsx",
+    "unused": [
+      {
+        "name": "type { BlogTag }",
+        "source": "@/types"
+      }
+    ]
+  },
+  {
+    "file": "components\\admin\\admin-tickets-list.tsx",
+    "unused": [
+      {
+        "name": "type { TicketTransaction }",
+        "source": "@/types"
+      }
+    ]
+  },
+  {
+    "file": "components\\admin\\admin-users-list.tsx",
+    "unused": [
+      {
+        "name": "type React",
+        "source": "react"
+      },
+      {
+        "name": "type { UserData }",
+        "source": "@/lib/firebase/users"
+      }
+    ]
+  },
+  {
+    "file": "components\\admin\\album-form.tsx",
+    "unused": [
+      {
+        "name": "type { Album }",
+        "source": "@/types/gallery"
+      }
+    ]
+  },
+  {
+    "file": "components\\admin\\approve-ticket-modal.tsx",
+    "unused": [
+      {
+        "name": "type React",
+        "source": "react"
+      },
+      {
+        "name": "type { TicketTransaction }",
+        "source": "@/types"
+      }
+    ]
+  },
+  {
+    "file": "components\\admin\\assign-ticket-modal.tsx",
+    "unused": [
+      {
+        "name": "type React",
+        "source": "react"
+      },
+      {
+        "name": "type { Event",
+        "source": "@/types"
+      }
+    ]
+  },
+  {
+    "file": "components\\admin\\banner-form.tsx",
+    "unused": [
+      {
+        "name": "type React",
+        "source": "react"
+      },
+      {
+        "name": "type { StoreBanner",
+        "source": "@/types"
+      }
+    ]
+  },
+  {
+    "file": "components\\admin\\blog-category-form.tsx",
+    "unused": [
+      {
+        "name": "type React",
+        "source": "react"
+      },
+      {
+        "name": "type { BlogCategory }",
+        "source": "@/types"
+      }
+    ]
+  },
+  {
+    "file": "components\\admin\\blog-fake-data.tsx",
+    "unused": [
+      {
+        "name": "*",
+        "source": "zod"
+      },
+      {
+        "name": "type { BlogPost }",
+        "source": "@/types/blog"
+      }
+    ]
+  },
+  {
+    "file": "components\\admin\\blog-form-page.tsx",
+    "unused": [
+      {
+        "name": "type React",
+        "source": "react"
+      },
+      {
+        "name": "v4",
+        "source": "uuid"
+      },
+      {
+        "name": "type { BlogPost }",
+        "source": "@/types/blog"
+      }
+    ]
+  },
+  {
+    "file": "components\\admin\\BlogForm.tsx",
+    "unused": [
+      {
+        "name": "type React",
+        "source": "react"
+      }
+    ]
+  },
+  {
+    "file": "components\\admin\\category-form.tsx",
+    "unused": [
+      {
+        "name": "type React",
+        "source": "react"
+      },
+      {
+        "name": "type { ProductCategory }",
+        "source": "@/types"
+      }
+    ]
+  },
+  {
+    "file": "components\\admin\\cta-form.tsx",
+    "unused": [
+      {
+        "name": "*",
+        "source": "zod"
+      },
+      {
+        "name": "type { EventCTA",
+        "source": "@/types"
+      }
+    ]
+  },
+  {
+    "file": "components\\admin\\dj-ranking\\admin-dj-profiles.tsx",
+    "unused": [
+      {
+        "name": "type { DJ }",
+        "source": "@/types/dj-ranking"
+      },
+      {
+        "name": "*",
+        "source": "zod"
+      }
+    ]
+  },
+  {
+    "file": "components\\admin\\dj-ranking\\admin-dj-suggestions.tsx",
+    "unused": [
+      {
+        "name": "type { DJSuggestion }",
+        "source": "@/types/dj-ranking"
+      }
+    ]
+  },
+  {
+    "file": "components\\admin\\dj-ranking\\admin-voting-periods.tsx",
+    "unused": [
+      {
+        "name": "type { VotingPeriod }",
+        "source": "@/types/dj-ranking"
+      },
+      {
+        "name": "*",
+        "source": "zod"
+      }
+    ]
+  },
+  {
+    "file": "components\\admin\\editor.tsx",
+    "unused": [
+      {
+        "name": "type React",
+        "source": "react"
+      }
+    ]
+  },
+  {
+    "file": "components\\admin\\event-cta-preview.tsx",
+    "unused": [
+      {
+        "name": "type { EventCTA }",
+        "source": "@/types"
+      }
+    ]
+  },
+  {
+    "file": "components\\admin\\event-form.tsx",
+    "unused": [
+      {
+        "name": "type React",
+        "source": "react"
+      },
+      {
+        "name": "type { Event",
+        "source": "@/types"
+      },
+      {
+        "name": "v4",
+        "source": "uuid"
+      }
+    ]
+  },
+  {
+    "file": "components\\admin\\event-schema-preview.tsx",
+    "unused": [
+      {
+        "name": "type { Event }",
+        "source": "@/types"
+      }
+    ]
+  },
+  {
+    "file": "components\\admin\\gallery-image-uploader.tsx",
+    "unused": [
+      {
+        "name": "type { Album",
+        "source": "@/types/gallery"
+      }
+    ]
+  },
+  {
+    "file": "components\\admin\\gallery-images-manager.tsx",
+    "unused": [
+      {
+        "name": "type DropResult",
+        "source": "react-beautiful-dnd"
+      },
+      {
+        "name": "type { Album",
+        "source": "@/types/gallery"
+      }
+    ]
+  },
+  {
+    "file": "components\\admin\\image-gallery-uploader.tsx",
+    "unused": [
+      {
+        "name": "type React",
+        "source": "react"
+      }
+    ]
+  },
+  {
+    "file": "components\\admin\\image-uploader.tsx",
+    "unused": [
+      {
+        "name": "type React",
+        "source": "react"
+      }
+    ]
+  },
+  {
+    "file": "components\\admin\\import-products-modal.tsx",
+    "unused": [
+      {
+        "name": "type React",
+        "source": "react"
+      }
+    ]
+  },
+  {
+    "file": "components\\admin\\installment-details-modal.tsx",
+    "unused": [
+      {
+        "name": "type { PaymentInstallment }",
+        "source": "@/types"
+      }
+    ]
+  },
+  {
+    "file": "components\\admin\\order-details-admin-modal.tsx",
+    "unused": [
+      {
+        "name": "type { Order }",
+        "source": "@/types"
+      }
+    ]
+  },
+  {
+    "file": "components\\admin\\pending-installments-list.tsx",
+    "unused": [
+      {
+        "name": "type { PaymentInstallment }",
+        "source": "@/types"
+      }
+    ]
+  },
+  {
+    "file": "components\\admin\\product-form.tsx",
+    "unused": [
+      {
+        "name": "type React",
+        "source": "react"
+      },
+      {
+        "name": "v4",
+        "source": "uuid"
+      },
+      {
+        "name": "type { Product",
+        "source": "@/types"
+      },
+      {
+        "name": "type { ProductVideo }",
+        "source": "@/types"
+      }
+    ]
+  },
+  {
+    "file": "components\\admin\\store-fake-data.tsx",
+    "unused": [
+      {
+        "name": "*",
+        "source": "zod"
+      },
+      {
+        "name": "type { Product }",
+        "source": "@/types"
+      }
+    ]
+  },
+  {
+    "file": "components\\admin\\tag-form.tsx",
+    "unused": [
+      {
+        "name": "type React",
+        "source": "react"
+      },
+      {
+        "name": "type { BlogTag }",
+        "source": "@/types"
+      }
+    ]
+  },
+  {
+    "file": "components\\admin\\tag-input.tsx",
+    "unused": [
+      {
+        "name": "type KeyboardEvent",
+        "source": "react"
+      }
+    ]
+  },
+  {
+    "file": "components\\admin\\ticket-details-modal.tsx",
+    "unused": [
+      {
+        "name": "type React",
+        "source": "react"
+      },
+      {
+        "name": "type { TicketTransaction }",
+        "source": "@/types"
+      }
+    ]
+  },
+  {
+    "file": "components\\auth\\admin-route-guard.tsx",
+    "unused": [
+      {
+        "name": "type React",
+        "source": "react"
+      }
+    ]
+  },
+  {
+    "file": "components\\auth\\auth-route-guard.tsx",
+    "unused": [
+      {
+        "name": "type React",
+        "source": "react"
+      }
+    ]
+  },
+  {
+    "file": "components\\auth\\completar-registro-form.tsx",
+    "unused": [
+      {
+        "name": "type React",
+        "source": "react"
+      }
+    ]
+  },
+  {
+    "file": "components\\auth\\login-form.tsx",
+    "unused": [
+      {
+        "name": "type React",
+        "source": "react"
+      }
+    ]
+  },
+  {
+    "file": "components\\auth\\recuperar-password-form.tsx",
+    "unused": [
+      {
+        "name": "type React",
+        "source": "react"
+      }
+    ]
+  },
+  {
+    "file": "components\\auth\\registro-form.tsx",
+    "unused": [
+      {
+        "name": "type React",
+        "source": "react"
+      }
+    ]
+  },
+  {
+    "file": "components\\auth\\restablecer-password-form.tsx",
+    "unused": [
+      {
+        "name": "type React",
+        "source": "react"
+      }
+    ]
+  },
+  {
+    "file": "components\\blog\\blog-card.tsx",
+    "unused": [
+      {
+        "name": "type { BlogPost",
+        "source": "@/types"
+      }
+    ]
+  },
+  {
+    "file": "components\\blog\\blog-list.tsx",
+    "unused": [
+      {
+        "name": "type { BlogPost }",
+        "source": "@/types/blog"
+      }
+    ]
+  },
+  {
+    "file": "components\\blog\\blog-sidebar.tsx",
+    "unused": [
+      {
+        "name": "type { BlogPost",
+        "source": "@/types"
+      }
+    ]
+  },
+  {
+    "file": "components\\blog\\category-schema.tsx",
+    "unused": [
+      {
+        "name": "type { BlogCategory",
+        "source": "@/types/blog"
+      }
+    ]
+  },
+  {
+    "file": "components\\blog\\comments-section.tsx",
+    "unused": [
+      {
+        "name": "type React",
+        "source": "react"
+      },
+      {
+        "name": "type { BlogComment }",
+        "source": "@/types/blog"
+      }
+    ]
+  },
+  {
+    "file": "components\\blog\\enhanced-post-schema.tsx",
+    "unused": [
+      {
+        "name": "type { BlogPost",
+        "source": "@/types/blog"
+      }
+    ]
+  },
+  {
+    "file": "components\\blog\\featured-posts.tsx",
+    "unused": [
+      {
+        "name": "type { BlogPost }",
+        "source": "@/types"
+      }
+    ]
+  },
+  {
+    "file": "components\\blog\\floating-reaction-button.tsx",
+    "unused": [
+      {
+        "name": "type { ReactionType }",
+        "source": "@/types/blog"
+      }
+    ]
+  },
+  {
+    "file": "components\\blog\\newsletter-form.tsx",
+    "unused": [
+      {
+        "name": "type React",
+        "source": "react"
+      }
+    ]
+  },
+  {
+    "file": "components\\blog\\post-card.tsx",
+    "unused": [
+      {
+        "name": "type { BlogPost }",
+        "source": "@/types/blog"
+      }
+    ]
+  },
+  {
+    "file": "components\\blog\\post-detail-wrapper.tsx",
+    "unused": [
+      {
+        "name": "type { BlogPost }",
+        "source": "@/types"
+      }
+    ]
+  },
+  {
+    "file": "components\\blog\\post-detail.tsx",
+    "unused": [
+      {
+        "name": "type React",
+        "source": "react"
+      },
+      {
+        "name": "type { BlogPost }",
+        "source": "@/types/blog"
+      },
+      {
+        "name": "Prism",
+        "source": "react-syntax-highlighter"
+      }
+    ]
+  },
+  {
+    "file": "components\\blog\\post-filters.tsx",
+    "unused": [
+      {
+        "name": "type React",
+        "source": "react"
+      },
+      {
+        "name": "type { BlogCategory }",
+        "source": "@/types"
+      }
+    ]
+  },
+  {
+    "file": "components\\blog\\post-list-wrapper.tsx",
+    "unused": [
+      {
+        "name": "type { BlogPost }",
+        "source": "@/types/blog"
+      }
+    ]
+  },
+  {
+    "file": "components\\blog\\post-reactions.tsx",
+    "unused": [
+      {
+        "name": "type { ReactionType",
+        "source": "@/types/blog"
+      }
+    ]
+  },
+  {
+    "file": "components\\blog\\post-schema.tsx",
+    "unused": [
+      {
+        "name": "type { BlogPost",
+        "source": "@/types/blog"
+      }
+    ]
+  },
+  {
+    "file": "components\\blog\\post-sidebar.tsx",
+    "unused": [
+      {
+        "name": "type { BlogPost",
+        "source": "@/types"
+      }
+    ]
+  },
+  {
+    "file": "components\\blog\\reactions-modal.tsx",
+    "unused": [
+      {
+        "name": "type { ReactionType",
+        "source": "@/types/blog"
+      }
+    ]
+  },
+  {
+    "file": "components\\blog\\related-posts.tsx",
+    "unused": [
+      {
+        "name": "type { BlogPost }",
+        "source": "@/types"
+      }
+    ]
+  },
+  {
+    "file": "components\\blog\\structured-data.tsx",
+    "unused": [
+      {
+        "name": "type { BlogPost }",
+        "source": "@/types/blog"
+      }
+    ]
+  },
+  {
+    "file": "components\\blog\\tag-cloud.tsx",
+    "unused": [
+      {
+        "name": "type { BlogTag }",
+        "source": "@/types"
+      }
+    ]
+  },
+  {
+    "file": "components\\blog\\tag-schema.tsx",
+    "unused": [
+      {
+        "name": "type { BlogTag }",
+        "source": "@/types"
+      }
+    ]
+  },
+  {
+    "file": "components\\dj-ranking\\dj-ranking-display.tsx",
+    "unused": [
+      {
+        "name": "type { Ranking",
+        "source": "@/types/dj-ranking"
+      }
+    ]
+  },
+  {
+    "file": "components\\dj-ranking\\suggest-dj-form.tsx",
+    "unused": [
+      {
+        "name": "*",
+        "source": "zod"
+      },
+      {
+        "name": "type { DJSuggestion }",
+        "source": "@/types/dj-ranking"
+      }
+    ]
+  },
+  {
+    "file": "components\\dj-ranking\\vote-dj-form.tsx",
+    "unused": [
+      {
+        "name": "type { DJ",
+        "source": "@/types/dj-ranking"
+      }
+    ]
+  },
+  {
+    "file": "components\\event-card.tsx",
+    "unused": [
+      {
+        "name": "type { Event }",
+        "source": "@/types"
+      }
+    ]
+  },
+  {
+    "file": "components\\events\\event-card.tsx",
+    "unused": [
+      {
+        "name": "type React",
+        "source": "react"
+      }
+    ]
+  },
+  {
+    "file": "components\\events\\event-cta.tsx",
+    "unused": [
+      {
+        "name": "type { EventCTA }",
+        "source": "@/types"
+      }
+    ]
+  },
+  {
+    "file": "components\\events\\event-detail-client-wrapper.tsx",
+    "unused": [
+      {
+        "name": "type { Event }",
+        "source": "@/types"
+      }
+    ]
+  },
+  {
+    "file": "components\\events\\event-detail.tsx",
+    "unused": [
+      {
+        "name": "type React",
+        "source": "react"
+      },
+      {
+        "name": "type { Event",
+        "source": "@/types"
+      }
+    ]
+  },
+  {
+    "file": "components\\events\\event-schema.tsx",
+    "unused": [
+      {
+        "name": "type { Event }",
+        "source": "@/types"
+      }
+    ]
+  },
+  {
+    "file": "components\\events\\events-banner.tsx",
+    "unused": [
+      {
+        "name": "type { Event }",
+        "source": "@/types"
+      }
+    ]
+  },
+  {
+    "file": "components\\events\\events-filter.tsx",
+    "unused": [
+      {
+        "name": "type React",
+        "source": "react"
+      }
+    ]
+  },
+  {
+    "file": "components\\events\\events-list.tsx",
+    "unused": [
+      {
+        "name": "type { Event }",
+        "source": "@/types"
+      }
+    ]
+  },
+  {
+    "file": "components\\events\\purchase-ticket-modal.tsx",
+    "unused": [
+      {
+        "name": "type React",
+        "source": "react"
+      },
+      {
+        "name": "type { Event",
+        "source": "@/types"
+      },
+      {
+        "name": "v4",
+        "source": "uuid"
+      }
+    ]
+  },
+  {
+    "file": "components\\gallery\\album-grid.tsx",
+    "unused": [
+      {
+        "name": "type { Album }",
+        "source": "@/types/gallery"
+      }
+    ]
+  },
+  {
+    "file": "components\\gallery\\gallery-filters.tsx",
+    "unused": [
+      {
+        "name": "type { Album }",
+        "source": "@/types/gallery"
+      }
+    ]
+  },
+  {
+    "file": "components\\gallery\\gallery-schema.tsx",
+    "unused": [
+      {
+        "name": "type { Album",
+        "source": "@/types/gallery"
+      }
+    ]
+  },
+  {
+    "file": "components\\gallery\\image-viewer-modal.tsx",
+    "unused": [
+      {
+        "name": "type React",
+        "source": "react"
+      },
+      {
+        "name": "type { GalleryImage }",
+        "source": "@/types/gallery"
+      }
+    ]
+  },
+  {
+    "file": "components\\gallery\\masonry-grid.tsx",
+    "unused": [
+      {
+        "name": "type { GalleryImage }",
+        "source": "@/types/gallery"
+      }
+    ]
+  },
+  {
+    "file": "components\\home\\featured-events-section.tsx",
+    "unused": [
+      {
+        "name": "type { Event }",
+        "source": "@/types"
+      }
+    ]
+  },
+  {
+    "file": "components\\home\\home-client.tsx",
+    "unused": [
+      {
+        "name": "type { Event }",
+        "source": "@/types"
+      }
+    ]
+  },
+  {
+    "file": "components\\home\\home-schema.tsx",
+    "unused": [
+      {
+        "name": "type { Event }",
+        "source": "@/types"
+      }
+    ]
+  },
+  {
+    "file": "components\\home\\newsletter-section.tsx",
+    "unused": [
+      {
+        "name": "type React",
+        "source": "react"
+      }
+    ]
+  },
+  {
+    "file": "components\\page-header.tsx",
+    "unused": [
+      {
+        "name": "type { ReactNode }",
+        "source": "react"
+      }
+    ]
+  },
+  {
+    "file": "components\\profile\\payment-history-card.tsx",
+    "unused": [
+      {
+        "name": "type { TicketTransaction }",
+        "source": "@/types"
+      }
+    ]
+  },
+  {
+    "file": "components\\profile\\profile-form.tsx",
+    "unused": [
+      {
+        "name": "type React",
+        "source": "react"
+      },
+      {
+        "name": "type UserData",
+        "source": "@/lib/firebase/users"
+      }
+    ]
+  },
+  {
+    "file": "components\\profile\\profile-layout.tsx",
+    "unused": [
+      {
+        "name": "type React",
+        "source": "react"
+      }
+    ]
+  },
+  {
+    "file": "components\\script-optimization.tsx",
+    "unused": [
+      {
+        "name": "type React",
+        "source": "react"
+      }
+    ]
+  },
+  {
+    "file": "components\\store\\cart-item.tsx",
+    "unused": [
+      {
+        "name": "type { CartItem as CartItemType }",
+        "source": "@/context/cart-context"
+      }
+    ]
+  },
+  {
+    "file": "components\\store\\category-list.tsx",
+    "unused": [
+      {
+        "name": "type { ProductCategory }",
+        "source": "@/types"
+      }
+    ]
+  },
+  {
+    "file": "components\\store\\category-schema.tsx",
+    "unused": [
+      {
+        "name": "type { ProductCategory",
+        "source": "@/types"
+      }
+    ]
+  },
+  {
+    "file": "components\\store\\checkout-form.tsx",
+    "unused": [
+      {
+        "name": "type React",
+        "source": "react"
+      },
+      {
+        "name": "v4",
+        "source": "uuid"
+      },
+      {
+        "name": "type { Order",
+        "source": "@/types"
+      }
+    ]
+  },
+  {
+    "file": "components\\store\\featured-products.tsx",
+    "unused": [
+      {
+        "name": "type { Product }",
+        "source": "@/types"
+      }
+    ]
+  },
+  {
+    "file": "components\\store\\order-details-modal.tsx",
+    "unused": [
+      {
+        "name": "type { Order",
+        "source": "@/types"
+      }
+    ]
+  },
+  {
+    "file": "components\\store\\product-card.tsx",
+    "unused": [
+      {
+        "name": "type React",
+        "source": "react"
+      },
+      {
+        "name": "type { Product }",
+        "source": "@/types"
+      }
+    ]
+  },
+  {
+    "file": "components\\store\\product-detail.tsx",
+    "unused": [
+      {
+        "name": "type { Product",
+        "source": "@/types"
+      }
+    ]
+  },
+  {
+    "file": "components\\store\\product-filters.tsx",
+    "unused": [
+      {
+        "name": "type { ProductCategory }",
+        "source": "@/types"
+      }
+    ]
+  },
+  {
+    "file": "components\\store\\product-list.tsx",
+    "unused": [
+      {
+        "name": "type { Product }",
+        "source": "@/types"
+      }
+    ]
+  },
+  {
+    "file": "components\\store\\product-opengraph.tsx",
+    "unused": [
+      {
+        "name": "type { Metadata }",
+        "source": "next"
+      },
+      {
+        "name": "type { Product",
+        "source": "@/types"
+      }
+    ]
+  },
+  {
+    "file": "components\\store\\product-reviews.tsx",
+    "unused": [
+      {
+        "name": "type { ProductReview }",
+        "source": "@/types"
+      }
+    ]
+  },
+  {
+    "file": "components\\store\\product-schema.tsx",
+    "unused": [
+      {
+        "name": "type { Product",
+        "source": "@/types"
+      }
+    ]
+  },
+  {
+    "file": "components\\store\\products-grid.tsx",
+    "unused": [
+      {
+        "name": "type { Product }",
+        "source": "@/types"
+      }
+    ]
+  },
+  {
+    "file": "components\\store\\related-products.tsx",
+    "unused": [
+      {
+        "name": "type { Product }",
+        "source": "@/types"
+      }
+    ]
+  },
+  {
+    "file": "components\\store\\user-orders.tsx",
+    "unused": [
+      {
+        "name": "type { Order",
+        "source": "@/types"
+      }
+    ]
+  },
+  {
+    "file": "components\\team\\author-profile.tsx",
+    "unused": [
+      {
+        "name": "type { UserData }",
+        "source": "@/lib/firebase/users"
+      }
+    ]
+  },
+  {
+    "file": "components\\team\\team-member-card.tsx",
+    "unused": [
+      {
+        "name": "type { UserData }",
+        "source": "@/lib/firebase/users"
+      }
+    ]
+  },
+  {
+    "file": "components\\team\\team-members-list.tsx",
+    "unused": [
+      {
+        "name": "type { UserData }",
+        "source": "@/lib/firebase/users"
+      }
+    ]
+  },
+  {
+    "file": "components\\theme-provider.tsx",
+    "unused": [
+      {
+        "name": "*",
+        "source": "react"
+      }
+    ]
+  },
+  {
+    "file": "components\\tickets\\approved-ticket-card.tsx",
+    "unused": [
+      {
+        "name": "type { TicketTransaction }",
+        "source": "@/types"
+      }
+    ]
+  },
+  {
+    "file": "components\\tickets\\pay-installment-modal.tsx",
+    "unused": [
+      {
+        "name": "type React",
+        "source": "react"
+      },
+      {
+        "name": "type { PaymentInstallment }",
+        "source": "@/types"
+      },
+      {
+        "name": "v4",
+        "source": "uuid"
+      }
+    ]
+  },
+  {
+    "file": "components\\tickets\\pending-download-ticket.tsx",
+    "unused": [
+      {
+        "name": "type { TicketTransaction }",
+        "source": "@/types"
+      }
+    ]
+  },
+  {
+    "file": "components\\ui\\accordion.tsx",
+    "unused": [
+      {
+        "name": "*",
+        "source": "react"
+      },
+      {
+        "name": "*",
+        "source": "@radix-ui/react-accordion"
+      }
+    ]
+  },
+  {
+    "file": "components\\ui\\alert-dialog.tsx",
+    "unused": [
+      {
+        "name": "*",
+        "source": "react"
+      },
+      {
+        "name": "*",
+        "source": "@radix-ui/react-alert-dialog"
+      }
+    ]
+  },
+  {
+    "file": "components\\ui\\alert.tsx",
+    "unused": [
+      {
+        "name": "*",
+        "source": "react"
+      },
+      {
+        "name": "type VariantProps",
+        "source": "class-variance-authority"
+      }
+    ]
+  },
+  {
+    "file": "components\\ui\\aspect-ratio.tsx",
+    "unused": [
+      {
+        "name": "*",
+        "source": "@radix-ui/react-aspect-ratio"
+      }
+    ]
+  },
+  {
+    "file": "components\\ui\\avatar.tsx",
+    "unused": [
+      {
+        "name": "*",
+        "source": "react"
+      },
+      {
+        "name": "*",
+        "source": "@radix-ui/react-avatar"
+      }
+    ]
+  },
+  {
+    "file": "components\\ui\\badge.tsx",
+    "unused": [
+      {
+        "name": "*",
+        "source": "react"
+      },
+      {
+        "name": "type VariantProps",
+        "source": "class-variance-authority"
+      }
+    ]
+  },
+  {
+    "file": "components\\ui\\breadcrumb.tsx",
+    "unused": [
+      {
+        "name": "*",
+        "source": "react"
+      }
+    ]
+  },
+  {
+    "file": "components\\ui\\button.tsx",
+    "unused": [
+      {
+        "name": "*",
+        "source": "react"
+      },
+      {
+        "name": "type VariantProps",
+        "source": "class-variance-authority"
+      }
+    ]
+  },
+  {
+    "file": "components\\ui\\calendar.tsx",
+    "unused": [
+      {
+        "name": "*",
+        "source": "react"
+      }
+    ]
+  },
+  {
+    "file": "components\\ui\\card.tsx",
+    "unused": [
+      {
+        "name": "*",
+        "source": "react"
+      }
+    ]
+  },
+  {
+    "file": "components\\ui\\carousel.tsx",
+    "unused": [
+      {
+        "name": "*",
+        "source": "react"
+      }
+    ]
+  },
+  {
+    "file": "components\\ui\\chart.tsx",
+    "unused": [
+      {
+        "name": "*",
+        "source": "react"
+      },
+      {
+        "name": "*",
+        "source": "recharts"
+      }
+    ]
+  },
+  {
+    "file": "components\\ui\\checkbox.tsx",
+    "unused": [
+      {
+        "name": "*",
+        "source": "react"
+      },
+      {
+        "name": "*",
+        "source": "@radix-ui/react-checkbox"
+      }
+    ]
+  },
+  {
+    "file": "components\\ui\\collapsible.tsx",
+    "unused": [
+      {
+        "name": "*",
+        "source": "@radix-ui/react-collapsible"
+      }
+    ]
+  },
+  {
+    "file": "components\\ui\\command.tsx",
+    "unused": [
+      {
+        "name": "*",
+        "source": "react"
+      },
+      {
+        "name": "type DialogProps",
+        "source": "@radix-ui/react-dialog"
+      }
+    ]
+  },
+  {
+    "file": "components\\ui\\context-menu.tsx",
+    "unused": [
+      {
+        "name": "*",
+        "source": "react"
+      },
+      {
+        "name": "*",
+        "source": "@radix-ui/react-context-menu"
+      }
+    ]
+  },
+  {
+    "file": "components\\ui\\dialog.tsx",
+    "unused": [
+      {
+        "name": "*",
+        "source": "react"
+      },
+      {
+        "name": "*",
+        "source": "@radix-ui/react-dialog"
+      }
+    ]
+  },
+  {
+    "file": "components\\ui\\drawer.tsx",
+    "unused": [
+      {
+        "name": "*",
+        "source": "react"
+      }
+    ]
+  },
+  {
+    "file": "components\\ui\\dropdown-menu.tsx",
+    "unused": [
+      {
+        "name": "*",
+        "source": "react"
+      },
+      {
+        "name": "*",
+        "source": "@radix-ui/react-dropdown-menu"
+      }
+    ]
+  },
+  {
+    "file": "components\\ui\\form.tsx",
+    "unused": [
+      {
+        "name": "*",
+        "source": "react"
+      },
+      {
+        "name": "*",
+        "source": "@radix-ui/react-label"
+      }
+    ]
+  },
+  {
+    "file": "components\\ui\\hover-card.tsx",
+    "unused": [
+      {
+        "name": "*",
+        "source": "react"
+      },
+      {
+        "name": "*",
+        "source": "@radix-ui/react-hover-card"
+      }
+    ]
+  },
+  {
+    "file": "components\\ui\\input-otp.tsx",
+    "unused": [
+      {
+        "name": "*",
+        "source": "react"
+      }
+    ]
+  },
+  {
+    "file": "components\\ui\\input.tsx",
+    "unused": [
+      {
+        "name": "*",
+        "source": "react"
+      }
+    ]
+  },
+  {
+    "file": "components\\ui\\label.tsx",
+    "unused": [
+      {
+        "name": "*",
+        "source": "react"
+      },
+      {
+        "name": "*",
+        "source": "@radix-ui/react-label"
+      },
+      {
+        "name": "type VariantProps",
+        "source": "class-variance-authority"
+      }
+    ]
+  },
+  {
+    "file": "components\\ui\\menubar.tsx",
+    "unused": [
+      {
+        "name": "*",
+        "source": "react"
+      },
+      {
+        "name": "*",
+        "source": "@radix-ui/react-menubar"
+      }
+    ]
+  },
+  {
+    "file": "components\\ui\\navigation-menu.tsx",
+    "unused": [
+      {
+        "name": "*",
+        "source": "react"
+      },
+      {
+        "name": "*",
+        "source": "@radix-ui/react-navigation-menu"
+      }
+    ]
+  },
+  {
+    "file": "components\\ui\\pagination.tsx",
+    "unused": [
+      {
+        "name": "*",
+        "source": "react"
+      }
+    ]
+  },
+  {
+    "file": "components\\ui\\popover.tsx",
+    "unused": [
+      {
+        "name": "*",
+        "source": "react"
+      },
+      {
+        "name": "*",
+        "source": "@radix-ui/react-popover"
+      }
+    ]
+  },
+  {
+    "file": "components\\ui\\pre.tsx",
+    "unused": [
+      {
+        "name": "*",
+        "source": "react"
+      }
+    ]
+  },
+  {
+    "file": "components\\ui\\progress.tsx",
+    "unused": [
+      {
+        "name": "*",
+        "source": "react"
+      },
+      {
+        "name": "*",
+        "source": "@radix-ui/react-progress"
+      }
+    ]
+  },
+  {
+    "file": "components\\ui\\radio-group.tsx",
+    "unused": [
+      {
+        "name": "*",
+        "source": "react"
+      },
+      {
+        "name": "*",
+        "source": "@radix-ui/react-radio-group"
+      }
+    ]
+  },
+  {
+    "file": "components\\ui\\resizable.tsx",
+    "unused": [
+      {
+        "name": "*",
+        "source": "react-resizable-panels"
+      }
+    ]
+  },
+  {
+    "file": "components\\ui\\scroll-area.tsx",
+    "unused": [
+      {
+        "name": "*",
+        "source": "react"
+      },
+      {
+        "name": "*",
+        "source": "@radix-ui/react-scroll-area"
+      }
+    ]
+  },
+  {
+    "file": "components\\ui\\select.tsx",
+    "unused": [
+      {
+        "name": "*",
+        "source": "react"
+      },
+      {
+        "name": "*",
+        "source": "@radix-ui/react-select"
+      }
+    ]
+  },
+  {
+    "file": "components\\ui\\separator.tsx",
+    "unused": [
+      {
+        "name": "*",
+        "source": "react"
+      },
+      {
+        "name": "*",
+        "source": "@radix-ui/react-separator"
+      }
+    ]
+  },
+  {
+    "file": "components\\ui\\sheet.tsx",
+    "unused": [
+      {
+        "name": "*",
+        "source": "react"
+      },
+      {
+        "name": "*",
+        "source": "@radix-ui/react-dialog"
+      },
+      {
+        "name": "type VariantProps",
+        "source": "class-variance-authority"
+      }
+    ]
+  },
+  {
+    "file": "components\\ui\\sidebar.tsx",
+    "unused": [
+      {
+        "name": "*",
+        "source": "react"
+      }
+    ]
+  },
+  {
+    "file": "components\\ui\\slider.tsx",
+    "unused": [
+      {
+        "name": "*",
+        "source": "react"
+      },
+      {
+        "name": "*",
+        "source": "@radix-ui/react-slider"
+      }
+    ]
+  },
+  {
+    "file": "components\\ui\\switch.tsx",
+    "unused": [
+      {
+        "name": "*",
+        "source": "react"
+      },
+      {
+        "name": "*",
+        "source": "@radix-ui/react-switch"
+      }
+    ]
+  },
+  {
+    "file": "components\\ui\\table.tsx",
+    "unused": [
+      {
+        "name": "*",
+        "source": "react"
+      }
+    ]
+  },
+  {
+    "file": "components\\ui\\tabs.tsx",
+    "unused": [
+      {
+        "name": "*",
+        "source": "react"
+      },
+      {
+        "name": "*",
+        "source": "@radix-ui/react-tabs"
+      }
+    ]
+  },
+  {
+    "file": "components\\ui\\textarea.tsx",
+    "unused": [
+      {
+        "name": "*",
+        "source": "react"
+      }
+    ]
+  },
+  {
+    "file": "components\\ui\\toast.tsx",
+    "unused": [
+      {
+        "name": "*",
+        "source": "react"
+      },
+      {
+        "name": "*",
+        "source": "@radix-ui/react-toast"
+      },
+      {
+        "name": "type VariantProps",
+        "source": "class-variance-authority"
+      }
+    ]
+  },
+  {
+    "file": "components\\ui\\toggle-group.tsx",
+    "unused": [
+      {
+        "name": "*",
+        "source": "react"
+      },
+      {
+        "name": "*",
+        "source": "@radix-ui/react-toggle-group"
+      },
+      {
+        "name": "type VariantProps",
+        "source": "class-variance-authority"
+      }
+    ]
+  },
+  {
+    "file": "components\\ui\\toggle.tsx",
+    "unused": [
+      {
+        "name": "*",
+        "source": "react"
+      },
+      {
+        "name": "*",
+        "source": "@radix-ui/react-toggle"
+      },
+      {
+        "name": "type VariantProps",
+        "source": "class-variance-authority"
+      }
+    ]
+  },
+  {
+    "file": "components\\ui\\tooltip.tsx",
+    "unused": [
+      {
+        "name": "*",
+        "source": "react"
+      },
+      {
+        "name": "*",
+        "source": "@radix-ui/react-tooltip"
+      }
+    ]
+  },
+  {
+    "file": "components\\ui\\use-mobile.tsx",
+    "unused": [
+      {
+        "name": "*",
+        "source": "react"
+      }
+    ]
+  },
+  {
+    "file": "components\\ui\\use-toast.ts",
+    "unused": [
+      {
+        "name": "*",
+        "source": "react"
+      }
+    ]
+  },
+  {
+    "file": "context\\auth-context.tsx",
+    "unused": [
+      {
+        "name": "type ReactNode",
+        "source": "react"
+      },
+      {
+        "name": "type { User }",
+        "source": "@/types"
+      }
+    ]
+  },
+  {
+    "file": "context\\cart-context.tsx",
+    "unused": [
+      {
+        "name": "type React",
+        "source": "react"
+      }
+    ]
+  },
+  {
+    "file": "context\\currency-context.tsx",
+    "unused": [
+      {
+        "name": "type ReactNode",
+        "source": "react"
+      }
+    ]
+  },
+  {
+    "file": "context\\geolocation-context.tsx",
+    "unused": [
+      {
+        "name": "type ReactNode",
+        "source": "react"
+      }
+    ]
+  },
+  {
+    "file": "hooks\\use-mobile.tsx",
+    "unused": [
+      {
+        "name": "*",
+        "source": "react"
+      }
+    ]
+  },
+  {
+    "file": "hooks\\use-offline-sync.ts",
+    "unused": [
+      {
+        "name": "type ActionType",
+        "source": "@/lib/pwa/sync-manager"
+      }
+    ]
+  },
+  {
+    "file": "hooks\\use-toast.ts",
+    "unused": [
+      {
+        "name": "*",
+        "source": "react"
+      }
+    ]
+  },
+  {
+    "file": "lib\\constants\\reaction-types.ts",
+    "unused": [
+      {
+        "name": "type { ReactionType }",
+        "source": "@/types/blog"
+      }
+    ]
+  },
+  {
+    "file": "lib\\firebase\\auth.ts",
+    "unused": [
+      {
+        "name": "type { User }",
+        "source": "@/types"
+      }
+    ]
+  },
+  {
+    "file": "lib\\firebase\\authors.ts",
+    "unused": [
+      {
+        "name": "type { UserData }",
+        "source": "./users"
+      }
+    ]
+  },
+  {
+    "file": "lib\\firebase\\banners.ts",
+    "unused": [
+      {
+        "name": "type { StoreBanner }",
+        "source": "@/types"
+      }
+    ]
+  },
+  {
+    "file": "lib\\firebase\\blog.ts",
+    "unused": [
+      {
+        "name": "type { ReactionType }",
+        "source": "@/types/blog"
+      }
+    ]
+  },
+  {
+    "file": "lib\\firebase\\ctas.ts",
+    "unused": [
+      {
+        "name": "type { EventCTA }",
+        "source": "@/types"
+      }
+    ]
+  },
+  {
+    "file": "lib\\firebase\\dj-suggestions.ts",
+    "unused": [
+      {
+        "name": "type { DJSuggestion }",
+        "source": "@/types/dj-ranking"
+      }
+    ]
+  },
+  {
+    "file": "lib\\firebase\\dj.ts",
+    "unused": [
+      {
+        "name": "type { DJ }",
+        "source": "@/types/dj-ranking"
+      }
+    ]
+  },
+  {
+    "file": "lib\\firebase\\djs.ts",
+    "unused": [
+      {
+        "name": "type { DJ }",
+        "source": "@/types/dj-ranking"
+      }
+    ]
+  },
+  {
+    "file": "lib\\firebase\\events.ts",
+    "unused": [
+      {
+        "name": "type { Event }",
+        "source": "@/types"
+      }
+    ]
+  },
+  {
+    "file": "lib\\firebase\\fake-data.ts",
+    "unused": [
+      {
+        "name": "getRandomFakeUser",
+        "source": "@/lib/fake-data/users"
+      },
+      {
+        "name": "type { ReactionType }",
+        "source": "@/types/blog"
+      }
+    ]
+  },
+  {
+    "file": "lib\\firebase\\gallery.ts",
+    "unused": [
+      {
+        "name": "type { Album",
+        "source": "@/types/gallery"
+      }
+    ]
+  },
+  {
+    "file": "lib\\firebase\\optimized-queries.ts",
+    "unused": [
+      {
+        "name": "type DocumentData",
+        "source": "firebase/firestore"
+      }
+    ]
+  },
+  {
+    "file": "lib\\firebase\\orders.ts",
+    "unused": [
+      {
+        "name": "type { Order",
+        "source": "@/types"
+      },
+      {
+        "name": "v4",
+        "source": "uuid"
+      }
+    ]
+  },
+  {
+    "file": "lib\\firebase\\products.ts",
+    "unused": [
+      {
+        "name": "type { Product",
+        "source": "@/types"
+      },
+      {
+        "name": "v4",
+        "source": "uuid"
+      }
+    ]
+  },
+  {
+    "file": "lib\\firebase\\reviews.ts",
+    "unused": [
+      {
+        "name": "type { ProductReview }",
+        "source": "@/types"
+      }
+    ]
+  },
+  {
+    "file": "lib\\firebase\\stock.ts",
+    "unused": [
+      {
+        "name": "type { OrderItem }",
+        "source": "@/types"
+      }
+    ]
+  },
+  {
+    "file": "lib\\firebase\\store.ts",
+    "unused": [
+      {
+        "name": "type { Product",
+        "source": "@/types"
+      }
+    ]
+  },
+  {
+    "file": "lib\\firebase\\tickets.ts",
+    "unused": [
+      {
+        "name": "type { TicketTransaction",
+        "source": "@/types"
+      },
+      {
+        "name": "v4",
+        "source": "uuid"
+      }
+    ]
+  },
+  {
+    "file": "lib\\firebase\\voting.ts",
+    "unused": [
+      {
+        "name": "type { Vote",
+        "source": "@/types/dj-ranking"
+      }
+    ]
+  },
+  {
+    "file": "lib\\pwa\\offline-data-cache.ts",
+    "unused": [
+      {
+        "name": "type DBSchema",
+        "source": "idb"
+      }
+    ]
+  },
+  {
+    "file": "lib\\pwa\\sync-manager.ts",
+    "unused": [
+      {
+        "name": "type DBSchema",
+        "source": "idb"
+      }
+    ]
+  },
+  {
+    "file": "lib\\schema.ts",
+    "unused": [
+      {
+        "name": "type { Product",
+        "source": "@/types"
+      }
+    ]
+  },
+  {
+    "file": "lib\\utils.ts",
+    "unused": [
+      {
+        "name": "type ClassValue",
+        "source": "clsx"
+      }
+    ]
+  },
+  {
+    "file": "tailwind.config.ts",
+    "unused": [
+      {
+        "name": "type { Config }",
+        "source": "tailwindcss"
+      }
+    ]
+  }
+]

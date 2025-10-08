@@ -20,7 +20,7 @@ export function ProductSchema({ product, category }: ProductSchemaProps) {
         : undefined,
     brand: {
       "@type": "Brand",
-      name: product.brand || "RaveHub",
+      name: product.brand || "Ravehub",
     },
     offers: {
       "@type": "Offer",

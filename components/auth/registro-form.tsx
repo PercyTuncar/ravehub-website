@@ -206,7 +206,7 @@ export default function RegistroForm() {
     <Card className="max-w-2xl mx-auto">
       <CardHeader className="space-y-1">
         <CardTitle className="text-2xl font-bold">Crear cuenta</CardTitle>
-        <CardDescription>Completa el formulario para registrarte en RaveHub</CardDescription>
+        <CardDescription>Completa el formulario para registrarte en Ravehub</CardDescription>
       </CardHeader>
       <CardContent>
         {error && (

@@ -13,13 +13,13 @@ export async function generateMetadata({ params }: EditCTAPageProps) {
 
   if (!cta) {
     return {
-      title: "CTA no encontrado | RaveHub",
+      title: "CTA no encontrado | Ravehub",
       description: "El CTA que buscas no existe o ha sido eliminado.",
     }
   }
 
   return {
-    title: `Editar CTA: ${cta.title} | RaveHub`,
+    title: `Editar CTA: ${cta.title} | Ravehub`,
     description: "Editar Call to Action personalizado para eventos",
   }
 }

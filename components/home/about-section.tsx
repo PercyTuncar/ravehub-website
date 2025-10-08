@@ -22,7 +22,7 @@ export function AboutSection() {
           <span className="inline-block px-3 py-1 bg-primary/10 text-primary rounded-full text-sm font-medium mb-4">
             Quiénes Somos
           </span>
-          <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-4">Sobre RaveHub</h2>
+          <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-4">Sobre Ravehub</h2>
           <p className="text-base sm:text-lg text-muted-foreground max-w-2xl mx-auto">
             Conectamos a los amantes de la música con los mejores eventos, artistas y productos en Latinoamérica.
           </p>
@@ -33,7 +33,7 @@ export function AboutSection() {
             <div className="relative h-[350px] sm:h-[400px] md:h-[500px] rounded-2xl overflow-hidden shadow-xl group">
               <Image
                 src="https://firebasestorage.googleapis.com/v0/b/event-ticket-website-6b541.firebasestorage.app/o/rave-1-_1_-min.webp?alt=media&token=c1d8ad9c-7131-4174-9c0c-dbc52fb2af28"
-                alt="Comunidad RaveHub en Road to Ultra Ecuador"
+                alt="Comunidad Ravehub en Road to Ultra Ecuador"
                 fill
                 sizes="(max-width: 768px) 100vw, 50vw"
                 loading="lazy"
@@ -41,7 +41,7 @@ export function AboutSection() {
                 onError={(e) => {
                   const target = e.target as HTMLImageElement
                   target.onerror = null
-                  target.src = "/images/placeholder-blog.jpg"
+                  target.src = "/placeholder.jpg"
                 }}
               />
               <div className="absolute inset-0 bg-black/5 pointer-events-none"></div>
@@ -53,7 +53,7 @@ export function AboutSection() {
               La plataforma líder en eventos de música electrónica
             </h3>
             <p className="text-base sm:text-lg mb-4 sm:mb-6 text-muted-foreground">
-              RaveHub es la plataforma líder en eventos de música electrónica en Latinoamérica. Conectamos a los amantes
+              Ravehub es la plataforma líder en eventos de música electrónica en Latinoamérica. Conectamos a los amantes
               de la música con los mejores eventos, artistas y productos.
             </p>
             <p className="text-base sm:text-lg mb-6 sm:mb-8 text-muted-foreground">

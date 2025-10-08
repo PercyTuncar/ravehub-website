@@ -108,7 +108,7 @@ export function InstallPrompt() {
             <Download className="h-6 w-6 text-primary" />
           </div>
           <div>
-            <h3 className="font-medium">Instala RaveHub</h3>
+            <h3 className="font-medium">Instala Ravehub</h3>
             <p className="text-sm text-gray-500 dark:text-gray-400">
               {isIOS
                 ? "Añade esta app a tu pantalla de inicio para acceder más rápido"

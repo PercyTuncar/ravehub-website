@@ -2,8 +2,8 @@ import type { Metadata } from "next"
 import { CheckoutForm } from "@/components/store/checkout-form"
 
 export const metadata: Metadata = {
-  title: "Checkout | RaveHub",
-  description: "Completa tu compra en RaveHub",
+  title: "Checkout | Ravehub",
+  description: "Completa tu compra en Ravehub",
 }
 
 export default function CheckoutPage() {

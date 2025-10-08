@@ -7,28 +7,28 @@ import { EventsCategories } from "@/components/events/events-categories"
 import { Breadcrumbs } from "@/components/breadcrumbs"
 
 export const metadata = {
-  title: "Eventos | RaveHub - Música Electrónica en Latinoamérica",
+  title: "Eventos | Ravehub - Música Electrónica en Latinoamérica",
   description:
     "Explora los mejores eventos de música electrónica en Latinoamérica. Filtra por país, fecha y precio. Compra entradas con opciones de pago en cuotas.",
   openGraph: {
-    title: "Eventos | RaveHub - Música Electrónica en Latinoamérica",
+    title: "Eventos | Ravehub - Música Electrónica en Latinoamérica",
     description:
       "Explora los mejores eventos de música electrónica en Latinoamérica. Filtra por país, fecha y precio. Compra entradas con opciones de pago en cuotas.",
     url: "https://www.weareravehub.com/eventos",
-    siteName: "RaveHub",
+    siteName: "Ravehub",
     type: "website",
     images: [
       {
         url: "https://www.weareravehub.com/electronic-music-festival-night.png",
         width: 1200,
         height: 630,
-        alt: "RaveHub Eventos - Música Electrónica",
+        alt: "Ravehub Eventos - Música Electrónica",
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "Eventos | RaveHub - Música Electrónica en Latinoamérica",
+    title: "Eventos | Ravehub - Música Electrónica en Latinoamérica",
     description: "Explora los mejores eventos de música electrónica en Latinoamérica. Filtra por país, fecha y precio.",
     images: ["https://www.weareravehub.com/electronic-music-festival-night.png"],
   },

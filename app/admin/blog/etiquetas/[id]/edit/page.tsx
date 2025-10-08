@@ -9,7 +9,7 @@ interface EditTagPageProps {
 
 export async function generateMetadata({ params }: EditTagPageProps): Promise<Metadata> {
   return {
-    title: "Editar Etiqueta | Admin RaveHub",
+    title: "Editar Etiqueta | Admin Ravehub",
     description: "Editar una etiqueta existente del blog",
   }
 }

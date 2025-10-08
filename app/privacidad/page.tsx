@@ -2,8 +2,8 @@ import type { Metadata } from "next"
 import { PageHeader } from "@/components/page-header"
 
 export const metadata: Metadata = {
-  title: "Política de Privacidad | RaveHub",
-  description: "Información sobre cómo RaveHub recopila, utiliza y protege tus datos personales.",
+  title: "Política de Privacidad | Ravehub",
+  description: "Información sobre cómo Ravehub recopila, utiliza y protege tus datos personales.",
 }
 
 export default function PrivacyPolicyPage() {
@@ -14,12 +14,12 @@ export default function PrivacyPolicyPage() {
       <div className="prose max-w-none mt-12">
         <h2>1. Introducción</h2>
         <p>
-          En RaveHub, respetamos tu privacidad y nos comprometemos a proteger tus datos personales. Esta Política de
+          En Ravehub, respetamos tu privacidad y nos comprometemos a proteger tus datos personales. Esta Política de
           Privacidad describe cómo recopilamos, utilizamos y compartimos tu información cuando utilizas nuestra
           plataforma.
         </p>
         <p>
-          Al utilizar RaveHub, aceptas las prácticas descritas en esta política. Te recomendamos leerla detenidamente
+          Al utilizar Ravehub, aceptas las prácticas descritas en esta política. Te recomendamos leerla detenidamente
           para entender cómo tratamos tu información.
         </p>
 

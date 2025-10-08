@@ -2,8 +2,8 @@ import type { Metadata } from "next"
 import { PageHeader } from "@/components/page-header"
 
 export const metadata: Metadata = {
-  title: "Política de Reembolsos | RaveHub",
-  description: "Información sobre la política de reembolsos de RaveHub para entradas de eventos y productos.",
+  title: "Política de Reembolsos | Ravehub",
+  description: "Información sobre la política de reembolsos de Ravehub para entradas de eventos y productos.",
 }
 
 export default function RefundPolicyPage() {
@@ -14,13 +14,13 @@ export default function RefundPolicyPage() {
       <div className="prose max-w-none mt-12">
         <h2>1. Política General de No Reembolso</h2>
         <p>
-          En RaveHub, todas las ventas de entradas para eventos son <strong>finales y no reembolsables</strong>. Al
+          En Ravehub, todas las ventas de entradas para eventos son <strong>finales y no reembolsables</strong>. Al
           realizar una compra, usted acepta esta política de no reembolso. Esta política está diseñada para garantizar
           la viabilidad financiera de los eventos y proporcionar certeza a los organizadores.
         </p>
 
         <h2>2. Entradas para Eventos</h2>
-        <p>Para todas las entradas de eventos adquiridas a través de RaveHub:</p>
+        <p>Para todas las entradas de eventos adquiridas a través de Ravehub:</p>
         <ul>
           <li>
             No se ofrecen reembolsos por cambio de opinión, conflictos de horario, o cualquier otra razón personal.
@@ -52,17 +52,17 @@ export default function RefundPolicyPage() {
         <p>En el caso excepcional de que un evento sea cancelado por el organizador y no sea reprogramado:</p>
         <ul>
           <li>
-            RaveHub podrá, a su discreción, ofrecer un reembolso del valor nominal de la entrada (excluyendo tarifas de
+            Ravehub podrá, a su discreción, ofrecer un reembolso del valor nominal de la entrada (excluyendo tarifas de
             servicio y gastos de envío).
           </li>
-          <li>Alternativamente, RaveHub podrá ofrecer crédito para futuros eventos en lugar de un reembolso.</li>
+          <li>Alternativamente, Ravehub podrá ofrecer crédito para futuros eventos en lugar de un reembolso.</li>
         </ul>
         <p>Si un evento es reprogramado:</p>
         <ul>
           <li>Las entradas generalmente serán válidas para la nueva fecha.</li>
           <li>No se ofrecerán reembolsos automáticos por eventos reprogramados.</li>
           <li>
-            En circunstancias excepcionales, RaveHub podrá, a su discreción, considerar solicitudes de reembolso caso
+            En circunstancias excepcionales, Ravehub podrá, a su discreción, considerar solicitudes de reembolso caso
             por caso.
           </li>
         </ul>
@@ -86,7 +86,7 @@ export default function RefundPolicyPage() {
 
         <h2>6. Excepciones</h2>
         <p>
-          RaveHub se reserva el derecho de hacer excepciones a esta política caso por caso, a su sola discreción. Sin
+          Ravehub se reserva el derecho de hacer excepciones a esta política caso por caso, a su sola discreción. Sin
           embargo, estas excepciones no establecen un precedente ni modifican esta política general.
         </p>
 
@@ -104,12 +104,12 @@ export default function RefundPolicyPage() {
         <h2>8. Disputas y Reclamaciones</h2>
         <p>
           Si tiene alguna disputa relacionada con esta política de reembolsos, acepta primero intentar resolver el
-          problema directamente con RaveHub antes de buscar resolución a través de otros medios.
+          problema directamente con Ravehub antes de buscar resolución a través de otros medios.
         </p>
 
         <h2>9. Modificaciones a la Política</h2>
         <p>
-          RaveHub se reserva el derecho de modificar esta política de reembolsos en cualquier momento. Las
+          Ravehub se reserva el derecho de modificar esta política de reembolsos en cualquier momento. Las
           modificaciones entrarán en vigor inmediatamente después de su publicación en nuestra plataforma y se aplicarán
           a todas las compras realizadas después de la fecha de modificación.
         </p>

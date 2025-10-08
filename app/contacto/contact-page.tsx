@@ -438,7 +438,7 @@ export default function ContactPage() {
                           <rect width="20" height="16" x="2" y="4" rx="2" />
                           <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" />
                         </svg>
-                        <span className="font-medium">contacto@weareravehub.com</span>
+                        <span className="font-medium">contacto[at]weareravehub[dot]com</span>
                       </motion.a>
                     </div>
                   </div>
@@ -469,7 +469,7 @@ export default function ContactPage() {
                 "Sí, ofrecemos descuentos especiales para grupos de 5 o más personas. Contáctanos para más información.",
             },
             {
-              question: "¿Cómo puedo colaborar con RaveHub?",
+              question: "¿Cómo puedo colaborar con Ravehub?",
               answer:
                 "Estamos abiertos a colaboraciones con artistas, promotores y marcas. Envíanos un mensaje con tu propuesta.",
             },

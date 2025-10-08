@@ -4,8 +4,8 @@ import Link from "next/link"
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
 
 export const metadata: Metadata = {
-  title: "Preguntas Frecuentes | RaveHub",
-  description: "Encuentra respuestas a las preguntas más comunes sobre RaveHub, eventos, entradas y más.",
+  title: "Preguntas Frecuentes | Ravehub",
+  description: "Encuentra respuestas a las preguntas más comunes sobre Ravehub, eventos, entradas y más.",
 }
 
 export default function FAQPage() {
@@ -62,7 +62,7 @@ export default function FAQPage() {
             <AccordionContent>
               <p>
                 Las entradas se entregan digitalmente unos días antes del evento. Recibirás un correo electrónico con
-                tus entradas o instrucciones para acceder a ellas a través de tu cuenta de RaveHub. Asegúrate de
+                tus entradas o instrucciones para acceder a ellas a través de tu cuenta de Ravehub. Asegúrate de
                 mantener actualizada tu información de contacto.
               </p>
             </AccordionContent>
@@ -82,7 +82,7 @@ export default function FAQPage() {
         <h2 className="text-2xl font-bold mb-6">Cuenta y Perfil</h2>
         <Accordion type="single" collapsible className="mb-8">
           <AccordionItem value="item-6">
-            <AccordionTrigger>¿Cómo creo una cuenta en RaveHub?</AccordionTrigger>
+            <AccordionTrigger>¿Cómo creo una cuenta en Ravehub?</AccordionTrigger>
             <AccordionContent>
               <p>
                 Puedes crear una cuenta haciendo clic en "Registro" en la parte superior de la página. Necesitarás
@@ -117,7 +117,7 @@ export default function FAQPage() {
         <h2 className="text-2xl font-bold mb-6">Sorteos y Promociones</h2>
         <Accordion type="single" collapsible className="mb-8">
           <AccordionItem value="item-9">
-            <AccordionTrigger>¿Cómo funcionan los sorteos de RaveHub?</AccordionTrigger>
+            <AccordionTrigger>¿Cómo funcionan los sorteos de Ravehub?</AccordionTrigger>
             <AccordionContent>
               <p>Nuestros sorteos se realizan de manera transparente:</p>
               <ul className="list-disc pl-5 mt-2">
@@ -188,7 +188,7 @@ export default function FAQPage() {
         <h2 className="text-2xl font-bold mb-6">Contacto y Soporte</h2>
         <Accordion type="single" collapsible>
           <AccordionItem value="item-13">
-            <AccordionTrigger>¿Cómo puedo contactar al soporte de RaveHub?</AccordionTrigger>
+            <AccordionTrigger>¿Cómo puedo contactar al soporte de Ravehub?</AccordionTrigger>
             <AccordionContent>
               <p>Puedes contactarnos a través de:</p>
               <ul className="list-disc pl-5 mt-2">
@@ -218,9 +218,9 @@ export default function FAQPage() {
           </AccordionItem>
 
           <AccordionItem value="item-14">
-            <AccordionTrigger>¿Dónde puedo encontrar más información sobre RaveHub?</AccordionTrigger>
+            <AccordionTrigger>¿Dónde puedo encontrar más información sobre Ravehub?</AccordionTrigger>
             <AccordionContent>
-              <p>Puedes encontrar más información sobre RaveHub en:</p>
+              <p>Puedes encontrar más información sobre Ravehub en:</p>
               <ul className="list-disc pl-5 mt-2">
                 <li>
                   <Link href="/ayuda" className="text-primary hover:underline">

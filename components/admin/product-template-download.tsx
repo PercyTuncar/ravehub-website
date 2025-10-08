@@ -28,7 +28,7 @@ export function ProductTemplateDownload() {
         // Optional fields
         discountPercentage: 10, // 0-100
         sku: "SKU123456",
-        brand: "RaveHub",
+        brand: "Ravehub",
         isHighlighted: false,
         videoUrl: "https://www.youtube.com/watch?v=example",
 

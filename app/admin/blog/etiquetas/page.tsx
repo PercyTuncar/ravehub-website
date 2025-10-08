@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button"
 import { Plus } from "lucide-react"
 
 export const metadata: Metadata = {
-  title: "Gestión de Etiquetas | Admin RaveHub",
+  title: "Gestión de Etiquetas | Admin Ravehub",
   description: "Administra las etiquetas del blog",
 }
 

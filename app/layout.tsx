@@ -16,6 +16,7 @@ import { InstallPrompt } from "@/components/pwa/install-prompt"
 import { UpdatePrompt } from "@/components/pwa/update-prompt"
 import GoogleAnalytics from "@/components/analytics/google-analytics"
 import { Suspense } from "react"
+import Script from "next/script"
 import { FontOptimization } from "@/components/font-optimization"
 import { ConnectionStatus } from "@/components/pwa/connection-status" // Import ConnectionStatus component
 
@@ -30,15 +31,15 @@ const inter = Inter({
 
 // Actualizar el metadata para incluir el manifest y los colores de tema
 export const metadata: Metadata = {
-  title: "RaveHub - Eventos de música electrónica en Latinoamérica",
+  metadataBase: new URL("https://www.weareravehub.com"),
+  title: "Ravehub - Eventos de Música Electrónica en Latinoamérica | Entradas y Merchandise",
   description:
-    "Encuentra los mejores eventos de música electrónica, compra entradas y merchandise oficial. La plataforma líder para festivales y fiestas electrónicas en Latinoamérica.",
+    "Descubre los mejores eventos de música electrónica en Latinoamérica. Compra entradas, merchandise oficial y vive experiencias únicas con opciones de pago en cuotas.",
   manifest: "/manifest.json",
-  themeColor: "#000000",
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",
-    title: "RaveHub",
+    title: "Ravehub",
   },
   icons: {
     icon: "/favicon-ravehub.ico",
@@ -55,23 +56,23 @@ export const metadata: Metadata = {
     type: "website",
     locale: "es_LA",
     url: "https://www.weareravehub.com",
-    title: "RaveHub - Eventos de música electrónica en Latinoamérica",
+    title: "Ravehub - Eventos de Música Electrónica en Latinoamérica | Entradas y Merchandise",
     description:
-      "Encuentra los mejores eventos de música electrónica, compra entradas y merchandise oficial. La plataforma líder para festivales y fiestas electrónicas en Latinoamérica.",
-    siteName: "RaveHub",
+      "Descubre los mejores eventos de música electrónica en Latinoamérica. Compra entradas, merchandise oficial y vive experiencias únicas con opciones de pago en cuotas.",
+    siteName: "Ravehub",
     images: [
       {
-        url: "https://www.weareravehub.com/electronic-music-festival-night.png",
+        url: "https://www.weareravehub.com/placeholder.jpg",
         width: 1200,
         height: 630,
-        alt: "RaveHub - Eventos de música electrónica",
+        alt: "Ravehub - Eventos de música electrónica",
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "RaveHub - Eventos de música electrónica en Latinoamérica",
-    description: "Encuentra los mejores eventos de música electrónica, compra entradas y merchandise oficial.",
+    title: "Ravehub - Eventos de Música Electrónica en Latinoamérica | Entradas y Merchandise",
+    description: "Descubre los mejores eventos de música electrónica en Latinoamérica. Compra entradas, merchandise oficial y vive experiencias únicas.",
     images: ["https://www.weareravehub.com/electronic-music-festival-night.png"],
   },
   keywords: [
@@ -105,6 +106,7 @@ export const viewport = {
   initialScale: 1,
   maximumScale: 5,
   userScalable: true,
+  themeColor: "#000000",
 }
 
 // En el componente RootLayout, añadir los componentes PWA
@@ -125,7 +127,7 @@ export default function RootLayout({
         <link rel="apple-touch-icon" href="/icons/icon-192x192.png" />
         <meta name="apple-mobile-web-app-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-        <meta name="apple-mobile-web-app-title" content="RaveHub" />
+        <meta name="apple-mobile-web-app-title" content="Ravehub" />
 
         {/* Favicon links - ensure they appear on all pages */}
         <link rel="icon" href="/favicon-ravehub.ico" sizes="any" />
@@ -133,6 +135,37 @@ export default function RootLayout({
 
         {/* Optimización de fuentes */}
         <FontOptimization />
+
+        {/* Local Business Schema */}
+        <Script id="local-business-schema" type="application/ld+json" strategy="beforeInteractive">
+          {`
+          {
+            "@context": "https://schema.org",
+            "@type": "Organization",
+            "name": "Ravehub",
+            "url": "https://www.weareravehub.com",
+            "logo": "https://www.weareravehub.com/images/logo-full.png",
+            "description": "Plataforma líder en eventos de música electrónica en Latinoamérica",
+            "address": {
+              "@type": "PostalAddress",
+              "addressCountry": "PE",
+              "addressLocality": "Lima"
+            },
+            "contactPoint": {
+              "@type": "ContactPoint",
+              "telephone": "+51-944-784-488",
+              "contactType": "customer service",
+              "availableLanguage": "Spanish"
+            },
+            "sameAs": [
+              "https://www.facebook.com/ravehub",
+              "https://www.instagram.com/ravehub.pe",
+              "https://twitter.com/dldkchile",
+              "https://www.youtube.com/channel/UC-wATPEqoNpPPcFHfTFae8w"
+            ]
+          }
+          `}
+        </Script>
       </head>
       <body className={inter.className}>
         <ThemeProvider attribute="class" defaultTheme="light" enableSystem disableTransitionOnChange>

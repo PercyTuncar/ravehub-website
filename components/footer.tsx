@@ -25,7 +25,7 @@ const OrganizationSchema = () => {
   const orgSchema = {
     "@context": "https://schema.org",
     "@type": "Organization",
-    name: "RaveHub",
+    name: "Ravehub",
     url: "https://weareravehub.com",
     logo: "https://weareravehub.com/images/logo-full.png",
     sameAs: [
@@ -66,7 +66,7 @@ export default function Footer() {
       <div className="container mx-auto px-4 py-12">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           <div>
-            <h3 className="text-lg font-bold mb-4">RaveHub</h3>
+            <h3 className="text-lg font-bold mb-4">Ravehub</h3>
             <p className="text-muted-foreground mb-4">
               La plataforma líder en eventos de música electrónica en Latinoamérica. Conectamos a los amantes de la
               música electrónica con los mejores eventos, artistas y experiencias.
@@ -183,7 +183,7 @@ export default function Footer() {
               <p className="flex items-center gap-2">
                 <Mail size={16} className="flex-shrink-0" />
                 <a href="mailto:info@weareravehub.com" className="hover:text-primary transition-colors">
-                  info@weareravehub.com
+                  info[at]weareravehub[dot]com
                 </a>
               </p>
               <p className="flex items-center gap-2">
@@ -214,7 +214,7 @@ export default function Footer() {
         </div>
 
         <div className="border-t mt-12 pt-8 text-center text-muted-foreground">
-          <p>&copy; {new Date().getFullYear()} RaveHub. Todos los derechos reservados.</p>
+          <p>&copy; {new Date().getFullYear()} Ravehub. Todos los derechos reservados.</p>
         </div>
       </div>
       <OrganizationSchema />

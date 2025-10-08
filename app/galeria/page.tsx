@@ -1,4 +1,6 @@
 import { Suspense } from "react"
+export const dynamic = 'force-dynamic'
+
 import { AlbumGrid } from "@/components/gallery/album-grid"
 import { GalleryFilters } from "@/components/gallery/gallery-filters"
 import { GalleryHero } from "@/components/gallery/gallery-hero"
@@ -7,7 +9,7 @@ import type { Metadata } from "next"
 import { Breadcrumbs } from "@/components/breadcrumbs"
 
 export const metadata: Metadata = {
-  title: "Galería de imágenes | RaveHub",
+  title: "Galería de imágenes | Ravehub",
   description: "Explora nuestra galería de imágenes de eventos de música electrónica",
 }
 

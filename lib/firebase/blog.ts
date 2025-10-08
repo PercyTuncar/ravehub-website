@@ -1,3 +1,4 @@
+import { cache } from "react"
 import {
   collection,
   query,
@@ -16,7 +17,7 @@ import {
 } from "firebase/firestore"
 import { db } from "@/lib/firebase/config"
 // Importar el tipo Event
-import type {
+import {
   BlogPost,
   BlogCategory,
   BlogTag,
@@ -25,8 +26,9 @@ import type {
   PostReaction,
   PostReactionsDetail,
   CommentReaction,
-} from "@/types"
-import type { ReactionType } from "@/types/blog"
+  ReactionType,
+  Author,
+} from "@/types/blog"
 import { generateSlug } from "@/lib/utils"
 import { filterBlobUrls, cleanAltTexts } from "@/lib/firebase/image-utils"
 import { getFirestore, limit as firestoreLimit } from "firebase/firestore"
@@ -114,7 +116,7 @@ export async function getAllPostsForAdmin(): Promise<BlogPost[]> {
       posts.push({
         id: doc.id,
         ...doc.data(),
-      } as BlogPost)
+      } as any)
     })
 
     return posts
@@ -147,17 +149,20 @@ export async function getAllPosts(page = 1, pageSize = 9, categoryId?: string, t
 
     const allPosts: BlogPost[] = []
     querySnapshot.forEach((doc) => {
-      const postData = doc.data()
-      console.log("Post data:", { id: doc.id, ...postData })
+      const postData = doc.data() as BlogPost;
+      console.log("Post data:", doc.data())
       // Convertir las fechas de string a objetos Date
       const post: BlogPost = {
+        ...(postData as BlogPost),
         id: doc.id,
-        ...postData,
+        author: postData.author || undefined,
+        tags: postData.tags || [],
+        category: postData.category || undefined,
       }
 
       // Filtrar por tag si se proporciona un nombre de etiqueta
       if (tagName) {
-        if (post.tags && post.tags.includes(tagName)) {
+        if (post.tags && post.tags.some(tag => tag.name === tagName)) {
           allPosts.push(post)
         }
       } else {
@@ -209,10 +214,7 @@ export async function getPostsForAdmin() {
     const posts: BlogPost[] = []
     querySnapshot.forEach((doc) => {
       const postData = doc.data()
-      posts.push({
-        id: doc.id,
-        ...postData,
-      })
+      posts.push({ id: doc.id, ...postData } as BlogPost)
     })
 
     return posts
@@ -404,7 +406,7 @@ export async function getPostsByCategory(
 
     querySnapshot.forEach((doc) => {
       const postData = convertTimestamps(doc.data())
-      posts.push({ id: doc.id, ...postData } as BlogPost)
+      posts.push({ id: doc.id, ...postData } as any)
     })
 
     // Get the last document for pagination
@@ -458,13 +460,13 @@ export async function getPostsByTag(
           if (typeof tag === "string") {
             return tag === tagId
           } else if (typeof tag === "object" && tag !== null) {
-            return tag.id === tagId
+            return (tag as any).id === tagId
           }
           return false
         })
 
         if (hasTag) {
-          allFilteredPosts.push({ id: doc.id, ...postData })
+          allFilteredPosts.push({ ...postData, id: doc.id } as any)
         }
       }
     })
@@ -476,11 +478,13 @@ export async function getPostsByTag(
     if (sortOrder === "popular") {
       sortedPosts.sort((a, b) => (b.viewCount || 0) - (a.viewCount || 0))
     } else if (sortOrder === "oldest") {
-      sortedPosts.sort((a, b) => {
-        const dateA = a.publishDate ? new Date(a.publishDate).getTime() : 0
-        const dateB = b.publishDate ? new Date(b.publishDate).getTime() : 0
-        return dateA - dateB
-      })
+        const toMillis = (date: any) => {
+            if (!date) return 0;
+            if (typeof date.toMillis === 'function') return date.toMillis(); // Firestore Timestamp
+            if (typeof date.getTime === 'function') return date.getTime(); // JavaScript Date
+            return new Date(date).getTime(); // String or number
+        };
+        sortedPosts.sort((a, b) => toMillis(a.publishDate) - toMillis(b.publishDate));
     }
     // Default is "recent" which is already sorted by publishDate desc
 
@@ -502,22 +506,11 @@ export async function getPostsByTag(
 }
 
 // Buscar la función getPostBySlug y reemplazarla con esta versión optimizada
-export async function getPostBySlug(slug: string): Promise<BlogPost | null> {
+export const getPostBySlug = cache(async (slug: string): Promise<BlogPost | null> => {
   try {
     if (!slug) {
       console.error("No slug provided to getPostBySlug")
       return null
-    }
-
-    // Usar caché si está disponible y no ha expirado
-    const cacheKey = `post_${slug}`
-    const cachedEntry = globalThis.__POST_CACHE?.[cacheKey]
-    const now = Date.now()
-
-    // Si hay una entrada en caché y no ha expirado (5 minutos)
-    if (cachedEntry && now - cachedEntry.timestamp < 5 * 60 * 1000) {
-      console.log(`Using cached post for slug: ${slug}`)
-      return cachedEntry.data
     }
 
     console.log(`Buscando post con slug: ${slug}`)
@@ -562,28 +555,19 @@ export async function getPostBySlug(slug: string): Promise<BlogPost | null> {
     }
 
     const post = {
-      id: postId,
       ...docData,
+      id: postId,
       category,
       averageRating: docData.averageRating || 0,
       ratingCount: docData.ratingCount || 0,
     } as BlogPost
-
-    // Guardar en caché con timestamp
-    if (!globalThis.__POST_CACHE) {
-      globalThis.__POST_CACHE = {}
-    }
-    globalThis.__POST_CACHE[cacheKey] = {
-      data: post,
-      timestamp: now,
-    }
 
     return post
   } catch (error) {
     console.error(`Error fetching post with slug ${slug}:`, error)
     return null
   }
-}
+})
 
 // Get post by ID
 export async function getPostById(id: string): Promise<BlogPost | null> {
@@ -611,7 +595,7 @@ export async function createPost(postData: Omit<BlogPost, "id">): Promise<string
       publishDate: postData.publishDate || new Date(),
       updatedDate: new Date(),
       viewCount: 0,
-      imageGallery: filterBlobUrls(postData.imageGallery),
+      imageGalleryPost: filterBlobUrls(postData.imageGalleryPost),
       imageAltTexts: cleanAltTexts(postData.imageAltTexts),
     })
 
@@ -656,7 +640,7 @@ export async function updatePost(id: string, postData: Partial<BlogPost>): Promi
     const postWithTimestamp = removeUndefinedValues({
       ...postData,
       updatedDate: new Date(),
-      imageGallery: filterBlobUrls(postData.imageGallery),
+      imageGalleryPost: filterBlobUrls(postData.imageGalleryPost),
       imageAltTexts: cleanAltTexts(postData.imageAltTexts),
     })
 
@@ -777,7 +761,7 @@ export async function getRelatedPosts(
 
     // Filtrar por categoría (prioridad alta)
     if (categoryId) {
-      const categoryPosts = allPosts.filter((post) => post.categoryId === categoryId)
+      const categoryPosts = allPosts.filter((post) => post.category?.id === categoryId)
       for (const post of categoryPosts) {
         if (relatedPosts.length < limitCount && !relatedPosts.some((p) => p.id === post.id)) {
           relatedPosts.push(post)
@@ -791,10 +775,7 @@ export async function getRelatedPosts(
         if (!post.tags) return false
         return post.tags.some((tag) => {
           const tagName = typeof tag === "string" ? tag : tag.name
-          return tags.some((t) => {
-            const tName = typeof t === "string" ? t : t.name
-            return tagName === tName
-          })
+          return tags.some((t: any) => t.name === tagName)
         })
       })
 
@@ -831,7 +812,7 @@ export async function getAllCategories(): Promise<BlogCategory[]> {
     const categories: BlogCategory[] = []
 
     querySnapshot.forEach((doc) => {
-      categories.push({ id: doc.id, ...doc.data() } as BlogCategory)
+      categories.push({ id: doc.id, ...doc.data() } as any)
     })
 
     return categories
@@ -875,7 +856,7 @@ export async function getTagBySlug(slug: string): Promise<BlogTag | null> {
     const tagId = querySnapshot.docs[0].id
     console.log(`Tag encontrado con ID: ${tagId}`)
 
-    const tag = { id: tagId, ...tagData } as BlogTag
+    const tag = { id: tagId, ...tagData } as any
 
     // Guardar en caché
     if (!globalThis.__TAG_CACHE) {
@@ -902,7 +883,7 @@ export async function getCategoryById(id: string): Promise<BlogCategory | null> 
       return null
     }
 
-    return { id: categoryDoc.id, ...categoryDoc.data() } as BlogCategory
+    return { id: categoryDoc.id, ...categoryDoc.data() } as any
   } catch (error) {
     console.error(`Error fetching category with ID ${id}:`, error)
     return null
@@ -945,7 +926,7 @@ export async function getCategoryBySlug(slug: string): Promise<BlogCategory | nu
     const categoryId = querySnapshot.docs[0].id
     console.log(`Categoría encontrada con ID: ${categoryId}`)
 
-    const category = { id: categoryId, ...categoryData } as BlogCategory
+    const category = { id: categoryId, ...categoryData } as any
 
     // Guardar en caché
     if (!globalThis.__CATEGORY_CACHE) {
@@ -1006,7 +987,7 @@ export async function getAllTags(): Promise<BlogTag[]> {
     const tags: BlogTag[] = []
 
     querySnapshot.forEach((doc) => {
-      tags.push({ id: doc.id, ...doc.data() } as BlogTag)
+      tags.push({ id: doc.id, ...doc.data() } as any)
     })
 
     return tags
@@ -1063,7 +1044,7 @@ export async function getComments(postId: string): Promise<BlogComment[]> {
         ...commentData,
         likes: commentData.likes || 0,
         likedBy: commentData.likedBy || [],
-      } as BlogComment)
+      } as any)
     })
 
     return comments
@@ -1101,7 +1082,7 @@ export async function getUnapprovedComments(): Promise<BlogComment[]> {
 
     querySnapshot.forEach((doc) => {
       const commentData = convertTimestamps(doc.data())
-      comments.push({ id: doc.id, ...commentData } as BlogComment)
+      comments.push({ id: doc.id, ...commentData } as any)
     })
 
     return comments
@@ -1174,7 +1155,7 @@ export async function getUserRating(postId: string, userId: string): Promise<Blo
     }
 
     const ratingDoc = querySnapshot.docs[0]
-    return { id: ratingDoc.id, ...ratingDoc.data() } as BlogRating
+    return { id: ratingDoc.id, ...ratingDoc.data() } as any
   } catch (error) {
     console.error(`Error fetching user rating for post ${postId}:`, error)
     return null
@@ -1293,7 +1274,7 @@ export async function unlikeComment(commentId: string, userId: string): Promise<
     if (likedBy.includes(userId)) {
       await updateDoc(commentRef, {
         likes: increment(-1),
-        likedBy: likedBy.filter((id) => id !== userId),
+        likedBy: likedBy.filter((id: string) => id !== userId),
       })
     }
   } catch (error) {
@@ -1371,7 +1352,7 @@ export async function getPostReactions(postId: string): Promise<PostReactionsDet
       // Actualizar el tipo de reacción normalizado
       reactionData.reactionType = normalizedType
 
-      const reaction = { id: doc.id, ...reactionData } as PostReaction
+      const reaction = { id: doc.id, ...reactionData } as any
       reactions.push(reaction)
 
       // Contar por tipo de reacción normalizado
@@ -1433,7 +1414,7 @@ export async function getPostReactions(postId: string): Promise<PostReactionsDet
   } catch (error) {
     console.error(`Error fetching reactions for post ${postId}:`, error)
     // Lanzar el error para que el componente pueda manejarlo adecuadamente
-    throw new Error(`No se pudieron cargar las reacciones: ${error.message}`)
+    throw new Error(`No se pudieron cargar las reacciones: ${(error as Error).message}`)
   }
 }
 
@@ -1484,7 +1465,7 @@ export async function getUserReaction(postId: string, userId: string): Promise<P
     }
 
     const reactionDoc = querySnapshot.docs[0]
-    const reaction = { id: reactionDoc.id, ...reactionDoc.data() } as PostReaction
+    const reaction = { id: reactionDoc.id, ...reactionDoc.data() } as any
 
     // Guardar en caché
     try {
@@ -1682,7 +1663,7 @@ export async function getUsersByReactionType(
     const reactionsRef = collection(db, "blogReactions")
     let q
 
-    if (reactionType === "all") {
+    if (reactionType === "all" as any) {
       // Para "all", necesitamos una consulta diferente
       if (lastVisible) {
         q = query(
@@ -1722,7 +1703,7 @@ export async function getUsersByReactionType(
 
     querySnapshot.forEach((doc) => {
       const reactionData = convertTimestamps(doc.data())
-      reactions.push({ id: doc.id, ...reactionData } as PostReaction)
+      reactions.push({ id: doc.id, ...reactionData } as any)
     })
 
     // Obtener el último documento visible para la próxima consulta
@@ -1774,7 +1755,7 @@ export async function getCommentReactionCounts(commentId: string): Promise<Recor
     const counts: Partial<Record<CommentReactionType, number>> = {}
 
     reactions.forEach((reaction) => {
-      const type = reaction.reactionType
+      const type = reaction.reactionType as CommentReactionType
       counts[type] = (counts[type] || 0) + 1
     })
 
@@ -1803,7 +1784,7 @@ export async function getUserCommentReaction(commentId: string, userId: string):
     }
 
     const doc = querySnapshot.docs[0]
-    return { id: doc.id, ...convertTimestamps(doc.data()) } as CommentReaction
+    return { id: doc.id, ...convertTimestamps(doc.data()) } as any
   } catch (error) {
     console.error(`Error getting user reaction for comment ${commentId}:`, error)
     return null
@@ -1931,7 +1912,7 @@ export async function getTagById(id: string): Promise<BlogTag | null> {
       return null
     }
 
-    return { id: tagDoc.id, ...convertTimestamps(tagDoc.data()) } as BlogTag
+    return { id: tagDoc.id, ...convertTimestamps(tagDoc.data()) } as any
   } catch (error) {
     console.error(`Error fetching tag with ID ${id}:`, error)
     return null
@@ -2093,39 +2074,40 @@ export async function getPopularTags(limitCount = 10): Promise<BlogTag[]> {
 // }
 
 // Pin a comment (admin only)
-export async function pinComment(commentId: string, adminId: string): Promise<void> {
+export async function pinComment(
+  commentId: string,
+  postId: string,
+  adminId: string,
+): Promise<void> {
   try {
-    // First check how many pinned comments we already have
+    const commentRef = doc(db, "blogComments", commentId)
+    const commentDoc = await getDoc(commentRef)
+
+    if (!commentDoc.exists()) {
+      throw new Error("Comment not found")
+    }
+
+    // Limitar a 3 comentarios anclados
     const commentsRef = collection(db, "blogComments")
-    const q = query(commentsRef, where("isPinned", "==", true))
+    const q = query(
+      commentsRef,
+      where("postId", "==", postId),
+      where("isPinned", "==", true),
+      orderBy("pinnedAt", "asc"),
+    )
     const querySnapshot = await getDocs(q)
 
-    // Limit to 3 pinned comments
     if (querySnapshot.size >= 3) {
-      // Find the oldest pinned comment to replace
-      let oldestPinnedComment: { id: string; pinnedAt: Date } | null = null
-
-      querySnapshot.forEach((doc) => {
-        const data = doc.data()
-        const pinnedAt = data.pinnedAt ? new Date(data.pinnedAt.toDate()) : new Date(0)
-
-        if (!oldestPinnedComment || pinnedAt < oldestPinnedComment.pinnedAt) {
-          oldestPinnedComment = { id: doc.id, pinnedAt }
-        }
-      })
-
-      // Unpin the oldest comment
+      // Desanclar el más antiguo
+      const oldestPinnedComment = querySnapshot.docs[0]
       if (oldestPinnedComment) {
         await updateDoc(doc(db, "blogComments", oldestPinnedComment.id), {
           isPinned: false,
           pinnedAt: null,
-          pinnedBy: null,
         })
       }
     }
 
-    // Pin the new comment
-    const commentRef = doc(db, "blogComments", commentId)
     await updateDoc(commentRef, {
       isPinned: true,
       pinnedAt: new Date(),
@@ -2137,7 +2119,6 @@ export async function pinComment(commentId: string, adminId: string): Promise<vo
   }
 }
 
-// Unpin a comment
 export async function unpinComment(commentId: string): Promise<void> {
   try {
     const commentRef = doc(db, "blogComments", commentId)

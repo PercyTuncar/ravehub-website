@@ -19,13 +19,13 @@ export async function generateMetadata({ params }: AlbumPageProps): Promise<Meta
 
   if (!album) {
     return {
-      title: "Álbum no encontrado | RaveHub",
+      title: "Álbum no encontrado | Ravehub",
     }
   }
 
   return {
-    title: `Gestionar álbum: ${album.name} | RaveHub`,
-    description: `Gestiona las imágenes del álbum ${album.name} en la galería de RaveHub`,
+    title: `Gestionar álbum: ${album.name} | Ravehub`,
+    description: `Gestiona las imágenes del álbum ${album.name} en la galería de Ravehub`,
   }
 }
 

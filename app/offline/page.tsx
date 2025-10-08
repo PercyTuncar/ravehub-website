@@ -2,7 +2,7 @@ import type { Metadata } from "next"
 import OfflineContent from "@/components/offline/offline-content"
 
 export const metadata: Metadata = {
-  title: "Sin conexión | RaveHub",
+  title: "Sin conexión | Ravehub",
   description: "Parece que no tienes conexión a internet",
 }
 

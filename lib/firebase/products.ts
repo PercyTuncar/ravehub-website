@@ -225,7 +225,7 @@ export async function createProduct(productData: Product): Promise<string> {
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp(),
       // Ensure new fields are included with defaults if not provided
-      brand: productData.brand || "RaveHub",
+      brand: productData.brand || "Ravehub",
       videoUrl: productData.videoUrl || "",
       eligibleRegions: productData.eligibleRegions || [],
       shippingDetails: productData.shippingDetails || {

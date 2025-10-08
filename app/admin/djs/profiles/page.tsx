@@ -1,7 +1,7 @@
 import { AdminDJProfiles } from "@/components/admin/dj-ranking/admin-dj-profiles"
 
 export const metadata = {
-  title: "Perfiles de DJs | RaveHub",
+  title: "Perfiles de DJs | Ravehub",
   description: "Administración de perfiles de DJs",
 }
 

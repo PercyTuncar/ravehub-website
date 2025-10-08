@@ -1,7 +1,7 @@
 import { VoteDJForm } from "@/components/dj-ranking/vote-dj-form"
 
 export const metadata = {
-  title: "Votar por DJs | RaveHub",
+  title: "Votar por DJs | Ravehub",
   description: "Vota por tus DJs favoritos para el ranking anual",
 }
 

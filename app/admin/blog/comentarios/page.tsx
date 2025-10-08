@@ -3,7 +3,7 @@ import { AdminCommentsList } from "@/components/admin/admin-comments-list"
 import AdminRouteGuard from "@/components/auth/admin-route-guard"
 
 export const metadata: Metadata = {
-  title: "Administrar Comentarios | RaveHub",
+  title: "Administrar Comentarios | Ravehub",
   description: "Panel de administración de comentarios del blog",
 }
 

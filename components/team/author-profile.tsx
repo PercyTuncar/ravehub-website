@@ -77,7 +77,7 @@ export default function AuthorProfile({ author }: AuthorProfileProps) {
             <h2 className="text-2xl font-bold mb-4">Sobre {author.firstName}</h2>
             <p className="text-gray-600 dark:text-gray-300 mb-6">
               {author.bio ||
-                `${author.firstName} ${author.lastName} es parte del equipo de RaveHub Latam, contribuyendo con su experiencia y conocimiento para ofrecer la mejor experiencia en eventos.`}
+                `${author.firstName} ${author.lastName} es parte del equipo de Ravehub Latam, contribuyendo con su experiencia y conocimiento para ofrecer la mejor experiencia en eventos.`}
             </p>
 
             <div className="border-t border-gray-200 dark:border-gray-700 pt-4 mt-4">

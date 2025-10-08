@@ -2,13 +2,13 @@ import type { Metadata } from "next"
 import ContactPage from "./contact-page"
 
 export const metadata: Metadata = {
-  title: "Contacto | RaveHub",
+  title: "Contacto | Ravehub",
   description:
-    "Contáctanos y conéctate con la comunidad RaveHub a través de nuestras redes sociales y grupos de WhatsApp.",
+    "Contáctanos y conéctate con la comunidad Ravehub a través de nuestras redes sociales y grupos de WhatsApp.",
   openGraph: {
-    title: "Contacto | RaveHub",
+    title: "Contacto | Ravehub",
     description:
-      "Contáctanos y conéctate con la comunidad RaveHub a través de nuestras redes sociales y grupos de WhatsApp.",
+      "Contáctanos y conéctate con la comunidad Ravehub a través de nuestras redes sociales y grupos de WhatsApp.",
     images: ["/images/contact-og.png"],
   },
 }

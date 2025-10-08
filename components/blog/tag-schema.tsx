@@ -15,7 +15,7 @@ export function TagSchema({ tag }: TagSchemaProps) {
     isPartOf: {
       "@type": "WebSite",
       "@id": "https://ravehub.es/#website",
-      name: "RaveHub",
+      name: "Ravehub",
       url: "https://ravehub.es",
     },
     inLanguage: "es",

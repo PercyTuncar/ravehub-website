@@ -68,7 +68,7 @@ function generateJsonLd(post: BlogPost) {
         image: post.featuredImageUrl,
         publisher: {
           "@type": "Organization",
-          name: "RaveHub",
+          name: "Ravehub",
           logo: {
             "@type": "ImageObject",
             url: `${baseUrl}/logo.png`,

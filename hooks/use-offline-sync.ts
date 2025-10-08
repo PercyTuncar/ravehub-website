@@ -48,7 +48,7 @@ export function useOfflineSync() {
 
       // Mostrar notificación de reconexión
       if ("Notification" in window && Notification.permission === "granted") {
-        new Notification("RaveHub", {
+        new Notification("Ravehub", {
           body: "¡Conexión restablecida! Sincronizando datos...",
           icon: "/icons/icon-192x192.png",
         })
@@ -60,7 +60,7 @@ export function useOfflineSync() {
 
       // Mostrar notificación de desconexión
       if ("Notification" in window && Notification.permission === "granted") {
-        new Notification("RaveHub", {
+        new Notification("Ravehub", {
           body: "Conexión perdida. Tus acciones se guardarán y sincronizarán cuando vuelvas a estar en línea.",
           icon: "/icons/icon-192x192.png",
         })

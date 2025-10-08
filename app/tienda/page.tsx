@@ -8,22 +8,22 @@ import { Separator } from "@/components/ui/separator"
 import { Breadcrumbs } from "@/components/breadcrumbs"
 
 export const metadata: Metadata = {
-  title: "Tienda RaveHub | Productos para eventos y fiestas",
+  title: "Tienda Ravehub | Productos para eventos y fiestas",
   description:
-    "Explora nuestra colección de productos para tus eventos y fiestas. Encuentra todo lo que necesitas para tus celebraciones en RaveHub.",
+    "Explora nuestra colección de productos para tus eventos y fiestas. Encuentra todo lo que necesitas para tus celebraciones en Ravehub.",
   keywords: "tienda, productos, eventos, fiestas, rave, accesorios, ropa, decoración",
   openGraph: {
-    title: "Tienda RaveHub | Productos para eventos y fiestas",
+    title: "Tienda Ravehub | Productos para eventos y fiestas",
     description:
-      "Explora nuestra colección de productos para tus eventos y fiestas. Encuentra todo lo que necesitas para tus celebraciones en RaveHub.",
+      "Explora nuestra colección de productos para tus eventos y fiestas. Encuentra todo lo que necesitas para tus celebraciones en Ravehub.",
     type: "website",
     url: "https://ravehub.com/tienda",
   },
   twitter: {
     card: "summary_large_image",
-    title: "Tienda RaveHub | Productos para eventos y fiestas",
+    title: "Tienda Ravehub | Productos para eventos y fiestas",
     description:
-      "Explora nuestra colección de productos para tus eventos y fiestas. Encuentra todo lo que necesitas para tus celebraciones en RaveHub.",
+      "Explora nuestra colección de productos para tus eventos y fiestas. Encuentra todo lo que necesitas para tus celebraciones en Ravehub.",
   },
 }
 

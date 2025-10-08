@@ -6,16 +6,16 @@ import FeaturedBlogBanner from "@/components/blog/featured-blog-banner"
 import { Breadcrumbs } from "@/components/breadcrumbs"
 
 export const metadata: Metadata = {
-  title: "Blog | RaveHub",
+  title: "Blog | Ravehub",
   description: "Explora nuestro blog sobre música electrónica, festivales, cultura rave y más.",
   openGraph: {
-    title: "Blog | RaveHub",
+    title: "Blog | Ravehub",
     description: "Explora nuestro blog sobre música electrónica, festivales, cultura rave y más.",
     type: "website",
   },
   twitter: {
     card: "summary_large_image",
-    title: "Blog | RaveHub",
+    title: "Blog | Ravehub",
     description: "Explora nuestro blog sobre música electrónica, festivales, cultura rave y más.",
   },
   alternates: {

@@ -10,13 +10,13 @@ export function GallerySchema({ album, images }: GallerySchemaProps) {
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "ImageGallery",
-    name: `Galería RaveHub – ${album.name}`,
+    name: `Galería Ravehub – ${album.name}`,
     url: `${process.env.NEXT_PUBLIC_BASE_URL}/galeria/${album.slug}`,
     description: album.description,
     datePublished: album.date,
     author: {
       "@type": "Organization",
-      name: "RaveHub",
+      name: "Ravehub",
       url: process.env.NEXT_PUBLIC_BASE_URL,
     },
     image: images.map((image) => ({
@@ -27,7 +27,7 @@ export function GallerySchema({ album, images }: GallerySchemaProps) {
       datePublished: new Date(image.uploadedAt).toISOString().split("T")[0],
       author: {
         "@type": "Organization",
-        name: "RaveHub",
+        name: "Ravehub",
       },
       width: image.width,
       height: image.height,

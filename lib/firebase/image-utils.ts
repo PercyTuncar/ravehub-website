@@ -3,13 +3,15 @@
  * @param imageUrls Array de URLs de imágenes
  * @returns Array filtrado sin URLs de blob
  */
-export function filterBlobUrls(imageUrls?: string[]): string[] {
+export function filterBlobUrls(imageUrls?: (string | { url: string })[]): string[] {
   if (!imageUrls) return []
 
-  return imageUrls.filter((url) => {
-    // Filtrar URLs de blob que son temporales
-    return url && !url.startsWith("blob:")
-  })
+  return imageUrls
+    .map((item) => (typeof item === "string" ? item : item.url))
+    .filter((url) => {
+      // Filtrar URLs de blob que son temporales
+      return url && !url.startsWith("blob:")
+    })
 }
 
 /**

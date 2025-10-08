@@ -502,7 +502,7 @@ export function BlogCard({ post }: BlogCardProps) {
 
   // Format date for display
   const timeAgo = post.publishDate ? getTimeAgo(new Date(post.publishDate)) : "Sin fecha"
-  const imageUrl = post.featuredImageUrl || "/images/placeholder-blog.jpg"
+  const imageUrl = post.featuredImageUrl || "/placeholder.jpg"
 
   return (
     <div className="bg-white rounded-lg shadow-md overflow-hidden transition-all duration-300 hover:shadow-lg">

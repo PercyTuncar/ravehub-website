@@ -2,8 +2,8 @@ import type { Metadata } from "next"
 import RegistroForm from "@/components/auth/registro-form"
 
 export const metadata: Metadata = {
-  title: "Registro | RaveHub",
-  description: "Crea una cuenta en RaveHub para acceder a todas las funcionalidades",
+  title: "Registro | Ravehub",
+  description: "Crea una cuenta en Ravehub para acceder a todas las funcionalidades",
 }
 
 export const viewport = {

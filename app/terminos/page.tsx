@@ -2,9 +2,9 @@ import type { Metadata } from "next"
 import { PageHeader } from "@/components/page-header"
 
 export const metadata: Metadata = {
-  title: "Términos y Condiciones | RaveHub",
+  title: "Términos y Condiciones | Ravehub",
   description:
-    "Términos y condiciones legales para el uso de la plataforma RaveHub y la compra de entradas para eventos.",
+    "Términos y condiciones legales para el uso de la plataforma Ravehub y la compra de entradas para eventos.",
 }
 
 export default function TermsPage() {
@@ -15,8 +15,8 @@ export default function TermsPage() {
       <div className="prose max-w-none mt-12">
         <h2>1. Introducción</h2>
         <p>
-          Bienvenido a RaveHub. Estos Términos y Condiciones rigen el uso de nuestra plataforma, incluyendo nuestro
-          sitio web, aplicaciones móviles, servicios y funcionalidades ofrecidas por RaveHub (colectivamente, la
+          Bienvenido a Ravehub. Estos Términos y Condiciones rigen el uso de nuestra plataforma, incluyendo nuestro
+          sitio web, aplicaciones móviles, servicios y funcionalidades ofrecidas por Ravehub (colectivamente, la
           "Plataforma").
         </p>
         <p>
@@ -26,7 +26,7 @@ export default function TermsPage() {
 
         <h2>2. Uso de la Plataforma</h2>
         <p>
-          RaveHub proporciona una plataforma para descubrir, comprar entradas y participar en eventos de música
+          Ravehub proporciona una plataforma para descubrir, comprar entradas y participar en eventos de música
           electrónica en Latinoamérica. Usted acepta utilizar la Plataforma solo para fines legales y de manera que no
           infrinja los derechos de terceros ni restrinja el uso de la Plataforma por parte de otros.
         </p>
@@ -43,7 +43,7 @@ export default function TermsPage() {
         <ul>
           <li>La información proporcionada durante el proceso de compra debe ser precisa y completa.</li>
           <li>Las entradas no son transferibles a menos que se indique explícitamente lo contrario.</li>
-          <li>RaveHub se reserva el derecho de cancelar compras que parezcan fraudulentas o violen estos términos.</li>
+          <li>Ravehub se reserva el derecho de cancelar compras que parezcan fraudulentas o violen estos términos.</li>
           <li>Las entradas se entregarán digitalmente unos días antes del evento.</li>
         </ul>
 
@@ -58,7 +58,7 @@ export default function TermsPage() {
 
         <h2>6. Política de Reembolsos</h2>
         <p>
-          RaveHub no ofrece reembolsos para entradas compradas, excepto en circunstancias específicas detalladas en
+          Ravehub no ofrece reembolsos para entradas compradas, excepto en circunstancias específicas detalladas en
           nuestra{" "}
           <a href="/reembolsos" className="text-primary hover:underline">
             Política de Reembolsos
@@ -67,54 +67,54 @@ export default function TermsPage() {
         </p>
 
         <h2>7. Conducta en Eventos</h2>
-        <p>Al asistir a eventos organizados o promocionados por RaveHub, usted acepta:</p>
+        <p>Al asistir a eventos organizados o promocionados por Ravehub, usted acepta:</p>
         <ul>
           <li>Cumplir con todas las reglas del lugar y las instrucciones del personal del evento.</li>
           <li>
             No participar en comportamientos que puedan poner en peligro la seguridad o el disfrute de otros asistentes.
           </li>
           <li>
-            RaveHub se reserva el derecho de denegar la entrada o expulsar a cualquier persona que viole estas normas
+            Ravehub se reserva el derecho de denegar la entrada o expulsar a cualquier persona que viole estas normas
             sin reembolso.
           </li>
         </ul>
 
         <h2>8. Sorteos y Promociones</h2>
-        <p>Los sorteos y promociones realizados por RaveHub están sujetos a los siguientes términos:</p>
+        <p>Los sorteos y promociones realizados por Ravehub están sujetos a los siguientes términos:</p>
         <ul>
           <li>La participación en sorteos es gratuita y no requiere compra.</li>
           <li>
             Los sorteos se realizarán de manera transparente, con un enlace a la transmisión en vivo publicado en la
             publicación original del sorteo.
           </li>
-          <li>RaveHub se reserva el derecho de modificar o cancelar cualquier sorteo o promoción sin previo aviso.</li>
+          <li>Ravehub se reserva el derecho de modificar o cancelar cualquier sorteo o promoción sin previo aviso.</li>
           <li>Los ganadores serán notificados a través de los medios proporcionados durante su participación.</li>
         </ul>
 
         <h2>9. Propiedad Intelectual</h2>
         <p>
           Todo el contenido presente en la Plataforma, incluyendo pero no limitado a textos, gráficos, logotipos,
-          imágenes y software, es propiedad de RaveHub o de sus proveedores de contenido y está protegido por leyes de
+          imágenes y software, es propiedad de Ravehub o de sus proveedores de contenido y está protegido por leyes de
           propiedad intelectual.
         </p>
 
         <h2>10. Limitación de Responsabilidad</h2>
         <p>
-          RaveHub no será responsable por daños indirectos, incidentales, especiales, consecuentes o punitivos, incluida
+          Ravehub no será responsable por daños indirectos, incidentales, especiales, consecuentes o punitivos, incluida
           la pérdida de beneficios, ya sea que se base en contrato, agravio, negligencia, responsabilidad estricta o de
           otro tipo.
         </p>
 
         <h2>11. Modificaciones a los Términos</h2>
         <p>
-          RaveHub se reserva el derecho de modificar estos Términos y Condiciones en cualquier momento. Las
+          Ravehub se reserva el derecho de modificar estos Términos y Condiciones en cualquier momento. Las
           modificaciones entrarán en vigor inmediatamente después de su publicación en la Plataforma. Su uso continuado
           de la Plataforma después de tales modificaciones constituirá su aceptación de los nuevos términos.
         </p>
 
         <h2>12. Ley Aplicable</h2>
         <p>
-          Estos Términos y Condiciones se regirán e interpretarán de acuerdo con las leyes del país donde RaveHub tiene
+          Estos Términos y Condiciones se regirán e interpretarán de acuerdo con las leyes del país donde Ravehub tiene
           su sede principal, sin tener en cuenta sus conflictos de disposiciones legales.
         </p>
 

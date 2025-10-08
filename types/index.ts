@@ -326,42 +326,7 @@ export interface Address {
   [key: string]: any
 }
 
-export interface BlogPost {
-  id: string
-  title: string
-  slug: string
-  content?: string
-  excerpt?: string
-  featuredImage?: string
-  publishDate?: any // Puede ser Date, string, timestamp de Firestore, etc.
-  updatedAt?: any
-  author?:
-    | {
-        id?: string
-        firstName?: string
-        lastName?: string
-        name?: string
-        avatar?: string
-      }
-    | string
-  category?: {
-    id: string
-    name: string
-    slug: string
-  }
-  tags?: Array<{
-    id: string
-    name: string
-    slug: string
-  }>
-  readTime?: number
-  status?: "draft" | "published"
-  seo?: {
-    title?: string
-    description?: string
-    keywords?: string
-  }
-}
+
 
 // Nueva interfaz para las reseñas de productos
 export interface ProductReview {

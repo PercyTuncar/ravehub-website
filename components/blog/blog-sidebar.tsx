@@ -33,7 +33,7 @@ export function BlogSidebar({ currentPostId, recentPosts = [], popularPosts = []
               <li key={post.id} className="flex items-start">
                 <div className="flex-shrink-0 mr-3">
                   <Image
-                    src={post.featuredImageUrl || "/images/placeholder-blog.jpg"}
+                    src={post.featuredImageUrl || "/placeholder.jpg"}
                     alt={post.title}
                     width={60}
                     height={60}
@@ -64,7 +64,7 @@ export function BlogSidebar({ currentPostId, recentPosts = [], popularPosts = []
               <li key={post.id} className="flex items-start">
                 <div className="flex-shrink-0 mr-3">
                   <Image
-                    src={post.featuredImageUrl || "/images/placeholder-blog.jpg"}
+                    src={post.featuredImageUrl || "/placeholder.jpg"}
                     alt={post.title}
                     width={60}
                     height={60}

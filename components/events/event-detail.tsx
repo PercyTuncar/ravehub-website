@@ -552,7 +552,7 @@ export default function EventDetail({ event }: EventDetailProps) {
               </CardTitle>
               <CardDescription>
                 {event.sellTicketsOnPlatform
-                  ? "Compra tus entradas directamente en RaveHub"
+                  ? "Compra tus entradas directamente en Ravehub"
                   : "Entradas disponibles en ticketera externa"}
               </CardDescription>
             </CardHeader>

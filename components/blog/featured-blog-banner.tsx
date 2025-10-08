@@ -64,8 +64,8 @@ export default function FeaturedBlogBanner() {
             title: data.title || "Sin título",
             slug: data.slug || "",
             excerpt: data.excerpt || "",
-            featuredImageUrl: data.featuredImageUrl || "/images/placeholder-blog.jpg",
-            author: data.author || "RaveHub",
+            featuredImageUrl: data.featuredImageUrl || "/placeholder.jpg",
+            author: data.author || "Ravehub",
             authorImageUrl: data.authorImageUrl || "",
             publishDate: data.publishDate ? new Date(data.publishDate) : new Date(),
             categories: data.categories || [],
@@ -333,7 +333,7 @@ export default function FeaturedBlogBanner() {
                 <Link href={`/blog/${post.slug}`} className="block h-full">
                   <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/50 to-transparent z-10"></div>
                   <Image
-                    src={post.featuredImageUrl || "/images/placeholder-blog.jpg"}
+                    src={post.featuredImageUrl || "/placeholder.jpg"}
                     alt={post.title}
                     fill
                     className="object-cover transition-transform duration-700 group-hover:scale-105"

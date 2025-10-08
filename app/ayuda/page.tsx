@@ -3,7 +3,7 @@ import { PageHeader } from "@/components/page-header"
 import Link from "next/link"
 
 export const metadata: Metadata = {
-  title: "Centro de Ayuda | RaveHub",
+  title: "Centro de Ayuda | Ravehub",
   description: "Encuentra respuestas a tus preguntas y soluciones a problemas comunes en nuestro centro de ayuda.",
 }
 
@@ -150,7 +150,7 @@ export default function HelpCenterPage() {
           ¿Cómo comprar entradas?
         </h2>
         <div className="prose max-w-none">
-          <p>Comprar entradas en RaveHub es un proceso sencillo y seguro. Sigue estos pasos:</p>
+          <p>Comprar entradas en Ravehub es un proceso sencillo y seguro. Sigue estos pasos:</p>
           <ol>
             <li>Selecciona el evento al que deseas asistir desde nuestra sección de eventos.</li>
             <li>Elige el tipo de entrada y la cantidad que deseas comprar.</li>
@@ -169,7 +169,7 @@ export default function HelpCenterPage() {
         </h2>
         <div className="prose max-w-none">
           <p>
-            RaveHub ofrece la posibilidad de pagar tus entradas en cuotas para facilitar tu asistencia a nuestros
+            Ravehub ofrece la posibilidad de pagar tus entradas en cuotas para facilitar tu asistencia a nuestros
             eventos. Es importante tener en cuenta:
           </p>
           <ul>
@@ -188,7 +188,7 @@ export default function HelpCenterPage() {
           Sorteos y promociones
         </h2>
         <div className="prose max-w-none">
-          <p>En RaveHub realizamos sorteos y promociones de manera transparente:</p>
+          <p>En Ravehub realizamos sorteos y promociones de manera transparente:</p>
           <ul>
             <li>Todos los sorteos se anuncian en nuestras redes sociales oficiales.</li>
             <li>

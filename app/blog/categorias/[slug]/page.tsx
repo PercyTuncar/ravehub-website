@@ -14,7 +14,7 @@ interface CategoryPageProps {
 }
 
 export async function generateMetadata({ params }: CategoryPageProps): Promise<Metadata> {
-  const { slug } = params
+  const { slug } = await params
   const category = await getCategoryBySlug(slug)
 
   if (!category) {
@@ -45,7 +45,7 @@ export async function generateMetadata({ params }: CategoryPageProps): Promise<M
 }
 
 export default async function CategoryPage({ params }: CategoryPageProps) {
-  const { slug } = params
+  const { slug } = await params
   const category = await getCategoryBySlug(slug)
 
   if (!category) {

@@ -1,7 +1,7 @@
 import { CTAForm } from "@/components/admin/cta-form"
 
 export const metadata = {
-  title: "Nuevo CTA | RaveHub",
+  title: "Nuevo CTA | Ravehub",
   description: "Crear un nuevo Call to Action personalizado para eventos",
 }
 

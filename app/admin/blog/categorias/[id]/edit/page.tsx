@@ -2,7 +2,7 @@ import type { Metadata } from "next"
 import CategoryFormPage from "@/components/admin/blog-category-form"
 
 export const metadata: Metadata = {
-  title: "Editar Categoría | Admin RaveHub",
+  title: "Editar Categoría | Admin Ravehub",
   description: "Editar una categoría existente del blog",
 }
 

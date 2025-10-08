@@ -2,7 +2,7 @@ import type { Metadata } from "next"
 import { TagForm } from "@/components/admin/tag-form"
 
 export const metadata: Metadata = {
-  title: "Nueva Etiqueta | Admin RaveHub",
+  title: "Nueva Etiqueta | Admin Ravehub",
   description: "Crear una nueva etiqueta para el blog",
 }
 

@@ -1,4 +1,4 @@
-// RaveHub Service Worker v3.0
+// Ravehub Service Worker v3.0
 const CACHE_VERSION = "v3"
 const CACHE_NAMES = {
   static: `ravehub-static-${CACHE_VERSION}`,
@@ -27,7 +27,7 @@ const PRECACHE_ASSETS = [
   "/tienda",
   "/galeria",
   "/contacto",
-  "/images/placeholder-blog.jpg",
+  "/placeholder.jpg",
   "/images/gallery-hero.jpg",
   "/images/electronic-music-festival-night.png",
 ]
@@ -180,7 +180,7 @@ async function cacheFirst(request) {
   } catch (error) {
     // Fallback para imágenes
     if (request.destination === "image") {
-      return caches.match("/images/placeholder-blog.jpg")
+      return caches.match("/placeholder.jpg")
     }
     throw error
   }
@@ -422,7 +422,7 @@ self.addEventListener("push", (event) => {
     const data = event.data.json()
 
     const options = {
-      body: data.body || "Notificación de RaveHub",
+      body: data.body || "Notificación de Ravehub",
       icon: data.icon || "/icons/icon-192x192.png",
       badge: data.badge || "/icons/badge-icon.png",
       vibrate: data.vibrate || [100, 50, 100],
@@ -433,7 +433,7 @@ self.addEventListener("push", (event) => {
       actions: data.actions || [],
     }
 
-    event.waitUntil(self.registration.showNotification(data.title || "RaveHub", options))
+    event.waitUntil(self.registration.showNotification(data.title || "Ravehub", options))
   } catch (error) {
     console.error("[Service Worker] Error al procesar notificación push:", error)
 
@@ -441,7 +441,7 @@ self.addEventListener("push", (event) => {
     const text = event.data.text()
 
     event.waitUntil(
-      self.registration.showNotification("RaveHub", {
+      self.registration.showNotification("Ravehub", {
         body: text,
         icon: "/icons/icon-192x192.png",
       }),

@@ -49,7 +49,7 @@ export function generateCategorySchema(props: CategorySchemaProps): Record<strin
     "@id": `${url}#webpage`,
     url: url,
     name: category.seoTitle || category.name,
-    headline: category.seoTitle || `${category.name} | RaveHub Blog`,
+    headline: category.seoTitle || `${category.name} | Ravehub Blog`,
     description: category.seoDescription || category.description || "",
     keywords: Array.isArray(category.metaKeywords) ? category.metaKeywords.join(", ") : "",
     inLanguage: "es",
@@ -57,12 +57,12 @@ export function generateCategorySchema(props: CategorySchemaProps): Record<strin
       "@type": "WebSite",
       "@id": `${baseUrl}/#website`,
       url: baseUrl,
-      name: "RaveHub",
+      name: "Ravehub",
       description: "Festivales y eventos de música electrónica en Latinoamérica",
       publisher: {
         "@type": "Organization",
         "@id": `${baseUrl}/#organization`,
-        name: "RaveHub",
+        name: "Ravehub",
         logo: {
           "@type": "ImageObject",
           url: `${baseUrl}/images/logo-full.png`,
@@ -117,12 +117,12 @@ export function generateCategorySchema(props: CategorySchemaProps): Record<strin
             dateModified: modifyDate,
             author: {
               "@type": "Person",
-              name: post.author || post.authorName || "RaveHub",
+              name: post.author || post.authorName || "Ravehub",
               url: post.authorId ? `${baseUrl}/autores/${post.authorId}` : undefined,
             },
             publisher: {
               "@type": "Organization",
-              name: "RaveHub",
+              name: "Ravehub",
               logo: {
                 "@type": "ImageObject",
                 url: `${baseUrl}/images/logo-full.png`,

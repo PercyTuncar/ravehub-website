@@ -19,7 +19,7 @@ interface ProductPageProps {
 export async function generateMetadata({ params }: ProductPageProps, parent: ResolvingMetadata): Promise<Metadata> {
   try {
     // Obtener el slug del producto
-    const { slug } = params
+    const { slug } = await params
 
     // Obtener los datos del producto
     const product = await getProductBySlug(slug)
@@ -27,7 +27,7 @@ export async function generateMetadata({ params }: ProductPageProps, parent: Res
     // Si no existe el producto, devolver metadatos por defecto
     if (!product) {
       return {
-        title: "Producto no encontrado | RaveHub",
+        title: "Producto no encontrado | Ravehub",
         description: "El producto que buscas no existe o ha sido eliminado.",
       }
     }
@@ -48,7 +48,7 @@ export async function generateMetadata({ params }: ProductPageProps, parent: Res
     const description = product.shortDescription || product.description || `Descubre ${product.name} en nuestra tienda.`
 
     // Construir el título con validación
-    const title = `${product.name} | RaveHub`
+    const title = `${product.name} | Ravehub`
 
     // Construir y devolver los metadatos con validaciones
     return {
@@ -58,7 +58,7 @@ export async function generateMetadata({ params }: ProductPageProps, parent: Res
         title: title,
         description: description,
         url: `${baseUrl}/tienda/${slug}`,
-        siteName: "RaveHub",
+        siteName: "Ravehub",
         images: [
           {
             url: mainImage,
@@ -81,15 +81,15 @@ export async function generateMetadata({ params }: ProductPageProps, parent: Res
     // En caso de cualquier error, devolver metadatos mínimos
     console.error("Error generating metadata:", error)
     return {
-      title: "Tienda RaveHub",
-      description: "Descubre productos exclusivos en la tienda de RaveHub.",
+      title: "Tienda Ravehub",
+      description: "Descubre productos exclusivos en la tienda de Ravehub.",
     }
   }
 }
 
 export default async function ProductPage({ params }: ProductPageProps) {
   try {
-    const { slug } = params
+    const { slug } = await params
     const product = await getProductBySlug(slug)
 
     if (!product) {

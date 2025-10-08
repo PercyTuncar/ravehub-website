@@ -172,7 +172,7 @@ export function TagForm({ tagId }: TagFormProps) {
       const tagToSave = {
         ...tag,
         seoTitle: tag.seoTitle || tag.name,
-        seoDescription: tag.seoDescription || `Artículos relacionados con ${tag.name} en RaveHub`,
+        seoDescription: tag.seoDescription || `Artículos relacionados con ${tag.name} en Ravehub`,
       }
 
       if (isEditing) {
@@ -312,7 +312,7 @@ export function TagForm({ tagId }: TagFormProps) {
                   name="seoTitle"
                   value={tag.seoTitle}
                   onChange={handleInputChange}
-                  placeholder={tag.name ? `Posts etiquetados con ${tag.name} | RaveHub Blog` : "Título SEO"}
+                  placeholder={tag.name ? `Posts etiquetados con ${tag.name} | Ravehub Blog` : "Título SEO"}
                   maxLength={70}
                 />
                 <p className="text-sm text-gray-500">{tag.seoTitle?.length || 0}/70 caracteres recomendados</p>
@@ -358,7 +358,7 @@ export function TagForm({ tagId }: TagFormProps) {
                 <SeoPreview
                   title={
                     tag.seoTitle ||
-                    (tag.name ? `Posts etiquetados con ${tag.name} | RaveHub Blog` : "Título de la Etiqueta")
+                    (tag.name ? `Posts etiquetados con ${tag.name} | Ravehub Blog` : "Título de la Etiqueta")
                   }
                   description={
                     tag.seoDescription ||

@@ -1,3 +1,5 @@
+import { Timestamp } from "firebase/firestore"
+
 // ========================
 // BLOG MODELS (Added as requested)
 // ========================
@@ -11,178 +13,78 @@ export interface BlogPost {
   slug: string
   content?: string
   excerpt?: string
+  tags?: BlogTag[]
+  author?: Author | string
+  publishDate: Date | Timestamp
+  updatedDate?: Date | Timestamp
+  status: "draft" | "published" | "archived"
+  isFeatured?: boolean
+  viewCount?: number
   featuredImage?: string
-  publishDate?: any
-  updatedDate?: any
-  author?:
-    | {
-        id?: string
-        firstName?: string
-        lastName?: string
-        name?: string
-        avatar?: string
-      }
-    | string
-  category?: {
-    id: string
-    name: string
-    slug: string
-  }
-  tags?: Array<{
-    id: string
-    name: string
-    slug: string
-  }>
-  readTime?: number
-  status?: "draft" | "published"
-  seo?: {
-    title?: string
-    description?: string
-    keywords?: string
-  }
-  imageAltTexts?: { [key: string]: string }
-  socialShares?: {
-    facebook?: number
-    twitter?: number
-    linkedin?: number
-    whatsapp?: number
-    total?: number
-  }
-  location?: {
-    venueName: string
-    address: string
-    city: string
-    region: string
-    country: string
-    postalCode: string
-    latitude: number
-    longitude: number
-    additionalInfo?: string
-  }
-  relatedEventId?: string
-  relatedPosts?: string[]
-  relatedEvents?: string[]
-  seoTitle: string
-  seoDescription: string
-  seoKeywords: string[]
-  ogType: string
-  twitterCardType: string
-  canonicalUrl: string
-  schemaType: "NewsArticle" | "BlogPosting" | "Article" | "Event" | "Review" | "HowTo"
-  contentType?: "blog" | "news" | "event" | "review" | "guide" // Nuevo campo para tipo de contenido
-  focusKeyword?: string
-  faq?: {
-    question: string
-    answer: string
-  }[]
-  translations?: {
-    language: string
-    translatedContent: string
-  }[]
-  isAccessibleForFree?: boolean
-  categories?: string[]
-  categoryName?: string
+  featuredImageUrl?: string
   mainImageUrl?: string
-  authorName?: string
-  authorEmail?: string
-  authorImageUrl?: string
-  videoEmbedUrl?: string
-  featured: boolean // Indica si el post es destacado. Seleccionado manualmente.
-  featuredOrder?: number // Orden de prioridad para posts destacados. Seleccionado manualmente.
-  featuredImageUrl: string // URL de la imagen principal del post. Debe ser ingresada manualmente.
-  imageGalleryPost?: Array<{
-    url: string
-    alt: string
-    order: number
-    id: string
-  }> // Galería de imágenes del post. Se guarda como un array de objetos con URL, texto alternativo y orden.
-  commentCount?: number // Número de comentarios en el post. Se genera automáticamente en base a interacciones.
-  averageRating?: number // Calificación promedio del post. Se genera automáticamente en base a calificaciones de usuarios.
-  viewCount?: number // Número de vistas del post. Se genera automáticamente en base a interacciones.
-
-  // Referencia a comentarios
-  comments?: BlogComment[] // Lista de comentarios relacionados con el post.
-
-  // Nuevo campo para reacciones
-  reactions?: {
-    total: number
-    types: {
-      [key in ReactionType]?: number
-    }
-  }
-
-  // Campos específicos para noticias
+  category?: BlogCategory
+  categoryId?: string
+  categoryName?: string
+  seoTitle?: string
+  seoDescription?: string
+  seoKeywords?: string[]
+  relatedPosts?: string[]
+  comments?: BlogComment[]
+  ratings?: BlogRating[]
+  averageRating?: number
+  ratingCount?: number
+  reactions?: PostReactionsSummary
+  socialShares?: SocialShares
   isNewsArticle?: boolean
-  isBreakingNews?: boolean
-  isLiveBlogPosting?: boolean
-
-  // Campos específicos para eventos
-  isEventPost?: boolean
-  eventDetails?: {
-    name: string
-    description: string
-    startDate: any
-    endDate?: any
-    venueName: string
-    city: string
-    country: string
-    region?: string
-    coordinates?: {
-      latitude: number
-      longitude: number
-    }
-    price?: string
-    currency?: string
-    performer?: string
-    organizer?: string
-    organizerUrl?: string
-    ticketUrl?: string
-    ticketSaleDate?: any
-    imageUrl?: string
-  }
-
-  // Campos específicos para reseñas
-  rating?: number
-  reviewItemType?: string
-  reviewItemName?: string
-  reviewItemImage?: string
-
-  // Campos específicos para guías/tutoriales
-  howToSteps?: Array<{
-    "@type": "HowToStep"
-    name: string
-    text: string
-    image?: string
-    url?: string
-  }>
-  howToTools?: Array<{
-    "@type": "HowToTool"
-    name: string
-  }>
-  howToSupplies?: Array<{
-    "@type": "HowToSupply"
-    name: string
-  }>
-  howToDuration?: string
-
-  // Campos para video
+  schemaType?: "BlogPosting" | "NewsArticle" | "Event" | "Review" | "HowTo"
+  contentType?: "blog" | "news" | "event" | "review" | "guide"
+  ogType?: "article" | "event"
+  twitterCardType?: "summary" | "summary_large_image"
+  twitterCreator?: string;
+  canonicalUrl?: string
+  authorName?: string
+  authorSlug?: string
+  authorUrl?: string
+  authorImageUrl?: string
+  authorJobTitle?: string
+  faqItems?: { question: string; answer: string }[]
   videoUrl?: string
-  videoEmbedUrl?: string
   videoTitle?: string
   videoDescription?: string
   videoThumbnail?: string
+  videoEmbedUrl?: string
   videoDuration?: string
+  isEventPost?: boolean
+  eventDetails?: EventDetails
+  imageGalleryPost?: any[];
+  imageAltTexts?: {[key: string]: string};
+}
 
-  // Campos para autor
-  authorSlug?: string
-  authorUrl?: string
-  authorBio?: string
-  authorJobTitle?: string
-  authorSocialLinks?: string[]
-  twitterCreator?: string
+export interface EventDetails {
+  name: string
+  description: string
+  startDate: Date | Timestamp
+  endDate?: Date | Timestamp
+  venueName: string
+  city: string
+  region?: string
+  country: string
+  imageUrl?: string
+  performer?: string
+  organizer?: string
+  organizerUrl?: string
+  price?: string
+  currency?: string
+  ticketUrl?: string
+}
 
-  // Campos para redirecciones
-  previousSlug?: string
+export interface SocialShares {
+  total: number
+  facebook?: number
+  twitter?: number
+  linkedin?: number
+  whatsapp?: number
 }
 
 /**
@@ -319,4 +221,36 @@ export interface BlogRating {
   comment?: string
   createdAt: Date
   updatedAt?: Date
+}
+
+/**
+ * Model for comment reactions
+ */
+export interface CommentReaction {
+  id: string
+  commentId: string
+  userId: string
+  userName: string
+  userImageUrl?: string
+  reactionType: CommentReactionType
+  createdAt: Date
+}
+
+/**
+ * Tipos de reacciones disponibles para los comentarios
+ */
+export type CommentReactionType =
+  | "like" // Me gusta 👍
+  | "love" // Me encanta ❤️
+  | "haha" // Me divierte 😂
+  | "wow" // Me sorprende 😮
+  | "sad" // Me entristece 😢
+  | "angry" // Me enoja 😡
+
+export interface Author {
+  id?: string
+  firstName?: string
+  lastName?: string
+  name?: string
+  avatar?: string
 }

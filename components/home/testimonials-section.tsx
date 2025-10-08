@@ -11,7 +11,7 @@ const testimonials = [
     role: "Asistente frecuente",
     image: "/placeholder.svg?height=100&width=100",
     content:
-      "RaveHub ha transformado mi experiencia asistiendo a eventos. La facilidad para comprar entradas y la opción de pagar en cuotas me ha permitido asistir a más eventos de los que pensaba posible.",
+      "Ravehub ha transformado mi experiencia asistiendo a eventos. La facilidad para comprar entradas y la opción de pagar en cuotas me ha permitido asistir a más eventos de los que pensaba posible.",
     rating: 5,
   },
   {
@@ -20,7 +20,7 @@ const testimonials = [
     role: "DJ y Productor",
     image: "/placeholder.svg?height=100&width=100",
     content:
-      "Como artista, valoro enormemente la plataforma que RaveHub ofrece. La organización es impecable y la comunidad que han creado es increíble. Siempre es un placer participar en sus eventos.",
+      "Como artista, valoro enormemente la plataforma que Ravehub ofrece. La organización es impecable y la comunidad que han creado es increíble. Siempre es un placer participar en sus eventos.",
     rating: 5,
   },
   {
@@ -29,7 +29,7 @@ const testimonials = [
     role: "Coleccionista de merchandise",
     image: "/placeholder.svg?height=100&width=100",
     content:
-      "La tienda de RaveHub tiene los mejores productos oficiales. La calidad es excelente y siempre encuentro artículos exclusivos de mis artistas favoritos. ¡Totalmente recomendado!",
+      "La tienda de Ravehub tiene los mejores productos oficiales. La calidad es excelente y siempre encuentro artículos exclusivos de mis artistas favoritos. ¡Totalmente recomendado!",
     rating: 4,
   },
 ]
@@ -82,7 +82,7 @@ export function TestimonialsSection() {
           </span>
           <h2 className="text-3xl md:text-4xl font-bold mb-4">Lo que dicen nuestros clientes</h2>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            Descubre por qué miles de personas confían en RaveHub para vivir las mejores experiencias musicales.
+            Descubre por qué miles de personas confían en Ravehub para vivir las mejores experiencias musicales.
           </p>
         </div>
 

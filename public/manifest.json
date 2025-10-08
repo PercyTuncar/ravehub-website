@@ -1,6 +1,6 @@
 {
-  "name": "RaveHub - Tu portal de eventos electrónicos",
-  "short_name": "RaveHub",
+  "name": "Ravehub - Tu portal de eventos electrónicos",
+  "short_name": "Ravehub",
   "description": "Descubre eventos, compra entradas, lee noticias y conecta con la comunidad electrónica",
   "start_url": "/",
   "display": "standalone",
@@ -26,12 +26,7 @@
       "type": "image/png",
       "purpose": "any"
     },
-    {
-      "src": "/icons/icon-144x144.png",
-      "sizes": "144x144",
-      "type": "image/png",
-      "purpose": "any"
-    },
+    ,
     {
       "src": "/icons/icon-152x152.png",
       "sizes": "152x152",
@@ -98,7 +93,7 @@
       "sizes": "1080x1920",
       "type": "image/jpeg",
       "platform": "narrow",
-      "label": "Pantalla de inicio de RaveHub"
+      "label": "Pantalla de inicio de Ravehub"
     },
     {
       "src": "/screenshots/events-screen.jpg",
@@ -112,7 +107,7 @@
       "sizes": "1080x1920",
       "type": "image/jpeg",
       "platform": "narrow",
-      "label": "Blog de RaveHub"
+      "label": "Blog de Ravehub"
     }
   ],
   "related_applications": [],

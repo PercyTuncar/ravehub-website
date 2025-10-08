@@ -5,8 +5,8 @@ import { ProfileLayout } from "@/components/profile/profile-layout"
 import { PageHeader } from "@/components/page-header"
 
 export const metadata: Metadata = {
-  title: "Mis Compras | RaveHub",
-  description: "Historial de compras en RaveHub",
+  title: "Mis Compras | Ravehub",
+  description: "Historial de compras en Ravehub",
 }
 
 export default function PurchasesPage() {
@@ -14,7 +14,7 @@ export default function PurchasesPage() {
     <AuthRouteGuard>
       <ProfileLayout>
         <div>
-          <PageHeader title="Mis Compras" description="Historial y estado de tus compras en RaveHub" />
+          <PageHeader title="Mis Compras" description="Historial y estado de tus compras en Ravehub" />
           <div className="mt-6">
             <UserOrders />
           </div>

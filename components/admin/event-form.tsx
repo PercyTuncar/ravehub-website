@@ -84,7 +84,7 @@ export function EventForm({ eventId }: EventFormProps) {
     inLanguage: "es",
     eventAttendanceMode: "http://schema.org/OfflineEventAttendanceMode",
     organizer: {
-      name: "RaveHub",
+      name: "Ravehub",
       url: "https://ravehub.com",
     },
     faqSection: [],

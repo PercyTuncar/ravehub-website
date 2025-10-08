@@ -1,10 +1,8 @@
-import type React from "react"
-import "../globals.css"
-import "./styles.css"
+import type React from "react" 
 import type { Metadata } from "next"
 
 export const metadata: Metadata = {
-  title: "Sorteo | RaveHub",
+  title: "Sorteo | Ravehub",
   description: "Sistema de sorteo para los comentarios de blog",
 }
 

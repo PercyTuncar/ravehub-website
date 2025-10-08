@@ -2,8 +2,8 @@ import type { Metadata } from "next"
 import RecuperarPasswordForm from "@/components/auth/recuperar-password-form"
 
 export const metadata: Metadata = {
-  title: "Recuperar contraseña | RaveHub",
-  description: "Recupera el acceso a tu cuenta de RaveHub",
+  title: "Recuperar contraseña | Ravehub",
+  description: "Recupera el acceso a tu cuenta de Ravehub",
 }
 
 export const viewport = {

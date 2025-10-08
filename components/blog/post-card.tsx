@@ -20,7 +20,7 @@ export function PostCard({ post }: PostCardProps) {
       <div className="relative h-48 w-full">
         <Link href={`/blog/${post.slug}`} aria-label={post.title}>
           <OptimizedImage
-            src={post.featuredImageUrl || post.featuredImage || "/images/placeholder-blog.jpg"}
+            src={post.featuredImageUrl || post.featuredImage || "/placeholder.jpg"}
             alt={post.title}
             fill
             sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"

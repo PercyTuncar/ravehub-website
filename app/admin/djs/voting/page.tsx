@@ -1,7 +1,7 @@
 import { AdminVotingPeriods } from "@/components/admin/dj-ranking/admin-voting-periods"
 
 export const metadata = {
-  title: "Periodos de Votación | RaveHub",
+  title: "Periodos de Votación | Ravehub",
   description: "Administración de periodos de votación para rankings de DJs",
 }
 

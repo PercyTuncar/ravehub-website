@@ -1,7 +1,7 @@
 import { AdminBannersList } from "@/components/admin/admin-banners-list"
 
 export const metadata = {
-  title: "Administrar Banners de Tienda | RaveHub Admin",
+  title: "Administrar Banners de Tienda | Ravehub Admin",
   description: "Gestiona los banners que se muestran en la página principal de la tienda",
 }
 

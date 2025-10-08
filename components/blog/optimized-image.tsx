@@ -26,11 +26,11 @@ export function OptimizedImage({
   sizes = "(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw",
 }: OptimizedImageProps) {
   const [isLoading, setIsLoading] = useState(true)
-  const [imgSrc, setImgSrc] = useState(src || "/images/placeholder-blog.jpg")
+  const [imgSrc, setImgSrc] = useState(src || "/placeholder.jpg")
 
   // Manejar imágenes rotas o no disponibles
   useEffect(() => {
-    setImgSrc(src || "/images/placeholder-blog.jpg")
+    setImgSrc(src || "/placeholder.jpg")
   }, [src])
 
   return (
@@ -51,7 +51,7 @@ export function OptimizedImage({
         )}
         onLoad={() => setIsLoading(false)}
         onError={() => {
-          setImgSrc("/images/placeholder-blog.jpg")
+          setImgSrc("/placeholder.jpg")
           setIsLoading(false)
         }}
       />

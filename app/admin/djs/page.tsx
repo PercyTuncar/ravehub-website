@@ -1,7 +1,7 @@
 import { AdminDJSuggestions } from "@/components/admin/dj-ranking/admin-dj-suggestions"
 
 export const metadata = {
-  title: "Admin DJs | RaveHub",
+  title: "Admin DJs | Ravehub",
   description: "Administración de DJs",
 }
 

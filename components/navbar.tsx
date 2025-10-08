@@ -312,7 +312,7 @@ export default function Navbar() {
                   <div className="p-1 rounded-md flex items-center justify-center bg-gray-900">
                     <img
                       src="/images/logo-full.png"
-                      alt="RaveHub Logo"
+                      alt="Ravehub Logo"
                       className="h-6 md:h-8 w-auto object-contain max-w-[120px] md:max-w-none"
                     />
                   </div>

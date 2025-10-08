@@ -18,10 +18,16 @@ export async function getRedirectedSlug(slug: string): Promise<string> {
     if (!slug) return slug
 
     let currentSlug = slug
-    let redirectCount = 0
+    const visitedSlugs = new Set<string>()
     const MAX_REDIRECTS = 10 // Límite para evitar bucles infinitos
 
-    while (redirectCount < MAX_REDIRECTS) {
+    while (visitedSlugs.size < MAX_REDIRECTS) {
+      if (visitedSlugs.has(currentSlug)) {
+        console.warn(`Bucle de redirección detectado para el slug: ${currentSlug}`)
+        return currentSlug // Romper el bucle devolviendo el slug actual
+      }
+      visitedSlugs.add(currentSlug)
+
       // Buscar si el slug actual tiene una redirección
       const redirectsRef = collection(db, "slugRedirects")
       const q = query(redirectsRef, where("oldSlug", "==", currentSlug))
@@ -35,8 +41,6 @@ export async function getRedirectedSlug(slug: string): Promise<string> {
       // Obtener el nuevo slug de la redirección
       const redirectData = querySnapshot.docs[0].data() as SlugRedirect
       currentSlug = redirectData.newSlug
-
-      redirectCount++
     }
 
     console.warn(`Se alcanzó el límite máximo de redirecciones (${MAX_REDIRECTS}) para el slug: ${slug}`)

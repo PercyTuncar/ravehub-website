@@ -3,7 +3,7 @@ import Link from "next/link"
 import { BlogManagement } from "@/components/admin/blog-management"
 
 export const metadata: Metadata = {
-  title: "Gestión de Blog | Admin RaveHub",
+  title: "Gestión de Blog | Admin Ravehub",
   description: "Panel de administración de artículos del blog",
 }
 

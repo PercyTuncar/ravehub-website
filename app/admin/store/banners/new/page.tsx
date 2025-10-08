@@ -1,7 +1,7 @@
 import { BannerForm } from "@/components/admin/banner-form"
 
 export const metadata = {
-  title: "Nuevo Banner | RaveHub Admin",
+  title: "Nuevo Banner | Ravehub Admin",
   description: "Crea un nuevo banner para la tienda",
 }
 

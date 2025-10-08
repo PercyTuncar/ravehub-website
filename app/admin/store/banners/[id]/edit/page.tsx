@@ -1,7 +1,7 @@
 import { BannerForm } from "@/components/admin/banner-form"
 
 export const metadata = {
-  title: "Editar Banner | RaveHub Admin",
+  title: "Editar Banner | Ravehub Admin",
   description: "Edita un banner existente de la tienda",
 }
 

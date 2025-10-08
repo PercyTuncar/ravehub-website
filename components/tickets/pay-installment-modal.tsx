@@ -163,7 +163,7 @@ export function PayInstallmentModal({ isOpen, onClose, installment, onSuccess }:
                   <p className="font-medium">Instrucciones para transferencia bancaria:</p>
                   <p>Banco: Interbank</p>
                   <p>Cuenta: 123-456-789</p>
-                  <p>Titular: RaveHub S.A.C.</p>
+                  <p>Titular: Ravehub S.A.C.</p>
                   <p>
                     Concepto: Cuota {installment.installmentNumber} - {user?.firstName} {user?.lastName}
                   </p>

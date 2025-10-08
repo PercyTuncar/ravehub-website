@@ -11,7 +11,7 @@ interface AuthorPageProps {
 }
 
 export async function generateMetadata({ params }: AuthorPageProps): Promise<Metadata> {
-  const { slug } = params
+  const { slug } = await params
 
   // Verificar si el slug es un ID o un nombre formateado
   const isId = !slug.includes("-")
@@ -25,19 +25,19 @@ export async function generateMetadata({ params }: AuthorPageProps): Promise<Met
 
   if (!author) {
     return {
-      title: "Autor no encontrado | RaveHub Latam",
+      title: "Autor no encontrado | Ravehub Latam",
       description: "El autor que buscas no existe o no está disponible.",
     }
   }
 
   return {
-    title: `${author.firstName} ${author.lastName} | RaveHub Latam`,
-    description: `Conoce más sobre ${author.firstName} ${author.lastName}, miembro del equipo de RaveHub Latam.`,
+    title: `${author.firstName} ${author.lastName} | Ravehub Latam`,
+    description: `Conoce más sobre ${author.firstName} ${author.lastName}, miembro del equipo de Ravehub Latam.`,
   }
 }
 
 export default async function AuthorPage({ params }: AuthorPageProps) {
-  const { slug } = params
+  const { slug } = await params
 
   // Verificar si el slug es un ID o un nombre formateado
   const isId = !slug.includes("-")

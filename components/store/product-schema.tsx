@@ -88,7 +88,7 @@ export function ProductSchema({ product, category }: ProductSchemaProps) {
           ...(review.purchaseVerified && {
             publisher: {
               "@type": "Organization",
-              name: "RaveHub",
+              name: "Ravehub",
             },
           }),
         }))
@@ -106,7 +106,7 @@ export function ProductSchema({ product, category }: ProductSchemaProps) {
           sku: product.id,
           brand: {
             "@type": "Brand",
-            name: product.brand || "RaveHub",
+            name: product.brand || "Ravehub",
           },
           // Usar datos reales de material y género
           material: "Algodón Jersey 30/1",
@@ -148,7 +148,7 @@ export function ProductSchema({ product, category }: ProductSchemaProps) {
               }),
             seller: {
               "@type": "Organization",
-              name: "RaveHub",
+              name: "Ravehub",
               url: process.env.NEXT_PUBLIC_BASE_URL,
             },
           },

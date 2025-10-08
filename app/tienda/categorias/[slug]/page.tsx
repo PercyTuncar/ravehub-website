@@ -18,15 +18,15 @@ export async function generateMetadata({ params }: CategoryPageProps): Promise<M
 
   if (!category) {
     return {
-      title: "Categoría no encontrada | RaveHub",
+      title: "Categoría no encontrada | Ravehub",
       description: "La categoría que buscas no existe o ha sido eliminada",
     }
   }
 
   // Use SEO fields if available, otherwise use category name/description
-  const title = category.seoTitle || `${category.name} | Tienda RaveHub`
+  const title = category.seoTitle || `${category.name} | Tienda Ravehub`
   const description =
-    category.seoDescription || category.description || `Explora nuestra colección de ${category.name} en RaveHub`
+    category.seoDescription || category.description || `Explora nuestra colección de ${category.name} en Ravehub`
 
   // Prepare keywords
   const keywords = category.seoKeywords || []

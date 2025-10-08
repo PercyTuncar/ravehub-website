@@ -108,7 +108,7 @@ export default function UserSettingsForm() {
     <Card className="w-full max-w-3xl mx-auto">
       <CardHeader>
         <CardTitle>Preferencias de Usuario</CardTitle>
-        <CardDescription>Personaliza tu experiencia en RaveHub ajustando tus preferencias</CardDescription>
+        <CardDescription>Personaliza tu experiencia en Ravehub ajustando tus preferencias</CardDescription>
       </CardHeader>
       <CardContent>
         <Tabs defaultValue="general" className="w-full">

@@ -7,10 +7,13 @@ import { PostDetailSkeleton } from "@/components/blog/post-detail-skeleton"
 import { BlogSidebarSkeleton } from "@/components/blog/blog-sidebar-skeleton"
 import { PostDetailWrapper } from "@/components/blog/post-detail-wrapper"
 import { BlogSidebarWrapper } from "@/components/blog/blog-sidebar-wrapper"
-// Importar la función getRedirectedSlug y redirect de Next.js
 import { getRedirectedSlug } from "@/lib/firebase/slug-redirects"
 import { EnhancedPostSchema } from "@/components/blog/enhanced-post-schema"
+import { RelatedPostsSection } from "@/components/blog/related-posts-section"
 import Script from "next/script"
+import { BlogCategory } from "@/types/blog"
+
+export const dynamic = "force-dynamic"
 
 interface BlogPostPageProps {
   params: {
@@ -54,11 +57,12 @@ function safeISOString(date: any): string | undefined {
 
 // Enhance generateMetadata to add more metadata for SEO
 export async function generateMetadata({ params }: BlogPostPageProps): Promise<Metadata> {
-  const post = await getPostBySlug(params.slug)
+  const { slug } = await params
+  const post = await getPostBySlug(slug)
 
   if (!post) {
     return {
-      title: "Artículo no encontrado | RaveHub Blog",
+      title: "Artículo no encontrado | Ravehub Blog",
       description: "El artículo que buscas no existe o ha sido eliminado.",
     }
   }
@@ -71,7 +75,7 @@ export async function generateMetadata({ params }: BlogPostPageProps): Promise<M
   const postUrl = `${baseUrl}/blog/${post.slug}`
 
   // Get the main image URL
-  const imageUrl = post.mainImageUrl || post.featuredImageUrl || `${baseUrl}/images/placeholder-blog.jpg`
+  const imageUrl = post.mainImageUrl || post.featuredImageUrl || `${baseUrl}/placeholder.jpg`
 
   // Determine content type for appropriate metadata
   const contentType =
@@ -89,17 +93,31 @@ export async function generateMetadata({ params }: BlogPostPageProps): Promise<M
   // Set appropriate Open Graph type
   const ogType = post.ogType || (contentType === "event" ? "event" : "article")
 
+  // Enhanced keywords for better SEO targeting
+  const enhancedKeywords = [
+    ...(post.seoKeywords || tagNames || []),
+    // Add contextual keywords based on content type
+    ...(contentType === "event" ? ["evento", "concierto", "festival", "entradas"] : []),
+    ...(contentType === "news" ? ["noticia", "actualidad", "novedad"] : []),
+    ...(contentType === "review" ? ["reseña", "opinión", "crítica"] : []),
+    // Add location-based keywords if available (check for eventDetails location)
+    ...((post as any).eventDetails?.city ? [(post as any).eventDetails.city.toLowerCase()] : []),
+    ...((post as any).eventDetails?.country ? [(post as any).eventDetails.country.toLowerCase()] : []),
+    // Add music genre keywords
+    "música electrónica", "techno", "house", "electronic music", "rave", "festival"
+  ].filter((keyword, index, arr) => arr.indexOf(keyword) === index) // Remove duplicates
+
   return {
-    title: post.seoTitle || `${post.title} | RaveHub Blog`,
-    description: post.seoDescription || post.shortDescription || post.excerpt || "",
-    keywords: post.seoKeywords || tagNames || [],
-    authors: post.author ? [{ name: post.author }] : undefined,
+    title: post.seoTitle || `${post.title} | Ravehub Blog`,
+    description: post.seoDescription || post.excerpt || "",
+    keywords: enhancedKeywords,
+    authors: post.author ? [{ name: typeof post.author === 'string' ? post.author : post.author.name }] : undefined,
     category: post.categoryName || "Blog",
     openGraph: {
       title: post.seoTitle || post.title,
-      description: post.seoDescription || post.shortDescription || post.excerpt || "",
+      description: post.seoDescription || post.excerpt || "",
       url: postUrl,
-      siteName: "RaveHub",
+      siteName: "Ravehub",
       images: [
         {
           url: imageUrl,
@@ -109,16 +127,16 @@ export async function generateMetadata({ params }: BlogPostPageProps): Promise<M
         },
       ],
       locale: "es_ES",
-      type: ogType,
+      type: "article",
       publishedTime: safeISOString(post.publishDate),
-      modifiedTime: safeISOString(post.updatedAt || post.updatedDate),
-      authors: post.author ? [post.author] : undefined,
+      modifiedTime: safeISOString(post.updatedDate),
+      authors: post.author ? [typeof post.author === 'string' ? post.author : post.author.name || ''] : undefined,
       tags: tagNames,
     },
     twitter: {
-      card: post.twitterCardType || "summary_large_image",
+      card: "summary_large_image",
       title: post.seoTitle || post.title,
-      description: post.seoDescription || post.shortDescription || post.excerpt || "",
+      description: post.seoDescription || post.excerpt || "",
       images: imageUrl ? [imageUrl] : undefined,
       creator: post.twitterCreator || "@weareravehub",
       site: "@weareravehub",
@@ -143,11 +161,12 @@ export async function generateMetadata({ params }: BlogPostPageProps): Promise<M
 
 // Modificar la función principal para manejar redirecciones
 export default async function BlogPostPage({ params }: BlogPostPageProps) {
+  const { slug } = await params
   // Verificar si el slug actual es el definitivo o necesita redirección
-  const finalSlug = await getRedirectedSlug(params.slug)
+  const finalSlug = await getRedirectedSlug(slug)
 
   // Si el slug final es diferente al original, redirigir
-  if (finalSlug !== params.slug) {
+  if (finalSlug !== slug) {
     redirect(`/blog/${finalSlug}`)
   }
 
@@ -204,7 +223,7 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
 
       {/* Datos estructurados para SEO */}
       <Suspense fallback={null}>
-        <EnhancedPostSchema post={{ ...post, schemaType }} category={post.category} url={fullUrl} />
+        <EnhancedPostSchema post={{ ...post, schemaType }} category={post.category as BlogCategory} url={fullUrl} />
       </Suspense>
 
       {/* Add WebSite schema */}
@@ -215,12 +234,12 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
           "@type": "WebSite",
           "@id": "${baseUrl}/#website",
           "url": "${baseUrl}",
-          "name": "RaveHub",
+          "name": "Ravehub",
           "description": "La plataforma líder en eventos de música electrónica en Latinoamérica",
           "publisher": {
             "@type": "Organization",
             "@id": "${baseUrl}/#organization",
-            "name": "RaveHub",
+            "name": "Ravehub",
             "logo": {
               "@type": "ImageObject",
               "url": "${baseUrl}/images/logo-full.png",
@@ -247,7 +266,7 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
           "@context": "https://schema.org",
           "@type": "Organization",
           "@id": "${baseUrl}/#organization",
-          "name": "RaveHub",
+          "name": "Ravehub",
           "url": "${baseUrl}",
           "logo": {
             "@type": "ImageObject",
@@ -333,12 +352,12 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
           "@id": "${fullUrl}",
           "url": "${fullUrl}",
           "name": "${post.title.replace(/"/g, '\\"')}",
-          "description": "${(post.seoDescription || post.shortDescription || post.excerpt || "").replace(/"/g, '\\"')}",
+          "description": "${(post.seoDescription || post.excerpt || "").replace(/"/g, '\\"')}",
           "isPartOf": {
             "@type": "WebSite",
             "@id": "${baseUrl}/#website",
             "url": "${baseUrl}",
-            "name": "RaveHub",
+            "name": "Ravehub",
             "description": "La plataforma líder en eventos de música electrónica en Latinoamérica"
           },
           "inLanguage": "es",
@@ -353,7 +372,7 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
               : ""
           }
           "datePublished": "${safeISOString(post.publishDate) || new Date().toISOString()}",
-          "dateModified": "${safeISOString(post.updatedAt || post.updatedDate) || safeISOString(post.publishDate) || new Date().toISOString()}",
+          "dateModified": "${safeISOString(post.updatedDate) || safeISOString(post.publishDate) || new Date().toISOString()}",
           "breadcrumb": {
             "@id": "${fullUrl}#breadcrumb"
           },
@@ -374,17 +393,17 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
           "@id": "${fullUrl}#article",
           "headline": "${post.title.replace(/"/g, '\\"')}",
           "name": "${post.title.replace(/"/g, '\\"')}",
-          "description": "${(post.seoDescription || post.shortDescription || post.excerpt || "").replace(/"/g, '\\"')}",
+          "description": "${(post.seoDescription || post.excerpt || "").replace(/"/g, '\\"')}",
           "datePublished": "${safeISOString(post.publishDate) || new Date().toISOString()}",
-          "dateModified": "${safeISOString(post.updatedAt || post.updatedDate) || safeISOString(post.publishDate) || new Date().toISOString()}",
+          "dateModified": "${safeISOString(post.updatedDate) || safeISOString(post.publishDate) || new Date().toISOString()}",
           "author": {
             "@type": "Person",
-            "name": "${post.authorName || post.author || "RaveHub Team"}"
+            "name": "${post.authorName || post.author || "Ravehub Team"}"
           },
           "publisher": {
             "@type": "Organization",
             "@id": "${baseUrl}/#organization",
-            "name": "RaveHub",
+            "name": "Ravehub",
             "logo": {
               "@type": "ImageObject",
               "url": "${baseUrl}/images/logo-full.png",
@@ -430,7 +449,7 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
             "worksFor": {
               "@type": "Organization",
               "@id": "${baseUrl}/#organization",
-              "name": "RaveHub"
+              "name": "Ravehub"
             }
           }
           `}
@@ -471,7 +490,7 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
             "@context": "https://schema.org",
             "@type": "VideoObject",
             "name": "${(post.videoTitle || post.title).replace(/"/g, '\\"')}",
-            "description": "${(post.videoDescription || post.shortDescription || post.excerpt || "").replace(/"/g, '\\"')}",
+            "description": "${(post.videoDescription || post.excerpt || "").replace(/"/g, '\\"')}",
             "thumbnailUrl": "${post.videoThumbnail || post.mainImageUrl || post.featuredImageUrl}",
             "uploadDate": "${safeISOString(post.publishDate) || new Date().toISOString()}",
             "contentUrl": "${post.videoUrl}",
@@ -479,7 +498,7 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
             "duration": "${post.videoDuration || "PT2M30S"}",
             "publisher": {
               "@type": "Organization",
-              "name": "RaveHub",
+              "name": "Ravehub",
               "logo": {
                 "@type": "ImageObject",
                 "url": "${baseUrl}/images/logo-full.png"
@@ -498,7 +517,7 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
             "@context": "https://schema.org",
             "@type": "Event",
             "name": "${(post.eventDetails.name || post.title).replace(/"/g, '\\"')}",
-            "description": "${(post.eventDetails.description || post.shortDescription || "").replace(/"/g, '\\"')}",
+            "description": "${(post.eventDetails.description || "").replace(/"/g, '\\"')}",
             "startDate": "${safeISOString(post.eventDetails.startDate) || safeISOString(post.publishDate) || new Date().toISOString()}",
             ${post.eventDetails.endDate ? `"endDate": "${safeISOString(post.eventDetails.endDate)}",` : ""}
             "location": {
@@ -518,7 +537,7 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
             },
             "organizer": {
               "@type": "Organization",
-              "name": "${(post.eventDetails.organizer || "RaveHub").replace(/"/g, '\\"')}",
+              "name": "${(post.eventDetails.organizer || "Ravehub").replace(/"/g, '\\"')}",
               "url": "${post.eventDetails.organizerUrl || baseUrl}"
             },
             "offers": {
@@ -534,6 +553,14 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
           `}
         </Script>
       )}
+
+      {/* Related Posts Section */}
+      <RelatedPostsSection
+        currentPostId={post.id}
+        categoryId={post.categoryId}
+        tags={post.tags?.map(tag => typeof tag === 'string' ? tag : tag.name)}
+        limit={4}
+      />
     </div>
   )
 }

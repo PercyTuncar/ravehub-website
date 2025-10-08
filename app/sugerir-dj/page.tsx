@@ -1,7 +1,7 @@
 import { SuggestDJForm } from "@/components/dj-ranking/suggest-dj-form"
 
 export const metadata = {
-  title: "Sugerir DJ | RaveHub",
+  title: "Sugerir DJ | Ravehub",
   description: "Sugiere tus DJs favoritos para el ranking anual",
 }
 

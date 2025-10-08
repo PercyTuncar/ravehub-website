@@ -4,7 +4,7 @@ import AuthRouteGuard from "@/components/auth/auth-route-guard"
 import { ProfileLayout } from "@/components/profile/profile-layout"
 
 export const metadata: Metadata = {
-  title: "Mi Perfil | RaveHub",
+  title: "Mi Perfil | Ravehub",
   description: "Gestiona tu información personal y configuraciones de cuenta",
 }
 

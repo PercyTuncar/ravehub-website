@@ -5,13 +5,13 @@ import Image from "next/image"
 import type { Metadata } from "next"
 
 export const metadata: Metadata = {
-  title: "Categorías de Productos | Tienda RaveHub",
+  title: "Categorías de Productos | Tienda Ravehub",
   description:
-    "Explora todas las categorías de productos disponibles en la tienda RaveHub. Encuentra lo que necesitas para tus eventos y fiestas.",
+    "Explora todas las categorías de productos disponibles en la tienda Ravehub. Encuentra lo que necesitas para tus eventos y fiestas.",
   keywords: "categorías, productos, tienda, eventos, fiestas, rave",
   openGraph: {
-    title: "Categorías de Productos | Tienda RaveHub",
-    description: "Explora todas las categorías de productos disponibles en la tienda RaveHub.",
+    title: "Categorías de Productos | Tienda Ravehub",
+    description: "Explora todas las categorías de productos disponibles en la tienda Ravehub.",
     type: "website",
     url: "https://ravehub.com/tienda/categorias",
   },

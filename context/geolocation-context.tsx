@@ -158,7 +158,7 @@ export function GeolocationProvider({ children }: { children: ReactNode }) {
           const response = await fetch("https://ipapi.co/json/", {
             headers: {
               Accept: "application/json",
-              "User-Agent": "RaveHub/1.0",
+              "User-Agent": "Ravehub/1.0",
             },
           })
 

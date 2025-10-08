@@ -3,9 +3,9 @@ import TeamMembersList from "@/components/team/team-members-list"
 import { PageHeader } from "@/components/page-header"
 
 export const metadata: Metadata = {
-  title: "Nuestro Equipo | RaveHub Latam",
+  title: "Nuestro Equipo | Ravehub Latam",
   description:
-    "Conoce al equipo detrás de RaveHub Latam, los expertos que hacen posible la mejor experiencia en eventos.",
+    "Conoce al equipo detrás de Ravehub Latam, los expertos que hacen posible la mejor experiencia en eventos.",
 }
 
 export const viewport = {
@@ -15,7 +15,7 @@ export const viewport = {
 export default function TeamPage() {
   return (
     <div className="container mx-auto px-4 py-12">
-      <PageHeader heading="Nuestro Equipo" text="Conoce a las personas que hacen posible RaveHub Latam" />
+      <PageHeader heading="Nuestro Equipo" text="Conoce a las personas que hacen posible Ravehub Latam" />
       <TeamMembersList />
     </div>
   )

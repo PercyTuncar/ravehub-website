@@ -5,8 +5,8 @@ import { PageHeader } from "@/components/page-header"
 import { ProfileLayout } from "@/components/profile/profile-layout"
 
 export const metadata: Metadata = {
-  title: "Ajustes de Cuenta | RaveHub",
-  description: "Personaliza tus preferencias y ajustes de cuenta en RaveHub",
+  title: "Ajustes de Cuenta | Ravehub",
+  description: "Personaliza tus preferencias y ajustes de cuenta en Ravehub",
 }
 
 export default function UserSettingsPage() {
@@ -14,7 +14,7 @@ export default function UserSettingsPage() {
     <AuthRouteGuard>
       <ProfileLayout>
         <div>
-          <PageHeader title="Ajustes de Cuenta" description="Personaliza tu experiencia en RaveHub" />
+          <PageHeader title="Ajustes de Cuenta" description="Personaliza tu experiencia en Ravehub" />
           <div className="mt-6">
             <UserSettingsForm />
           </div>

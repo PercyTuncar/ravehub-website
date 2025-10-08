@@ -86,12 +86,12 @@ export function PostSchema({ post, category, url, comments = [], reactions = [] 
     "@type": "WebSite",
     "@id": `${baseUrl}/#website`,
     url: baseUrl,
-    name: "RaveHub",
+    name: "Ravehub",
     description: "La plataforma líder en eventos de música electrónica en Latinoamérica",
     publisher: {
       "@type": "Organization",
       "@id": `${baseUrl}/#organization`,
-      name: "RaveHub",
+      name: "Ravehub",
       logo: {
         "@type": "ImageObject",
         url: `${baseUrl}/images/logo-full.png`,
@@ -115,7 +115,7 @@ export function PostSchema({ post, category, url, comments = [], reactions = [] 
     "@context": "https://schema.org",
     "@type": "Organization",
     "@id": `${baseUrl}/#organization`,
-    name: "RaveHub",
+    name: "Ravehub",
     url: baseUrl,
     logo: {
       "@type": "ImageObject",
@@ -144,7 +144,7 @@ export function PostSchema({ post, category, url, comments = [], reactions = [] 
     founders: [
       {
         "@type": "Person",
-        name: "RaveHub Founder",
+        name: "Ravehub Founder",
       },
     ],
     description: "La plataforma líder en eventos de música electrónica en Latinoamérica",
@@ -201,7 +201,7 @@ export function PostSchema({ post, category, url, comments = [], reactions = [] 
     dateModified: modifiedDate,
     author: {
       "@type": "Person",
-      name: post.authorName || post.author || "RaveHub Team",
+      name: post.authorName || post.author || "Ravehub Team",
       ...(post.authorImageUrl && { image: post.authorImageUrl }),
       ...(post.authorUrl && { url: post.authorUrl }),
       ...(post.authorEmail && { email: post.authorEmail }),
@@ -209,7 +209,7 @@ export function PostSchema({ post, category, url, comments = [], reactions = [] 
     publisher: {
       "@type": "Organization",
       "@id": `${baseUrl}/#organization`,
-      name: "RaveHub",
+      name: "Ravehub",
       logo: {
         "@type": "ImageObject",
         url: `${baseUrl}/images/logo-full.png`,
@@ -225,7 +225,7 @@ export function PostSchema({ post, category, url, comments = [], reactions = [] 
     copyrightYear: new Date(publishDate).getFullYear(),
     copyrightHolder: {
       "@type": "Organization",
-      name: "RaveHub",
+      name: "Ravehub",
     },
   }
 
@@ -465,7 +465,7 @@ export function PostSchema({ post, category, url, comments = [], reactions = [] 
       duration: post.videoDuration || "PT2M30S", // Default 2min 30sec in ISO 8601 duration format
       publisher: {
         "@type": "Organization",
-        name: "RaveHub",
+        name: "Ravehub",
         logo: {
           "@type": "ImageObject",
           url: `${baseUrl}/images/logo-full.png`,
@@ -535,7 +535,7 @@ export function PostSchema({ post, category, url, comments = [], reactions = [] 
       },
       organizer: {
         "@type": "Organization",
-        name: post.eventDetails.organizer || "RaveHub",
+        name: post.eventDetails.organizer || "Ravehub",
         url: post.eventDetails.organizerUrl || baseUrl,
       },
       offers: {
@@ -566,9 +566,9 @@ export function PostSchema({ post, category, url, comments = [], reactions = [] 
       worksFor: {
         "@type": "Organization",
         "@id": `${baseUrl}/#organization`,
-        name: "RaveHub",
+        name: "Ravehub",
       },
-      description: post.authorBio || `Autor en RaveHub especializado en música electrónica y eventos.`,
+      description: post.authorBio || `Autor en Ravehub especializado en música electrónica y eventos.`,
       sameAs: post.authorSocialLinks || [],
     }
     schemas.push(personSchema)
@@ -586,7 +586,7 @@ export function PostSchema({ post, category, url, comments = [], reactions = [] 
       "@type": "WebSite",
       "@id": `${baseUrl}/#website`,
       url: baseUrl,
-      name: "RaveHub",
+      name: "Ravehub",
       description: "La plataforma líder en eventos de música electrónica en Latinoamérica",
     },
     inLanguage: "es",

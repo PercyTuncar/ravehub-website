@@ -99,7 +99,7 @@ export function ProductForm({ productId }: ProductFormProps) {
       shippingCurrency: "PEN",
       eligibleRegion: "Latinoamérica",
     },
-    brand: "RaveHub",
+    brand: "Ravehub",
   })
 
   // Videos state
@@ -1220,7 +1220,7 @@ export function ProductForm({ productId }: ProductFormProps) {
                   placeholder="Nombre de la marca"
                 />
                 <p className="text-xs text-muted-foreground">
-                  Marca del producto. Por defecto es "RaveHub" si se deja en blanco.
+                  Marca del producto. Por defecto es "Ravehub" si se deja en blanco.
                 </p>
               </div>
 

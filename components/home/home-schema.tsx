@@ -59,13 +59,13 @@ export function HomeSchema({ featuredEvents }: HomeSchemaProps) {
         "@type": "WebSite",
         "@id": ensureHttpsProtocol(`${baseUrl}/#website`),
         url: ensureHttpsProtocol(baseUrl),
-        name: "RaveHub",
+        name: "Ravehub",
         description:
           "Compra tus entradas para los mejores eventos de música electrónica en Latinoamérica, con opciones de pago en cuotas para que disfrutes sin preocupaciones. Vive la experiencia única de los festivales más esperados.",
         publisher: {
           "@type": "Organization",
           "@id": ensureHttpsProtocol(`${baseUrl}/#organization`),
-          name: "RaveHub",
+          name: "Ravehub",
           url: ensureHttpsProtocol(baseUrl),
           logo: {
             "@type": "ImageObject",
@@ -73,7 +73,7 @@ export function HomeSchema({ featuredEvents }: HomeSchemaProps) {
             url: ensureHttpsProtocol(`${baseUrl}/images/logo-full.png`),
             width: 261,
             height: 60,
-            caption: "RaveHub",
+            caption: "Ravehub",
           },
         },
         potentialAction: {
@@ -93,7 +93,7 @@ export function HomeSchema({ featuredEvents }: HomeSchemaProps) {
       {
         "@type": "Organization",
         "@id": ensureHttpsProtocol(`${baseUrl}/#organization`),
-        name: "RaveHub",
+        name: "Ravehub",
         url: ensureHttpsProtocol(baseUrl),
         description:
           "La plataforma líder en eventos de música electrónica en Latinoamérica. Conectamos a los amantes de la música electrónica con los mejores eventos, artistas y experiencias.",
@@ -189,7 +189,7 @@ export function HomeSchema({ featuredEvents }: HomeSchemaProps) {
               }
             : {
                 "@type": "Organization",
-                name: "RaveHub",
+                name: "Ravehub",
                 url: ensureHttpsProtocol(baseUrl),
               },
           location: {

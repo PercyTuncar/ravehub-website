@@ -1,7 +1,7 @@
 import { AdminCTAsList } from "@/components/admin/admin-ctas-list"
 
 export const metadata = {
-  title: "Administrar CTAs | RaveHub",
+  title: "Administrar CTAs | Ravehub",
   description: "Gestiona los Call to Actions personalizados para eventos",
 }
 

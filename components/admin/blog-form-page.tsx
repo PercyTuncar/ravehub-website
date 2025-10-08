@@ -799,7 +799,7 @@ export default function BlogFormPage({ postId, isEditing }: BlogFormPageProps) {
           },
           publisher: {
             "@type": "Organization",
-            name: "RaveHub",
+            name: "Ravehub",
             logo: {
               "@type": "ImageObject",
               url: `${baseUrl}/images/logo-full.png`,
@@ -816,7 +816,7 @@ export default function BlogFormPage({ postId, isEditing }: BlogFormPageProps) {
           "@type": "WebSite",
           "@id": `${baseUrl}/#website`,
           url: baseUrl,
-          name: "RaveHub",
+          name: "Ravehub",
           description: "La plataforma líder en eventos de música electrónica en Latinoamérica",
           publisher: {
             "@type": "Organization",
@@ -827,7 +827,7 @@ export default function BlogFormPage({ postId, isEditing }: BlogFormPageProps) {
         {
           "@type": "Organization",
           "@id": `${baseUrl}/#organization`,
-          name: "RaveHub",
+          name: "Ravehub",
           url: baseUrl,
           logo: {
             "@type": "ImageObject",
@@ -909,7 +909,7 @@ export default function BlogFormPage({ postId, isEditing }: BlogFormPageProps) {
         image: post.featuredImageUrl || "",
         organizer: {
           "@type": "Organization",
-          name: "RaveHub",
+          name: "Ravehub",
           url: baseUrl,
         },
       }

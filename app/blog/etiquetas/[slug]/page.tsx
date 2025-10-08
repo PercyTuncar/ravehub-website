@@ -9,7 +9,7 @@ interface TagPageProps {
 }
 
 export async function generateMetadata({ params }: TagPageProps): Promise<Metadata> {
-  const { slug } = params
+  const { slug } = await params
   const tag = await getTagBySlug(slug)
 
   if (!tag) {
@@ -19,11 +19,11 @@ export async function generateMetadata({ params }: TagPageProps): Promise<Metada
   }
 
   return {
-    title: tag.seoTitle || `Posts etiquetados con ${tag.name} | RaveHub Blog`,
+    title: tag.seoTitle || `Posts etiquetados con ${tag.name} | Ravehub Blog`,
     description: tag.seoDescription || `Explora todos los artículos relacionados con ${tag.name} en nuestro blog.`,
     keywords: tag.metaKeywords ? Object.values(tag.metaKeywords).join(", ") : undefined,
     openGraph: {
-      title: tag.seoTitle || `Posts etiquetados con ${tag.name} | RaveHub Blog`,
+      title: tag.seoTitle || `Posts etiquetados con ${tag.name} | Ravehub Blog`,
       description: tag.seoDescription || `Explora todos los artículos relacionados con ${tag.name} en nuestro blog.`,
       type: "website",
       images: tag.imageUrl ? [{ url: tag.imageUrl, width: 1200, height: 630 }] : [],

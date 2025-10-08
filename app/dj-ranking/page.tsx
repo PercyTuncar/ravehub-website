@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Trophy, ThumbsUp, Vote } from "lucide-react"
 
 export const metadata = {
-  title: "DJ Ranking | RaveHub",
+  title: "DJ Ranking | Ravehub",
   description: "Descubre, sugiere y vota por los mejores DJs de cada país",
 }
 

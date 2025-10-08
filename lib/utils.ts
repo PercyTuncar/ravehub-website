@@ -5,6 +5,17 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
 
+// Function to obfuscate email addresses for SEO protection
+export function obfuscateEmail(email: string): string {
+  return email.replace('@', '[at]').replace('.', '[dot]')
+}
+
+// Function to create a mailto link with obfuscated display
+export function createProtectedEmailLink(email: string, text?: string): string {
+  const displayText = text || obfuscateEmail(email)
+  return `<a href="mailto:${email}" class="email-link">${displayText}</a>`
+}
+
 /**
  * Calcula y formatea el tiempo estimado de lectura de un texto.
  * @param content El contenido a leer
