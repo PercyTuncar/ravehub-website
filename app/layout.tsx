@@ -44,7 +44,7 @@ export const metadata: Metadata = {
   icons: {
     icon: "/favicon-ravehub.ico",
     shortcut: "/favicon-ravehub.ico",
-    apple: "/icons/icon-192x192.png",
+    apple: "/apple-touch-icon.png",
   },
   alternates: {
     canonical: "https://www.weareravehub.com",
@@ -124,7 +124,7 @@ export default function RootLayout({
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
 
         {/* Añadir los meta tags para PWA */}
-        <link rel="apple-touch-icon" href="/icons/icon-192x192.png" />
+        <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
         <meta name="apple-mobile-web-app-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
         <meta name="apple-mobile-web-app-title" content="Ravehub" />
