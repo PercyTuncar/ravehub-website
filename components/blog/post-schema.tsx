@@ -333,6 +333,10 @@ export function PostSchema({ post, category, url, comments = [], reactions = [] 
   if (post.averageRating && post.ratingCount) {
     articleSchema.aggregateRating = {
       "@type": "AggregateRating",
+      itemReviewed: {
+        "@type": post.schemaType || "BlogPosting",
+        name: post.title,
+      },
       ratingValue: Number(post.averageRating.toFixed(1)),
       reviewCount: post.ratingCount,
       bestRating: 5,
