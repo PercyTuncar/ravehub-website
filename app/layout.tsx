@@ -31,7 +31,7 @@ const inter = Inter({
 
 // Actualizar el metadata para incluir el manifest y los colores de tema
 export const metadata: Metadata = {
-  metadataBase: new URL("https://www.weareravehub.com"),
+  metadataBase: new URL("https://www.ravehublatam.com"),
   title: "Ravehub - Eventos de Música Electrónica en Latinoamérica | Entradas y Merchandise",
   description:
     "Descubre los mejores eventos de música electrónica en Latinoamérica. Compra entradas, merchandise oficial y vive experiencias únicas con opciones de pago en cuotas.",
@@ -47,22 +47,22 @@ export const metadata: Metadata = {
     apple: "/apple-touch-icon.png",
   },
   alternates: {
-    canonical: "https://www.weareravehub.com",
+    canonical: "https://www.ravehublatam.com",
     languages: {
-      es: "https://www.weareravehub.com",
+      es: "https://www.ravehublatam.com",
     },
   },
   openGraph: {
     type: "website",
     locale: "es_LA",
-    url: "https://www.weareravehub.com",
+    url: "https://www.ravehublatam.com",
     title: "Ravehub - Eventos de Música Electrónica en Latinoamérica | Entradas y Merchandise",
     description:
       "Descubre los mejores eventos de música electrónica en Latinoamérica. Compra entradas, merchandise oficial y vive experiencias únicas con opciones de pago en cuotas.",
     siteName: "Ravehub",
     images: [
       {
-        url: "https://www.weareravehub.com/placeholder.jpg",
+        url: "https://www.ravehublatam.com/placeholder.jpg",
         width: 1200,
         height: 630,
         alt: "Ravehub - Eventos de música electrónica",
@@ -73,7 +73,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "Ravehub - Eventos de Música Electrónica en Latinoamérica | Entradas y Merchandise",
     description: "Descubre los mejores eventos de música electrónica en Latinoamérica. Compra entradas, merchandise oficial y vive experiencias únicas.",
-    images: ["https://www.weareravehub.com/electronic-music-festival-night.png"],
+    images: ["https://www.ravehublatam.com/electronic-music-festival-night.png"],
   },
   keywords: [
     "eventos música electrónica",
@@ -143,8 +143,8 @@ export default function RootLayout({
             "@context": "https://schema.org",
             "@type": "Organization",
             "name": "Ravehub",
-            "url": "https://www.weareravehub.com",
-            "logo": "https://www.weareravehub.com/images/logo-full.png",
+            "url": "https://www.ravehublatam.com",
+            "logo": "https://www.ravehublatam.com/images/logo-full.png",
             "description": "Plataforma líder en eventos de música electrónica en Latinoamérica",
             "address": {
               "@type": "PostalAddress",

@@ -8,7 +8,7 @@ interface HomeSchemaProps {
 }
 
 export function HomeSchema({ featuredEvents }: HomeSchemaProps) {
-  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://weareravehub.com"
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://ravehublatam.com"
 
   const ensureHttpsProtocol = (url: string) => {
     if (!/^https?:\/\//i.test(url)) {

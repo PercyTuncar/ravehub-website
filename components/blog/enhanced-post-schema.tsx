@@ -304,7 +304,7 @@ export function EnhancedPostSchema({ post, category, url }: EnhancedPostSchemaPr
           const authorSlug =
             post.authorSlug ||
             (typeof post.author === "string" ? post.author.toLowerCase().replace(/\s+/g, "-") : "equipo")
-          post.authorUrl = `${process.env.NEXT_PUBLIC_BASE_URL || "https://www.weareravehub.com"}/autores/${authorSlug}`
+          post.authorUrl = `${process.env.NEXT_PUBLIC_BASE_URL || "https://www.ravehublatam.com"}/autores/${authorSlug}`
         }
       } catch (error) {
         console.error("Error fetching post interactions:", error)

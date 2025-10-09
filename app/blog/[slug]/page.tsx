@@ -71,7 +71,7 @@ export async function generateMetadata({ params }: BlogPostPageProps): Promise<M
   const tagNames = post.tags ? post.tags.map((tag) => (typeof tag === "string" ? tag : tag.name)) : []
 
   // Build basic metadata
-  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://www.weareravehub.com"
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://www.ravehublatam.com"
   const postUrl = `${baseUrl}/blog/${post.slug}`
 
   // Get the main image URL
@@ -138,8 +138,8 @@ export async function generateMetadata({ params }: BlogPostPageProps): Promise<M
       title: post.seoTitle || post.title,
       description: post.seoDescription || post.excerpt || "",
       images: imageUrl ? [imageUrl] : undefined,
-      creator: post.twitterCreator || "@weareravehub",
-      site: "@weareravehub",
+      creator: post.twitterCreator || "@ravehublatam",
+      site: "@ravehublatam",
     },
     alternates: {
       canonical: post.canonicalUrl || postUrl,
@@ -179,7 +179,7 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
   }
 
   // URL completa para el schema
-  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://www.weareravehub.com"
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://www.ravehublatam.com"
   const fullUrl = `${baseUrl}/blog/${post.slug}`
 
   // Construir la ruta de navegación básica (sin categoría que se cargará después)
@@ -275,10 +275,10 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
             "height": 60
           },
           "sameAs": [
-            "https://www.facebook.com/weareravehub",
-            "https://www.instagram.com/weareravehub",
-            "https://twitter.com/weareravehub",
-            "https://www.tiktok.com/@weareravehub"
+            "https://www.facebook.com/ravehublatam",
+            "https://www.instagram.com/ravehublatam",
+            "https://twitter.com/ravehublatam",
+            "https://www.tiktok.com/@ravehublatam"
           ],
           "contactPoint": {
             "@type": "ContactPoint",

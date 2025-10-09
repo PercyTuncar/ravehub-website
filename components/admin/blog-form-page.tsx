@@ -836,10 +836,10 @@ export default function BlogFormPage({ postId, isEditing }: BlogFormPageProps) {
             height: 60,
           },
           sameAs: [
-            "https://www.facebook.com/weareravehub",
-            "https://www.instagram.com/weareravehub",
-            "https://twitter.com/weareravehub",
-            "https://www.tiktok.com/@weareravehub",
+            "https://www.facebook.com/ravehublatam",
+            "https://www.instagram.com/ravehublatam",
+            "https://twitter.com/ravehublatam",
+            "https://www.tiktok.com/@ravehublatam",
           ],
         },
         {

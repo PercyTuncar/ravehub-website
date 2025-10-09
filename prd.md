@@ -402,6 +402,6 @@ El proyecto implementa varias estrategias avanzadas de SEO para maximizar la vis
     - **Título optimizado:** Aumentado de 39 a 78 caracteres para mejor cumplimiento de estándares SEO (50-60 caracteres recomendado).
     - **Meta descripción optimizada:** Reducida de 161 a 138 caracteres para cumplir con el límite recomendado de 120-160 caracteres.
     - **Schema Local Business:** Agregado schema de organización local para mejorar resultados de búsqueda locales.
-    - **Protección de emails:** Emails ofuscados (info[at]weareravehub[dot]com) para prevenir spam y mejorar seguridad.
+    - **Protección de emails:** Emails ofuscados (info[at]ravehublatam[dot]com) para prevenir spam y mejorar seguridad.
     - **Mejora de velocidad:** Implementadas optimizaciones para reducir el tamaño de página de 6.17MB (objetivo: <5MB).
 

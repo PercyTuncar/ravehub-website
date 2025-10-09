@@ -26,8 +26,8 @@ const OrganizationSchema = () => {
     "@context": "https://schema.org",
     "@type": "Organization",
     name: "Ravehub",
-    url: "https://weareravehub.com",
-    logo: "https://weareravehub.com/images/logo-full.png",
+    url: "https://ravehublatam.com",
+    logo: "https://ravehublatam.com/images/logo-full.png",
     sameAs: [
       "https://www.facebook.com/ravehub",
       "https://www.instagram.com/ravehub.pe",
@@ -48,7 +48,7 @@ const OrganizationSchema = () => {
       },
       {
         "@type": "ContactPoint",
-        email: "info@weareravehub.com",
+        email: "info@ravehublatam.com",
         contactType: "customer service",
       },
     ],
@@ -182,8 +182,8 @@ export default function Footer() {
             <address className="not-italic text-muted-foreground space-y-2">
               <p className="flex items-center gap-2">
                 <Mail size={16} className="flex-shrink-0" />
-                <a href="mailto:info@weareravehub.com" className="hover:text-primary transition-colors">
-                  info[at]weareravehub[dot]com
+                <a href="mailto:info@ravehublatam.com" className="hover:text-primary transition-colors">
+                  info[at]ravehublatam[dot]com
                 </a>
               </p>
               <p className="flex items-center gap-2">

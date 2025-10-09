@@ -11,7 +11,7 @@ import {
 } from "@/lib/firebase/optimized-queries"
 
 // Dominio base del sitio
-const SITE_URL = "https://www.weareravehub.com"
+const SITE_URL = "https://www.ravehublatam.com"
 
 // Función para formatear la fecha en formato ISO
 function formatDate(date: Date | number | string | undefined): string {

@@ -14,12 +14,12 @@ export const metadata = {
     title: "Eventos | Ravehub - Música Electrónica en Latinoamérica",
     description:
       "Explora los mejores eventos de música electrónica en Latinoamérica. Filtra por país, fecha y precio. Compra entradas con opciones de pago en cuotas.",
-    url: "https://www.weareravehub.com/eventos",
+    url: "https://www.ravehublatam.com/eventos",
     siteName: "Ravehub",
     type: "website",
     images: [
       {
-        url: "https://www.weareravehub.com/electronic-music-festival-night.png",
+        url: "https://www.ravehublatam.com/electronic-music-festival-night.png",
         width: 1200,
         height: 630,
         alt: "Ravehub Eventos - Música Electrónica",
@@ -30,10 +30,10 @@ export const metadata = {
     card: "summary_large_image",
     title: "Eventos | Ravehub - Música Electrónica en Latinoamérica",
     description: "Explora los mejores eventos de música electrónica en Latinoamérica. Filtra por país, fecha y precio.",
-    images: ["https://www.weareravehub.com/electronic-music-festival-night.png"],
+    images: ["https://www.ravehublatam.com/electronic-music-festival-night.png"],
   },
   alternates: {
-    canonical: "https://www.weareravehub.com/eventos",
+    canonical: "https://www.ravehublatam.com/eventos",
   },
 }
 

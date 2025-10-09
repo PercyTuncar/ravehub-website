@@ -192,7 +192,7 @@ export default function FAQPage() {
             <AccordionContent>
               <p>Puedes contactarnos a través de:</p>
               <ul className="list-disc pl-5 mt-2">
-                <li>Email: info@weareravehub.com</li>
+                <li>Email: info@ravehublatam.com</li>
                 <li>
                   Formulario de contacto:{" "}
                   <Link href="/contacto" className="text-primary hover:underline">

@@ -94,7 +94,7 @@ export default function RefundPolicyPage() {
         <p>Si cree que su situación califica para una excepción a nuestra política de no reembolso:</p>
         <ol>
           <li>
-            Contacte a nuestro equipo de soporte a través de info@weareravehub.com dentro de los 7 días posteriores a la
+            Contacte a nuestro equipo de soporte a través de info@ravehublatam.com dentro de los 7 días posteriores a la
             compra o al anuncio de cancelación/reprogramación del evento.
           </li>
           <li>Incluya su número de pedido, detalles de la compra y una explicación detallada de su solicitud.</li>
@@ -117,7 +117,7 @@ export default function RefundPolicyPage() {
         <h2>10. Contacto</h2>
         <p>Si tiene alguna pregunta sobre nuestra política de reembolsos, por favor contáctenos a:</p>
         <ul>
-          <li>Email: info@weareravehub.com</li>
+          <li>Email: info@ravehublatam.com</li>
           <li>
             Formulario de contacto:{" "}
             <a href="/contacto" className="text-primary hover:underline">
