@@ -57,10 +57,7 @@ export function Breadcrumbs({ className = "" }: BreadcrumbsProps) {
   }
 
   const breadcrumbs = generateBreadcrumbs()
-
-  // Solo incluir el script de datos estructurados si NO estamos en una página de evento
-  // para evitar duplicación con el EventSchema
-  const isEventPage = pathname.startsWith("/eventos/") && pathname.split("/").length === 3
+  const CANONICAL_DOMAIN = "https://www.ravehublatam.com"
 
   // Generate structured data for breadcrumbs
   const breadcrumbsStructuredData = {
@@ -70,7 +67,10 @@ export function Breadcrumbs({ className = "" }: BreadcrumbsProps) {
       "@type": "ListItem",
       position: idx + 1,
       name: crumb.label,
-      item: `https://www.ravehublatam.com${crumb.href}`,
+      item: {
+        "@type": "Thing",
+        id: `${CANONICAL_DOMAIN}${crumb.href}`,
+      },
     })),
   }
 
