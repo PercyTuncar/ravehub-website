@@ -227,6 +227,21 @@ export function PostSchema({ post, category, url, comments = [], reactions = [] 
       "@type": "Organization",
       name: "Ravehub",
     },
+    ...(post.averageRating &&
+      post.ratingCount && {
+        aggregateRating: {
+          "@type": "AggregateRating",
+          itemReviewed: {
+            "@type": post.schemaType || "BlogPosting",
+            name: post.title,
+          },
+          ratingValue: Number(post.averageRating.toFixed(1)),
+          reviewCount: post.ratingCount,
+          bestRating: 5,
+          worstRating: 1,
+          ratingCount: post.ratingCount,
+        },
+      }),
   }
 
   // Add NewsArticle specific properties if applicable
@@ -327,22 +342,6 @@ export function PostSchema({ post, category, url, comments = [], reactions = [] 
         caption: post.imageCaption || post.title,
       },
     ]
-  }
-
-  // Add ratings if available
-  if (post.averageRating && post.ratingCount) {
-    articleSchema.aggregateRating = {
-      "@type": "AggregateRating",
-      itemReviewed: {
-        "@type": post.schemaType || "BlogPosting",
-        name: post.title,
-      },
-      ratingValue: Number(post.averageRating.toFixed(1)),
-      reviewCount: post.ratingCount,
-      bestRating: 5,
-      worstRating: 1,
-      ratingCount: post.ratingCount,
-    }
   }
 
   // Add location if available

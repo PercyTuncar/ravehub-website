@@ -59,6 +59,35 @@ export interface BlogPost {
   eventDetails?: EventDetails
   imageGalleryPost?: any[];
   imageAltTexts?: {[key: string]: string};
+  reviews?: any[]; // Agregado para consistencia con post-schema
+  location?: { // Agregado para consistencia con post-schema
+    city?: string;
+    country?: string;
+    venueName?: string;
+  };
+  updatedAt?: Date | Timestamp; // Agregado para consistencia con post-schema
+  isBreakingNews?: boolean; // Agregado para consistencia con post-schema
+  isLiveBlogPosting?: boolean; // Agregado para consistencia con post-schema
+  rating?: number; // Agregado para consistencia con post-schema
+  reviewItemType?: string; // Agregado para consistencia con post-schema
+  reviewItemName?: string; // Agregado para consistencia con post-schema
+  reviewItemImage?: string; // Agregado para consistencia con post-schema
+  howToSteps?: any[]; // Agregado para consistencia con post-schema
+  howToTools?: any[]; // Agregado para consistencia con post-schema
+  howToSupplies?: any[]; // Agregado para consistencia con post-schema
+  howToDuration?: string; // Agregado para consistencia con post-schema
+  eventDate?: Date | Timestamp; // Agregado para consistencia con post-schema
+  eventEndDate?: Date | Timestamp; // Agregado para consistencia con post-schema
+  eventPerformer?: string; // Agregado para consistencia con post-schema
+  eventPrice?: number; // Agregado para consistencia con post-schema
+  eventCurrency?: string; // Agregado para consistencia con post-schema
+  eventUrl?: string; // Agregado para consistencia con post-schema
+  eventTicketsDate?: Date | Timestamp; // Agregado para consistencia con post-schema
+  imageCaption?: string; // Agregado para consistencia con post-schema
+  authorEmail?: string; // Agregado para consistencia con post-schema
+  authorBio?: string; // Agregado para consistencia con post-schema
+  authorSocialLinks?: string[]; // Agregado para consistencia con post-schema
+  shortDescription?: string; // Agregado para consistencia con post-schema
 }
 
 export interface EventDetails {
@@ -77,6 +106,11 @@ export interface EventDetails {
   price?: string
   currency?: string
   ticketUrl?: string
+  coordinates?: { // Agregado para consistencia con post-schema
+    latitude: number;
+    longitude: number;
+  };
+  ticketSaleDate?: Date | Timestamp; // Agregado para consistencia con post-schema
 }
 
 export interface SocialShares {
@@ -127,6 +161,9 @@ export interface BlogComment {
   userCommentCount: number // Número de comentarios realizados por el usuario en este post.
   userReplyCount: number // Número de respuestas realizadas por el usuario en este post.
   isPinned: boolean // Indica si el comentario está fijado en la parte superior.
+  isApproved?: boolean; // Agregado para consistencia con post-schema
+  isRating?: boolean; // Agregado para consistencia con post-schema
+  rating?: number; // Agregado para consistencia con post-schema
 }
 
 /**
