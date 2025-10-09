@@ -392,23 +392,27 @@ export async function getEventsForAdmin(): Promise<Event[]> {
 
 // Función optimizada para página de eventos con límite y cache
 export async function getEventsForPage(
-  limit = 12,
+  limitCount = 12,
   lastDoc?: any,
 ): Promise<{ events: Event[]; hasMore: boolean; lastDoc: any }> {
   try {
+    console.log("getEventsForPage called with limitCount:", limitCount, "lastDoc:", lastDoc)
     const eventsRef = collection(db, "events")
-    let q = query(eventsRef, where("status", "==", "published"), orderBy("startDate", "asc"), limit(limit))
+    let q = query(eventsRef, where("status", "==", "published"), orderBy("startDate", "asc"), limit(limitCount))
 
     if (lastDoc) {
       q = query(q, startAfter(lastDoc))
     }
 
+    console.log("Executing query for events...")
     const querySnapshot = await getDocs(q)
+    console.log("Query executed, found", querySnapshot.docs.length, "documents")
     const events: Event[] = []
     let lastDocument = null
 
     querySnapshot.forEach((doc) => {
       const data = doc.data()
+      console.log("Processing event:", doc.id, "status:", data.status)
       const event = {
         id: doc.id,
         ...data,
@@ -421,9 +425,10 @@ export async function getEventsForPage(
       lastDocument = doc
     })
 
+    console.log("Returning", events.length, "events, hasMore:", querySnapshot.docs.length === limitCount)
     return {
       events,
-      hasMore: querySnapshot.docs.length === limit,
+      hasMore: querySnapshot.docs.length === limitCount,
       lastDoc: lastDocument,
     }
   } catch (error) {

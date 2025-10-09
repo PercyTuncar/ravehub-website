@@ -11,16 +11,16 @@ import Image from "next/image"
 import Link from "next/link"
 import { useCurrency } from "@/context/currency-context"
 import { toast } from "@/components/ui/use-toast"
-import { useRouter } from "next/navigation"
 import { useAuth } from "@/context/auth-context"
 
 export function CartDrawer() {
   const { items, removeItem, updateQuantity, clearCart, totalItems, formattedSubtotal, subtotal } = useCart()
   const { currency } = useCurrency()
   const { user } = useAuth()
-  const router = useRouter()
   const [isOpen, setIsOpen] = useState(false)
   const [forceUpdate, setForceUpdate] = useState(0)
+
+  // No router needed, will use window.location
 
   // Forzar actualización del drawer cuando cambia el carrito
   useEffect(() => {
@@ -46,12 +46,12 @@ export function CartDrawer() {
         description: "Debes iniciar sesión para continuar con la compra",
       })
       setIsOpen(false)
-      router.push("/login?redirect=/tienda/checkout")
+      window.location.href = "/login?redirect=/tienda/checkout"
       return
     }
 
     setIsOpen(false)
-    router.push("/tienda/checkout")
+    window.location.href = "/tienda/checkout"
   }
 
   return (

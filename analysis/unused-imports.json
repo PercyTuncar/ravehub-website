@@ -1387,6 +1387,19 @@
     ]
   },
   {
+    "file": "components\\blog\\related-posts-section.tsx",
+    "unused": [
+      {
+        "name": "Clock",
+        "source": "lucide-react"
+      },
+      {
+        "name": "type { BlogPost }",
+        "source": "@/types/blog"
+      }
+    ]
+  },
+  {
     "file": "components\\blog\\related-posts.tsx",
     "unused": [
       {
@@ -2564,6 +2577,15 @@
     ]
   },
   {
+    "file": "inspect-posts.ts",
+    "unused": [
+      {
+        "name": "*",
+        "source": "fs"
+      }
+    ]
+  },
+  {
     "file": "lib\\constants\\reaction-types.ts",
     "unused": [
       {
@@ -2596,15 +2618,6 @@
       {
         "name": "type { StoreBanner }",
         "source": "@/types"
-      }
-    ]
-  },
-  {
-    "file": "lib\\firebase\\blog.ts",
-    "unused": [
-      {
-        "name": "type { ReactionType }",
-        "source": "@/types/blog"
       }
     ]
   },
