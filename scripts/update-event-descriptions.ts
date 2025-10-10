@@ -38,7 +38,11 @@ const stripHtmlTags = (html: string): string => {
   return text
 }
 
-async function updateEventDescriptions() {
+export async function updateExistingEventsWithDescriptionText(): Promise<{
+  success: boolean
+  updatedCount?: number
+  error?: string
+}> {
   try {
     console.log('Starting to update event descriptions...')
 
@@ -73,18 +77,34 @@ async function updateEventDescriptions() {
 
     console.log(`Successfully updated ${updatedCount} events`)
 
+    return {
+      success: true,
+      updatedCount
+    }
+
   } catch (error) {
     console.error('Error updating event descriptions:', error)
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error occurred'
+    }
   }
 }
 
-// Run the update
-updateEventDescriptions()
-  .then(() => {
-    console.log('Update completed successfully')
-    process.exit(0)
-  })
-  .catch((error) => {
-    console.error('Update failed:', error)
-    process.exit(1)
-  })
+// For backward compatibility when running as a script
+if (require.main === module) {
+  updateExistingEventsWithDescriptionText()
+    .then((result) => {
+      if (result.success) {
+        console.log('Update completed successfully')
+        process.exit(0)
+      } else {
+        console.error('Update failed:', result.error)
+        process.exit(1)
+      }
+    })
+    .catch((error) => {
+      console.error('Update failed:', error)
+      process.exit(1)
+    })
+}
