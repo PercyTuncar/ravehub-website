@@ -100,7 +100,7 @@ export function EventSchema({ event }: EventSchemaProps) {
         "@type": "MusicEvent",
         "@id": ensureHttpsProtocol(`${baseUrl}/eventos/${event.slug}#event`),
         name: event.name,
-        description: event.description || event.shortDescription,
+        description: event.descriptionText || event.shortDescription,
         url: ensureHttpsProtocol(`${baseUrl}/eventos/${event.slug}/`),
         image: event.mainImageUrl,
         startDate: startDateISO,
@@ -110,7 +110,7 @@ export function EventSchema({ event }: EventSchemaProps) {
         organizer: {
           "@type": "Organization",
           name: event.organizer?.name || "RAVEHUB",
-          url: ensureHttpsProtocol(event.organizer?.url) || ensureHttpsProtocol(baseUrl),
+          url: ensureHttpsProtocol(event.organizer?.url || baseUrl),
         },
         location: event.location
           ? {
@@ -141,14 +141,20 @@ export function EventSchema({ event }: EventSchemaProps) {
           Array.isArray(event.artistLineup) && event.artistLineup.length > 0
             ? event.artistLineup.map((artist) => ({
                 "@type": "MusicGroup",
+                "@id": ensureHttpsProtocol(`${baseUrl}/eventos/${event.slug}#performer-${artist.id}`),
                 name: artist.name,
-                image: artist.imageUrl,
+                image: artist.imageUrl ? {
+                  "@type": "ImageObject",
+                  url: artist.imageUrl,
+                  width: 400,
+                  height: 400,
+                } : undefined,
                 ...(artist.description && { description: artist.description }),
-                ...(artist.instagramHandle && {
-                  sameAs: `https://instagram.com/${artist.instagramHandle.replace("@", "")}`,
-                }),
-                ...(artist.spotifyUrl && { sameAs: artist.spotifyUrl }),
-                ...(artist.soundcloudUrl && { sameAs: artist.soundcloudUrl }),
+                sameAs: [
+                  ...(artist.instagramHandle ? [`https://instagram.com/${artist.instagramHandle.replace("@", "")}`] : []),
+                  ...(artist.spotifyUrl ? [artist.spotifyUrl] : []),
+                  ...(artist.soundcloudUrl ? [artist.soundcloudUrl] : []),
+                ].filter(Boolean),
               }))
             : undefined,
         offers:
@@ -196,6 +202,26 @@ export function EventSchema({ event }: EventSchemaProps) {
             url: event.mainImageUrl,
             width: 1200,
             height: 630,
+            caption: event.name,
+          },
+        }),
+        // Add aggregateRating if reviews exist
+        ...(event.reviews && event.reviews.length > 0 && {
+          aggregateRating: {
+            "@type": "AggregateRating",
+            ratingValue: event.reviews.reduce((sum, review) => sum + review.rating, 0) / event.reviews.length,
+            reviewCount: event.reviews.length,
+            bestRating: 5,
+            worstRating: 1,
+          },
+        }),
+        // Add additional properties for better SEO
+        keywords: event.tags?.join(", "),
+        genre: event.categories?.join(", "),
+        ...(event.isHighlighted && {
+          superEvent: {
+            "@type": "Festival",
+            name: "RAVEHUB Music Festival Series",
           },
         }),
       },

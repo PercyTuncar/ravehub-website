@@ -50,6 +50,7 @@ export function EventForm({ eventId }: EventFormProps) {
   const [formData, setFormData] = useState<Partial<Event>>({
     name: "",
     description: "",
+    descriptionText: "", // Plain text for SEO/schema
     shortDescription: "",
     slug: "",
     startDate: new Date(),
@@ -427,6 +428,7 @@ export function EventForm({ eventId }: EventFormProps) {
     // Basic required fields
     if (!formData.name) errors.push("El nombre del evento es obligatorio")
     if (!formData.shortDescription) errors.push("La descripción corta es obligatoria")
+    if (!formData.descriptionText) errors.push("La descripción SEO (Schema.org) es obligatoria")
     if (!formData.slug) errors.push("El slug (URL amigable) es obligatorio")
 
     // Location fields
@@ -446,6 +448,75 @@ export function EventForm({ eventId }: EventFormProps) {
     // Set the errors and return validation result
     setValidationErrors(errors)
     return errors.length === 0
+  }
+
+  // Function to strip HTML tags and create plain text
+  const stripHtmlTags = (html: string): string => {
+    if (!html || typeof html !== 'string') return ''
+
+    try {
+      // First, remove script and style tags completely (including multiline content)
+      let text = html
+        .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '') // Remove script tags and content
+        .replace(/<style\b[^<]*(?:(?!<\/style>)<[^<]*)*<\/style>/gi, '') // Remove style tags and content
+        .replace(/<!--[\s\S]*?-->/g, '') // Remove HTML comments
+
+      // Remove all remaining HTML tags
+      text = text.replace(/<[^>]*>/g, '')
+
+      // Replace common HTML entities
+      text = text
+        .replace(/&nbsp;/g, ' ')
+        .replace(/&/g, '&')
+        .replace(/</g, '<')
+        .replace(/>/g, '>')
+        .replace(/"/g, '"')
+        .replace(/'/g, "'")
+        .replace(/'/g, "'")
+
+      // Clean up extra whitespace and line breaks
+      text = text
+        .replace(/\s+/g, ' ') // Replace multiple whitespace with single space
+        .replace(/\n\s*\n/g, '\n') // Remove extra line breaks
+        .trim()
+
+      // Extract meaningful content - look for headings and paragraphs
+      const lines = text.split('\n').filter(line => line.trim().length > 0)
+
+      // Try to find the main event description content
+      let meaningfulText = ''
+      for (const line of lines) {
+        const trimmed = line.trim()
+        // Skip CSS-like content, URLs, and very short lines
+        if (trimmed.length > 10 &&
+            !trimmed.includes('@import') &&
+            !trimmed.includes('url(') &&
+            !trimmed.includes('var(--') &&
+            !trimmed.startsWith('//') &&
+            !trimmed.includes('document.addEventListener')) {
+          meaningfulText += trimmed + ' '
+        }
+      }
+
+      // If we found meaningful text, use it; otherwise use the cleaned text
+      text = meaningfulText.trim() || text
+
+      // Limit to reasonable length for schema (Google recommends ~160 characters)
+      if (text.length > 160) {
+        // Try to cut at a word boundary
+        let cutIndex = 157
+        while (cutIndex > 140 && text[cutIndex] !== ' ') {
+          cutIndex--
+        }
+        text = text.substring(0, cutIndex) + '...'
+      }
+
+      return text
+    } catch (error) {
+      console.error('Error stripping HTML tags:', error)
+      // Fallback: return a basic description
+      return 'Evento musical con artistas destacados. Información completa disponible en la página del evento.'
+    }
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -514,12 +585,16 @@ export function EventForm({ eventId }: EventFormProps) {
 
       const slug = formData.slug || generateSlug(formData.name || "")
 
+      // Use the user-provided descriptionText for schema (no automatic generation from HTML)
+      const descriptionText = formData.descriptionText || formData.shortDescription
+
       // Prepare event data
       const eventData = {
         ...(formData as Event),
         slug,
         mainImageUrl,
         bannerImageUrl,
+        descriptionText, // Use user-provided plain text for schema
         createdAt: eventId ? formData.createdAt! : new Date(),
         updatedAt: new Date(),
         createdBy: eventId ? formData.createdBy! : user.id,
@@ -766,6 +841,22 @@ export function EventForm({ eventId }: EventFormProps) {
                   required
                 />
                 <p className="text-xs text-muted-foreground">Máximo 150 caracteres</p>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="descriptionText">Descripción SEO (Schema.org) *</Label>
+                <Textarea
+                  id="descriptionText"
+                  value={formData.descriptionText || ""}
+                  onChange={(e) => handleChange("descriptionText", e.target.value)}
+                  rows={3}
+                  placeholder="Descripción optimizada para motores de búsqueda. Solo texto plano, sin HTML/CSS/JS."
+                  required
+                />
+                <p className="text-xs text-muted-foreground">
+                  Esta descripción se usa en el schema JSON-LD para Google. Máximo 160 caracteres.
+                  <strong> No incluya código HTML, CSS o JavaScript aquí.</strong>
+                </p>
               </div>
 
               <div className="space-y-2">

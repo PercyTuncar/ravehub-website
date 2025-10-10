@@ -3,7 +3,8 @@ export interface Event {
   name: string
   slug: string
   shortDescription: string
-  description: string
+  description: string // HTML content for display
+  descriptionText?: string // Plain text for schema/SEO
   startDate: Date
   startTime: string
   endDate?: Date
@@ -25,6 +26,7 @@ export interface Event {
     longitude: number
     additionalInfo?: string
   }
+  currency: string
   artistLineup: Artist[]
   zones: Zone[]
   salesPhases: SalesPhase[]

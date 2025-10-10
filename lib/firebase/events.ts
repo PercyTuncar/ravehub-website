@@ -223,20 +223,15 @@ export async function getEventBySlug(slug: string): Promise<Event | null> {
       // Asegurar que los nuevos campos tengan valores por defecto
       isMultiDay: docData.isMultiDay ?? false,
       endTime: docData.endTime || "23:00",
+      descriptionText: docData.descriptionText || "",
     } as Event
 
     // Normalizar las fechas en salesPhases
     if (normalizedEvent.salesPhases && normalizedEvent.salesPhases.length > 0) {
       normalizedEvent.salesPhases = normalizedEvent.salesPhases.map((phase) => ({
         ...phase,
-        startDate:
-          phase.startDate && typeof phase.startDate.toDate === "function"
-            ? phase.startDate.toDate()
-            : new Date(phase.startDate || Date.now()),
-        endDate:
-          phase.endDate && typeof phase.endDate.toDate === "function"
-            ? phase.endDate.toDate()
-            : new Date(phase.endDate || Date.now()),
+        startDate: phase.startDate ? new Date(phase.startDate) : new Date(),
+        endDate: phase.endDate ? new Date(phase.endDate) : new Date(),
       }))
     }
 

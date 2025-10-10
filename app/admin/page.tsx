@@ -1,4 +1,4 @@
-import { AdminDashboardRedesigned } from "@/components/admin/admin-dashboard-redesigned"
+import { AdminDashboardNew } from "@/components/admin/admin-dashboard-new"
 import type { Metadata } from "next"
 
 export const metadata: Metadata = {
@@ -7,5 +7,5 @@ export const metadata: Metadata = {
 }
 
 export default function AdminPage() {
-  return <AdminDashboardRedesigned />
+  return <AdminDashboardNew />
 }
