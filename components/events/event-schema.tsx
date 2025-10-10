@@ -217,7 +217,6 @@ export function EventSchema({ event }: EventSchemaProps) {
         }),
         // Add additional properties for better SEO
         keywords: event.tags?.join(", "),
-        genre: event.categories?.join(", "),
         ...(event.isHighlighted && {
           superEvent: {
             "@type": "Festival",
