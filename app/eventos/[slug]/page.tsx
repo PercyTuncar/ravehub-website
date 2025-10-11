@@ -33,8 +33,10 @@ export async function generateMetadata({ params }: EventPageProps) {
       year: 'numeric'
     })
 
-    // Obtener artista principal
-    const mainArtist = event.artistLineup?.[0] || "Artistas destacados"
+    // Obtener artista principal (artistLineup es un array de objetos Artist)
+    const mainArtist = event.artistLineup && event.artistLineup.length > 0
+      ? (event.artistLineup[0].name || "Artistas destacados")
+      : "Artistas destacados"
 
     // Construir título optimizado
     const title = `${event.name} en ${event.location?.city || 'Latinoamérica'} - ${formattedDate} | Ravehub`
@@ -58,7 +60,7 @@ export async function generateMetadata({ params }: EventPageProps) {
         title,
         description,
         images: [{ url: event.mainImageUrl }],
-        type: "event",
+        type: "website",
         url: `https://www.ravehublatam.com/eventos/${slug}`,
       },
       twitter: {
