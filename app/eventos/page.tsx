@@ -8,13 +8,12 @@ import { Breadcrumbs } from "@/components/breadcrumbs"
 import { EventsPageSchema } from "@/components/events/events-page-schema"
 
 export const metadata = {
-  title: "Eventos | Ravehub - Música Electrónica en Latinoamérica",
-  description:
-    "Explora los mejores eventos de música electrónica en Latinoamérica. Filtra por país, fecha y precio. Compra entradas con opciones de pago en cuotas.",
+  title: "Próximos Eventos de Música Electrónica en Latinoamérica | Ravehub",
+  description: "Descubre los mejores raves, festivales y eventos de música electrónica en LATAM. Encuentra fechas, lineup de artistas y compra tus entradas de forma segura en Ravehub.",
+  keywords: ["eventos música electrónica", "raves Latinoamérica", "festivales electrónicos", "comprar entradas", "eventos rave"],
   openGraph: {
-    title: "Eventos | Ravehub - Música Electrónica en Latinoamérica",
-    description:
-      "Explora los mejores eventos de música electrónica en Latinoamérica. Filtra por país, fecha y precio. Compra entradas con opciones de pago en cuotas.",
+    title: "Próximos Eventos de Música Electrónica en Latinoamérica | Ravehub",
+    description: "Descubre los mejores raves, festivales y eventos de música electrónica en LATAM. Encuentra fechas, lineup de artistas y compra tus entradas de forma segura en Ravehub.",
     url: "https://www.ravehublatam.com/eventos",
     siteName: "Ravehub",
     type: "website",
@@ -23,14 +22,14 @@ export const metadata = {
         url: "https://www.ravehublatam.com/electronic-music-festival-night.png",
         width: 1200,
         height: 630,
-        alt: "Ravehub Eventos - Música Electrónica",
+        alt: "Eventos de Música Electrónica - Ravehub",
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "Eventos | Ravehub - Música Electrónica en Latinoamérica",
-    description: "Explora los mejores eventos de música electrónica en Latinoamérica. Filtra por país, fecha y precio.",
+    title: "Próximos Eventos de Música Electrónica en Latinoamérica | Ravehub",
+    description: "Descubre los mejores raves, festivales y eventos de música electrónica en LATAM.",
     images: ["https://www.ravehublatam.com/electronic-music-festival-night.png"],
   },
   alternates: {

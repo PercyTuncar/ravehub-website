@@ -3,8 +3,23 @@ import { PageHeader } from "@/components/page-header"
 import Link from "next/link"
 
 export const metadata: Metadata = {
-  title: "Centro de Ayuda | Ravehub",
-  description: "Encuentra respuestas a tus preguntas y soluciones a problemas comunes en nuestro centro de ayuda.",
+  title: "Centro de Ayuda | Ravehub - Soporte para Eventos de Música Electrónica",
+  description: "Centro de ayuda completo para resolver tus dudas sobre eventos, entradas, sorteos, tienda y más. Guías paso a paso y soporte especializado en música electrónica.",
+  keywords: "ayuda, soporte, centro de ayuda, preguntas, soluciones, eventos, entradas, música electrónica, sorteos, tienda",
+  openGraph: {
+    title: "Centro de Ayuda | Ravehub - Soporte para Eventos de Música Electrónica",
+    description: "Centro de ayuda completo para resolver tus dudas sobre eventos, entradas, sorteos, tienda y más. Guías paso a paso y soporte especializado en música electrónica.",
+    type: "website",
+    url: "https://www.ravehublatam.com/ayuda",
+  },
+  twitter: {
+    card: "summary",
+    title: "Centro de Ayuda | Ravehub",
+    description: "Centro de ayuda completo para resolver tus dudas sobre eventos, entradas, sorteos, tienda y más.",
+  },
+  alternates: {
+    canonical: "https://www.ravehublatam.com/ayuda",
+  },
 }
 
 export default function HelpCenterPage() {

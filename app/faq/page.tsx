@@ -4,8 +4,23 @@ import Link from "next/link"
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
 
 export const metadata: Metadata = {
-  title: "Preguntas Frecuentes | Ravehub",
-  description: "Encuentra respuestas a las preguntas más comunes sobre Ravehub, eventos, entradas y más.",
+  title: "Preguntas Frecuentes | Ravehub - Eventos de Música Electrónica",
+  description: "Resuelve todas tus dudas sobre compra de entradas, eventos de música electrónica, sorteos, tienda y más. Guía completa de preguntas frecuentes de Ravehub.",
+  keywords: "preguntas frecuentes, FAQ, ayuda, soporte, entradas, eventos, música electrónica, sorteos, tienda",
+  openGraph: {
+    title: "Preguntas Frecuentes | Ravehub - Eventos de Música Electrónica",
+    description: "Resuelve todas tus dudas sobre compra de entradas, eventos de música electrónica, sorteos, tienda y más. Guía completa de preguntas frecuentes de Ravehub.",
+    type: "website",
+    url: "https://www.ravehublatam.com/faq",
+  },
+  twitter: {
+    card: "summary",
+    title: "Preguntas Frecuentes | Ravehub",
+    description: "Resuelve todas tus dudas sobre compra de entradas, eventos de música electrónica, sorteos, tienda y más.",
+  },
+  alternates: {
+    canonical: "https://www.ravehublatam.com/faq",
+  },
 }
 
 export default function FAQPage() {

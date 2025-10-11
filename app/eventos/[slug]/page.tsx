@@ -20,24 +20,62 @@ export async function generateMetadata({ params }: EventPageProps) {
     if (!event) {
       return {
         title: "Evento no encontrado | Ravehub",
-        description: "El evento que buscas no existe o ha sido eliminado.",
+        description: "El evento que buscas no existe o ha sido eliminado. Descubre otros eventos increíbles en Ravehub.",
+        robots: "noindex, follow",
       }
     }
 
+    // Formatear fecha de manera legible
+    const eventDate = event.startDate instanceof Date ? event.startDate : new Date(event.startDate)
+    const formattedDate = eventDate.toLocaleDateString('es-ES', {
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric'
+    })
+
+    // Obtener artista principal
+    const mainArtist = event.artistLineup?.[0] || "Artistas destacados"
+
+    // Construir título optimizado
+    const title = `${event.name} en ${event.location?.city || 'Latinoamérica'} - ${formattedDate} | Ravehub`
+
+    // Construir descripción CTA
+    const description = `¡No te pierdas a ${mainArtist} en ${event.name}! Compra tus entradas para este ${formattedDate} en ${event.location?.venueName || event.location?.city || 'Latinoamérica'}. Toda la info aquí.`
+
     return {
-      title: `${event.name} | Ravehub`,
-      description: event.shortDescription,
+      title,
+      description,
+      keywords: [
+        event.name.toLowerCase(),
+        mainArtist.toLowerCase(),
+        event.location?.city?.toLowerCase(),
+        "entradas",
+        "música electrónica",
+        "rave",
+        "festival"
+      ].filter(Boolean),
       openGraph: {
-        title: event.name,
-        description: event.shortDescription,
+        title,
+        description,
         images: [{ url: event.mainImageUrl }],
+        type: "event",
+        url: `https://www.ravehublatam.com/eventos/${slug}`,
+      },
+      twitter: {
+        card: "summary_large_image",
+        title,
+        description,
+        images: [event.mainImageUrl],
+      },
+      alternates: {
+        canonical: `https://www.ravehublatam.com/eventos/${slug}`,
       },
     }
   } catch (error) {
     console.error("Error generating metadata:", error)
     return {
       title: "Error | Ravehub",
-      description: "Ocurrió un error al cargar el evento.",
+      description: "Ocurrió un error al cargar el evento. Descubre otros eventos increíbles en Ravehub.",
     }
   }
 }

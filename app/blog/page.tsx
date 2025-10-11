@@ -6,20 +6,23 @@ import FeaturedBlogBanner from "@/components/blog/featured-blog-banner"
 import { Breadcrumbs } from "@/components/breadcrumbs"
 
 export const metadata: Metadata = {
-  title: "Blog | Ravehub",
-  description: "Explora nuestro blog sobre música electrónica, festivales, cultura rave y más.",
+  title: "Blog de Música Electrónica en Latinoamérica | Ravehub",
+  description: "Descubre las últimas noticias, reseñas de eventos, entrevistas con DJs y guías sobre la escena de música electrónica en Latinoamérica. Tu fuente definitiva para cultura rave.",
+  keywords: ["blog música electrónica", "noticias rave", "cultura electrónica Latinoamérica", "reseñas eventos", "entrevistas DJs"],
   openGraph: {
-    title: "Blog | Ravehub",
-    description: "Explora nuestro blog sobre música electrónica, festivales, cultura rave y más.",
+    title: "Blog de Música Electrónica en Latinoamérica | Ravehub",
+    description: "Descubre las últimas noticias, reseñas de eventos, entrevistas con DJs y guías sobre la escena de música electrónica en Latinoamérica.",
     type: "website",
+    url: "https://www.ravehublatam.com/blog",
+    siteName: "Ravehub",
   },
   twitter: {
     card: "summary_large_image",
-    title: "Blog | Ravehub",
-    description: "Explora nuestro blog sobre música electrónica, festivales, cultura rave y más.",
+    title: "Blog de Música Electrónica en Latinoamérica | Ravehub",
+    description: "Descubre las últimas noticias, reseñas de eventos, entrevistas con DJs y guías sobre la escena de música electrónica en Latinoamérica.",
   },
   alternates: {
-    canonical: "/blog",
+    canonical: "https://www.ravehublatam.com/blog",
   },
 }
 

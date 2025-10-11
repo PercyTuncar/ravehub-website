@@ -4,28 +4,33 @@ import type { Metadata } from "next"
 import { HomeClient } from "@/components/home/home-client"
 
 export const metadata: Metadata = {
-  title: "Ravehub - Eventos de música electrónica",
-  description:
-    "Encuentra los mejores eventos de música electrónica, compra entradas y merchandise oficial, con opciones de pago en cuotas para que disfrutes sin preocupaciones.",
+  title: "Ravehub - Eventos de Música Electrónica en Latinoamérica",
+  description: "La plataforma líder en eventos de música electrónica en Latinoamérica. Encuentra los mejores raves, compra entradas con pago en cuotas y merchandise oficial. ¡Disfruta sin preocupaciones!",
   authors: [{ name: "Ravehub" }],
-  keywords: ["eventos", "música electrónica", "entradas", "merchandise", "raves"],
+  keywords: ["eventos música electrónica", "raves Latinoamérica", "entradas electrónicas", "merchandise oficial", "pago en cuotas"],
   robots: "index, follow",
   verification: {
     google: "LJ0E6g_s2v1d9W5Mt-T1SD-r7asbrP8WsFt4f5yHZ7E",
   },
   openGraph: {
-    title: "Ravehub - Eventos de música electrónica",
-    description: "Encuentra los mejores eventos de música electrónica en Latinoamérica",
+    title: "Ravehub - Eventos de Música Electrónica en Latinoamérica",
+    description: "La plataforma líder en eventos de música electrónica en Latinoamérica. Encuentra los mejores raves, compra entradas con pago en cuotas y merchandise oficial.",
     images: [
-      "https://firebasestorage.googleapis.com/v0/b/event-ticket-website-6b541.firebasestorage.app/o/ravehubultra.webp?alt=media&token=126bf601-f0dd-463e-9661-4665ba50e015",
+      {
+        url: "https://firebasestorage.googleapis.com/v0/b/event-ticket-website-6b541.firebasestorage.app/o/ravehubultra.webp?alt=media&token=126bf601-f0dd-463e-9661-4665ba50e015",
+        width: 1200,
+        height: 630,
+        alt: "Ravehub - Eventos de Música Electrónica",
+      },
     ],
     url: "https://ravehublatam.com",
+    siteName: "Ravehub",
     type: "website",
   },
   twitter: {
     card: "summary_large_image",
-    title: "Ravehub - Eventos de música electrónica",
-    description: "Encuentra los mejores eventos de música electrónica en Latinoamérica",
+    title: "Ravehub - Eventos de Música Electrónica en Latinoamérica",
+    description: "La plataforma líder en eventos de música electrónica en Latinoamérica. Encuentra los mejores raves, compra entradas con pago en cuotas.",
     images: [
       "https://firebasestorage.googleapis.com/v0/b/event-ticket-website-6b541.firebasestorage.app/o/ravehubultra.webp?alt=media&token=126bf601-f0dd-463e-9661-4665ba50e015",
     ],

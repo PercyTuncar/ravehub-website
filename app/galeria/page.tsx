@@ -9,8 +9,23 @@ import type { Metadata } from "next"
 import { Breadcrumbs } from "@/components/breadcrumbs"
 
 export const metadata: Metadata = {
-  title: "Galería de imágenes | Ravehub",
-  description: "Explora nuestra galería de imágenes de eventos de música electrónica",
+  title: "Galería de Eventos | Ravehub - Fotos de Música Electrónica",
+  description: "Revive los mejores momentos de los eventos de música electrónica en Latinoamérica. Galería completa de fotos de festivales, raves y conciertos exclusivos.",
+  keywords: "galería, fotos, imágenes, eventos, música electrónica, festivales, raves, conciertos, Latinoamérica",
+  openGraph: {
+    title: "Galería de Eventos | Ravehub - Fotos de Música Electrónica",
+    description: "Revive los mejores momentos de los eventos de música electrónica en Latinoamérica. Galería completa de fotos de festivales, raves y conciertos exclusivos.",
+    type: "website",
+    url: "https://www.ravehublatam.com/galeria",
+  },
+  twitter: {
+    card: "summary",
+    title: "Galería de Eventos | Ravehub",
+    description: "Revive los mejores momentos de los eventos de música electrónica en Latinoamérica.",
+  },
+  alternates: {
+    canonical: "https://www.ravehublatam.com/galeria",
+  },
 }
 
 interface GalleryPageProps {

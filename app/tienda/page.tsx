@@ -8,22 +8,23 @@ import { Separator } from "@/components/ui/separator"
 import { Breadcrumbs } from "@/components/breadcrumbs"
 
 export const metadata: Metadata = {
-  title: "Tienda Ravehub | Productos para eventos y fiestas",
-  description:
-    "Explora nuestra colección de productos para tus eventos y fiestas. Encuentra todo lo que necesitas para tus celebraciones en Ravehub.",
-  keywords: "tienda, productos, eventos, fiestas, rave, accesorios, ropa, decoración",
+  title: "Tienda Oficial de Música Electrónica | Ravehub",
+  description: "Tienda oficial de Ravehub: merchandise exclusivo, accesorios para raves, ropa electrónica y productos para eventos. Envío a toda Latinoamérica con pago en cuotas.",
+  keywords: ["tienda música electrónica", "merchandise rave", "accesorios electrónicos", "ropa rave", "productos eventos", "tienda oficial"],
   openGraph: {
-    title: "Tienda Ravehub | Productos para eventos y fiestas",
-    description:
-      "Explora nuestra colección de productos para tus eventos y fiestas. Encuentra todo lo que necesitas para tus celebraciones en Ravehub.",
+    title: "Tienda Oficial de Música Electrónica | Ravehub",
+    description: "Tienda oficial de Ravehub: merchandise exclusivo, accesorios para raves, ropa electrónica y productos para eventos. Envío a toda Latinoamérica.",
     type: "website",
-    url: "https://ravehub.com/tienda",
+    url: "https://www.ravehublatam.com/tienda",
+    siteName: "Ravehub",
   },
   twitter: {
     card: "summary_large_image",
-    title: "Tienda Ravehub | Productos para eventos y fiestas",
-    description:
-      "Explora nuestra colección de productos para tus eventos y fiestas. Encuentra todo lo que necesitas para tus celebraciones en Ravehub.",
+    title: "Tienda Oficial de Música Electrónica | Ravehub",
+    description: "Tienda oficial de Ravehub: merchandise exclusivo, accesorios para raves, ropa electrónica y productos para eventos.",
+  },
+  alternates: {
+    canonical: "https://www.ravehublatam.com/tienda",
   },
 }
 
