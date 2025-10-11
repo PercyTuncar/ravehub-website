@@ -3,6 +3,7 @@
 import { useState, useCallback, useMemo, useEffect } from "react"
 import Image from "next/image"
 import { Globe, MapPin } from "lucide-react"
+import { getEventCountsByCountry } from "@/lib/firebase/events"
 
 // Definir los tipos fuera de la función del componente
 interface CountryData {
@@ -105,6 +106,7 @@ const countries: CountryData[] = [
 export function CountriesSection() {
   const [activeRegion, setActiveRegion] = useState<string>("all")
   const [isMobile, setIsMobile] = useState(false)
+  const [countriesData, setCountriesData] = useState<CountryData[]>(countries)
 
   // Optimización: Usar useCallback para funciones estables
   const checkIfMobile = useCallback(() => {
@@ -115,15 +117,15 @@ export function CountriesSection() {
   const filteredCountries = useMemo(() => {
     if (activeRegion === "all") {
       // Mostrar todos los países cuando se selecciona "Todos"
-      return countries
+      return countriesData
     } else if (activeRegion === "latinamerica") {
       // Mostrar todos los países de Latinoamérica sin límite
-      return countries.filter((country) => country.region === activeRegion)
+      return countriesData.filter((country) => country.region === activeRegion)
     } else {
       // Para otras regiones, mostrar solo los primeros 8 países
-      return countries.filter((country) => country.region === activeRegion).slice(0, 8)
+      return countriesData.filter((country) => country.region === activeRegion).slice(0, 8)
     }
-  }, [activeRegion])
+  }, [activeRegion, countriesData])
 
   // Optimización: Usar ResizeObserver una sola vez al montar
   useEffect(() => {
@@ -135,6 +137,26 @@ export function CountriesSection() {
 
     return () => resizeObserver.disconnect()
   }, [checkIfMobile])
+
+  // Cargar conteos reales de eventos por país
+  useEffect(() => {
+    const loadEventCounts = async () => {
+      try {
+        const countryCounts = await getEventCountsByCountry()
+        const updatedCountries = countries.map(country => ({
+          ...country,
+          events: countryCounts[country.name] || 0
+        }))
+        setCountriesData(updatedCountries)
+      } catch (error) {
+        console.error("Error loading event counts:", error)
+        // Mantener los datos por defecto en caso de error
+        setCountriesData(countries)
+      }
+    }
+
+    loadEventCounts()
+  }, [])
 
   return (
     <section className="py-12 bg-white relative overflow-hidden">

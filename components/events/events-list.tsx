@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState, useMemo } from "react"
 import { useSearchParams } from "next/navigation"
 import { EventCard } from "@/components/event-card"
-import { getEventsForPage } from "@/lib/firebase/events"
+import { getEventsForPage, getAllEvents } from "@/lib/firebase/events"
 import type { Event } from "@/types"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { AlertCircle } from "lucide-react"
@@ -125,20 +125,32 @@ export function EventsList() {
       try {
         setLoading(true)
 
-        const {
-          events: newEvents,
-          hasMore: moreAvailable,
-          lastDoc: newLastDoc,
-        } = await getEventsForPage(12, reset ? null : lastDoc)
+        // Para la categoría "all" sin otros filtros, cargar todos los eventos
+        const isAllCategory = (!category || category === "all") && !country && !dateParam && !search && minPrice === 0 && maxPrice === Number.POSITIVE_INFINITY
 
-        if (reset) {
-          setEvents(newEvents)
+        if (isAllCategory && reset) {
+          // Cargar todos los eventos para "all"
+          const allEvents = await getAllEvents()
+          setEvents(allEvents)
+          setHasMore(false)
+          setLastDoc(null)
         } else {
-          setEvents((prev) => [...prev, ...newEvents])
-        }
+          // Carga paginada normal para otras categorías o filtros
+          const {
+            events: newEvents,
+            hasMore: moreAvailable,
+            lastDoc: newLastDoc,
+          } = await getEventsForPage(12, reset ? null : lastDoc)
 
-        setHasMore(moreAvailable)
-        setLastDoc(newLastDoc)
+          if (reset) {
+            setEvents(newEvents)
+          } else {
+            setEvents((prev) => [...prev, ...newEvents])
+          }
+
+          setHasMore(moreAvailable)
+          setLastDoc(newLastDoc)
+        }
       } catch (error) {
         console.error("Error loading events:", error)
         setError("Error loading events")
@@ -146,7 +158,7 @@ export function EventsList() {
         setLoading(false)
       }
     },
-    [lastDoc],
+    [lastDoc, category, country, dateParam, search, minPrice, maxPrice],
   )
 
   // Cargar eventos iniciales
@@ -158,6 +170,38 @@ export function EventsList() {
   const eventsAfterFilter = useMemo(() => {
     return applyFilters(events)
   }, [events, dateParam, category, minPrice, maxPrice, search, applyFilters])
+
+  /**
+   * Separar eventos en próximos y pasados para la categoría "Todos"
+   * Solo se aplica cuando la categoría es "all" y no hay otros filtros activos
+   * Próximos eventos: ordenados por fecha ascendente (más cercano primero)
+   * Eventos pasados: ordenados por fecha descendente (más reciente primero)
+   * Maneja casos edge: eventos sin fecha se excluyen, comparación por día completo
+   */
+  const { upcomingEvents, pastEvents } = useMemo(() => {
+    if (category && category !== "all") {
+      return { upcomingEvents: [], pastEvents: [] }
+    }
+
+    const now = new Date()
+    now.setHours(0, 0, 0, 0) // Inicio del día actual para comparación consistente
+
+    const upcoming = eventsAfterFilter.filter((event) => {
+      if (!event.startDate) return false // Excluir eventos sin fecha definida
+      const eventDate = new Date(event.startDate)
+      eventDate.setHours(0, 0, 0, 0)
+      return eventDate >= now
+    }).sort((a, b) => new Date(a.startDate).getTime() - new Date(b.startDate).getTime())
+
+    const past = eventsAfterFilter.filter((event) => {
+      if (!event.startDate) return false // Excluir eventos sin fecha definida
+      const eventDate = new Date(event.startDate)
+      eventDate.setHours(0, 0, 0, 0)
+      return eventDate < now
+    }).sort((a, b) => new Date(b.startDate).getTime() - new Date(a.startDate).getTime())
+
+    return { upcomingEvents: upcoming, pastEvents: past }
+  }, [eventsAfterFilter, category])
 
   useEffect(() => {
     // Calcular el total de páginas
@@ -270,49 +314,82 @@ export function EventsList() {
     )
   }
 
+  // Determinar si mostrar secciones separadas para "all"
+  const isAllCategory = (!category || category === "all") && !country && !dateParam && !search && minPrice === 0 && maxPrice === Number.POSITIVE_INFINITY
+
   return (
     <>
-      <div id="events-list" className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mt-6">
-        {renderedEvents.map((event) => (
-          <EventCard key={event.id} event={event} />
-        ))}
-      </div>
+      {isAllCategory ? (
+        // Vista separada para "Todos"
+        <div className="space-y-12">
+          {upcomingEvents.length > 0 && (
+            <div>
+              <h2 className="text-2xl font-bold mb-6 text-center">Próximos Eventos</h2>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                {upcomingEvents.map((event) => (
+                  <EventCard key={event.id} event={event} />
+                ))}
+              </div>
+            </div>
+          )}
 
-      {/* Paginación */}
-      {totalPages > 1 && (
-        <Pagination className="mt-8">
-          <PaginationContent>
-            <PaginationItem>
-              <PaginationPrevious
-                onClick={() => goToPage(currentPage - 1)}
-                className={currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
-              />
-            </PaginationItem>
-
-            {getPageNumbers().map((page, index) => (
-              <PaginationItem key={index}>
-                {page === -1 ? (
-                  <span className="px-4 py-2">...</span>
-                ) : (
-                  <PaginationLink
-                    onClick={() => goToPage(page)}
-                    isActive={page === currentPage}
-                    className="cursor-pointer"
-                  >
-                    {page}
-                  </PaginationLink>
-                )}
-              </PaginationItem>
+          {pastEvents.length > 0 && (
+            <div>
+              <h2 className="text-2xl font-bold mb-6 text-center">Eventos Pasados</h2>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                {pastEvents.map((event) => (
+                  <EventCard key={event.id} event={event} />
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      ) : (
+        // Vista normal para otros filtros
+        <>
+          <div id="events-list" className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mt-6">
+            {renderedEvents.map((event) => (
+              <EventCard key={event.id} event={event} />
             ))}
+          </div>
 
-            <PaginationItem>
-              <PaginationNext
-                onClick={() => goToPage(currentPage + 1)}
-                className={currentPage === totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"}
-              />
-            </PaginationItem>
-          </PaginationContent>
-        </Pagination>
+          {/* Paginación */}
+          {totalPages > 1 && (
+            <Pagination className="mt-8">
+              <PaginationContent>
+                <PaginationItem>
+                  <PaginationPrevious
+                    onClick={() => goToPage(currentPage - 1)}
+                    className={currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                  />
+                </PaginationItem>
+
+                {getPageNumbers().map((page, index) => (
+                  <PaginationItem key={index}>
+                    {page === -1 ? (
+                      <span className="px-4 py-2">...</span>
+                    ) : (
+                      <PaginationLink
+                        onClick={() => goToPage(page)}
+                        isActive={page === currentPage}
+                        className="cursor-pointer"
+                      >
+                        {page}
+                      </PaginationLink>
+                    )}
+                  </PaginationItem>
+                ))}
+
+                <PaginationItem>
+                  <PaginationNext
+                    onClick={() => goToPage(currentPage + 1)}
+                    className={currentPage === totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                  />
+                </PaginationItem>
+              </PaginationContent>
+            </Pagination>
+          )}
+        </>
       )}
     </>
   )

@@ -22,20 +22,22 @@ function removeUndefinedValues(obj: any): any {
   return JSON.parse(JSON.stringify(obj))
 }
 
-// Get featured events for homepage
+// Get featured events for homepage - only upcoming events
 export async function getFeaturedEvents(limitCount = 6): Promise<Event[]> {
   try {
     const eventsRef = collection(db, "events")
+
+    // Primero obtener todos los eventos destacados publicados
     const q = query(
       eventsRef,
       where("status", "==", "published"),
       where("isHighlighted", "==", true),
       orderBy("startDate", "asc"),
-      limit(limitCount),
+      limit(limitCount * 2), // Obtener más para filtrar
     )
 
     const querySnapshot = await getDocs(q)
-    const events: Event[] = []
+    const allEvents: Event[] = []
 
     querySnapshot.forEach((doc) => {
       const data = doc.data()
@@ -49,10 +51,27 @@ export async function getFeaturedEvents(limitCount = 6): Promise<Event[]> {
         updatedAt: data.updatedAt?.toDate?.() || new Date(data.updatedAt || Date.now()),
       } as Event
 
-      events.push(event)
+      allEvents.push(event)
     })
 
-    return events
+    // Filtrar solo eventos futuros en el código
+    const now = new Date()
+    now.setHours(0, 0, 0, 0) // Inicio del día actual
+
+    const upcomingEvents = allEvents.filter((event) => {
+      const eventDate = new Date(event.startDate)
+      eventDate.setHours(0, 0, 0, 0)
+      return eventDate >= now
+    })
+
+    // Ordenar por fecha ascendente (más próximos primero) y limitar
+    const sortedEvents = upcomingEvents
+      .sort((a, b) => new Date(a.startDate).getTime() - new Date(b.startDate).getTime())
+      .slice(0, limitCount)
+
+    console.log(`Found ${sortedEvents.length} upcoming featured events out of ${allEvents.length} total highlighted events`)
+
+    return sortedEvents
   } catch (error) {
     console.error("Error fetching featured events:", error)
     return []
@@ -466,5 +485,30 @@ export async function getFeaturedEventsOptimized(limitCount = 3): Promise<Event[
   } catch (error) {
     console.error("Error fetching featured events:", error)
     return []
+  }
+}
+
+// Función para obtener el conteo de eventos por país
+export async function getEventCountsByCountry(): Promise<Record<string, number>> {
+  try {
+    const eventsRef = collection(db, "events")
+    const q = query(eventsRef, where("status", "==", "published"))
+
+    const querySnapshot = await getDocs(q)
+    const countryCounts: Record<string, number> = {}
+
+    querySnapshot.forEach((doc) => {
+      const data = doc.data()
+      const country = data.location?.country
+
+      if (country) {
+        countryCounts[country] = (countryCounts[country] || 0) + 1
+      }
+    })
+
+    return countryCounts
+  } catch (error) {
+    console.error("Error fetching event counts by country:", error)
+    return {}
   }
 }

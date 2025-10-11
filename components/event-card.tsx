@@ -105,6 +105,17 @@ export const EventCard = memo(({ event }: EventCardProps) => {
     year: "numeric",
   })
 
+  /**
+   * Determinar si el evento es próximo o pasado para mostrar indicadores visuales
+   * Comparación basada en fecha completa (ignorando hora) para consistencia
+   */
+  const now = new Date()
+  now.setHours(0, 0, 0, 0)
+  const eventStartDate = new Date(event.startDate)
+  eventStartDate.setHours(0, 0, 0, 0)
+  const isUpcoming = eventStartDate >= now
+  const isPast = eventStartDate < now
+
   // Format time
 
   const [timeRemaining, setTimeRemaining] = useState<{
@@ -203,6 +214,20 @@ export const EventCard = memo(({ event }: EventCardProps) => {
                 {category}
               </span>
             ))}
+          </div>
+
+          {/* Status Badge - Bottom Left Corner */}
+          <div className="absolute bottom-3 left-3">
+            {isUpcoming && (
+              <span className="bg-green-500/90 backdrop-blur-sm text-white px-3 py-1 rounded-lg text-xs font-semibold shadow-lg border border-white/20">
+                Próximo
+              </span>
+            )}
+            {isPast && (
+              <span className="bg-gray-600/90 backdrop-blur-sm text-white px-3 py-1 rounded-lg text-xs font-semibold shadow-lg border border-white/20">
+                Pasado
+              </span>
+            )}
           </div>
 
           {/* Countdown Timer */}
