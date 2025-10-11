@@ -19,9 +19,17 @@ export function EventSchema({ event }: EventSchemaProps) {
     return url
   }
 
+  // Función para combinar fecha y hora
+  const combineDateTime = (date: Date | string, time: string): string => {
+    const d = new Date(date)
+    const [hours, minutes] = time.split(':').map(Number)
+    d.setHours(hours || 0, minutes || 0, 0, 0)
+    return d.toISOString()
+  }
+
   // Formatear fechas para el esquema
-  const startDateISO = event.startDate ? new Date(event.startDate).toISOString() : undefined
-  const endDateISO = event.endDate ? new Date(event.endDate).toISOString() : undefined
+  const startDateISO = event.startDate ? combineDateTime(event.startDate, event.startTime || '00:00') : undefined
+  const endDateISO = event.endDate ? combineDateTime(event.endDate, event.endTime || '23:59') : undefined
 
   // Helper function to safely get price
   const getPrice = () => {
@@ -102,7 +110,6 @@ export function EventSchema({ event }: EventSchemaProps) {
         name: event.name,
         description: event.descriptionText || event.shortDescription,
         url: ensureHttpsProtocol(`${baseUrl}/eventos/${event.slug}/`),
-        image: event.mainImageUrl,
         startDate: startDateISO,
         endDate: endDateISO || startDateISO, // Usar startDate como fallback si no hay endDate
         eventStatus: event.eventStatus || "https://schema.org/EventScheduled",
