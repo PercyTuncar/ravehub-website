@@ -29,7 +29,19 @@ export function EventSchema({ event }: EventSchemaProps) {
 
   // Formatear fechas para el esquema
   const startDateISO = event.startDate ? combineDateTime(event.startDate, event.startTime || '00:00') : undefined
-  const endDateISO = event.endDate ? combineDateTime(event.endDate, event.endTime || '23:59') : undefined
+  let endDateISO = event.endDate ? combineDateTime(event.endDate, event.endTime || '23:59') : undefined
+
+  // Asegurar que endDate sea posterior a startDate
+  if (startDateISO && endDateISO) {
+    const start = new Date(startDateISO)
+    const end = new Date(endDateISO)
+    if (end <= start) {
+      // Si endDate es anterior o igual a startDate, ajustar endDate
+      // Asumir que el evento dura al menos 6 horas por defecto
+      end.setHours(start.getHours() + 6)
+      endDateISO = end.toISOString()
+    }
+  }
 
   // Helper function to safely get price
   const getPrice = () => {
@@ -125,7 +137,7 @@ export function EventSchema({ event }: EventSchemaProps) {
               name: event.location.venueName,
               address: {
                 "@type": "PostalAddress",
-                streetAddress: event.location.streetAddress || event.location.address,
+                streetAddress: (event.location.streetAddress || event.location.address || "").replace(/^(Exacta \(para SEO\):?\s*)/i, "").trim(),
                 addressLocality: event.location.city,
                 addressRegion: event.location.region || event.location.city,
                 postalCode: event.location.postalCode,
@@ -147,7 +159,9 @@ export function EventSchema({ event }: EventSchemaProps) {
         performer:
           Array.isArray(event.artistLineup) && event.artistLineup.length > 0
             ? event.artistLineup.map((artist) => ({
-                "@type": "MusicGroup",
+                "@type": artist.name.toLowerCase().includes('duo') ||
+                        artist.name.toLowerCase().includes('&') ||
+                        artist.name.toLowerCase().includes('y ') ? "MusicGroup" : "Person",
                 "@id": ensureHttpsProtocol(`${baseUrl}/eventos/${event.slug}#performer-${artist.id}`),
                 name: artist.name,
                 image: artist.imageUrl ? {
@@ -159,7 +173,14 @@ export function EventSchema({ event }: EventSchemaProps) {
                 ...(artist.description && { description: artist.description }),
                 sameAs: [
                   ...(artist.instagramHandle ? [`https://instagram.com/${artist.instagramHandle.replace("@", "")}`] : []),
-                  ...(artist.spotifyUrl ? [artist.spotifyUrl] : []),
+                  ...(artist.spotifyUrl ? [
+                    // Convertir URLs de Spotify a formato público si es necesario
+                    artist.spotifyUrl.startsWith('https://open.spotify.com')
+                      ? artist.spotifyUrl
+                      : artist.spotifyUrl.includes('spotify.com/artist/')
+                        ? `https://open.spotify.com/artist/${artist.spotifyUrl.split('/artist/')[1]?.split('?')[0]}`
+                        : undefined
+                  ].filter(Boolean) : []),
                   ...(artist.soundcloudUrl ? [artist.soundcloudUrl] : []),
                 ].filter(Boolean),
               }))

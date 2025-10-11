@@ -157,7 +157,7 @@ export default function RootLayout({
             "sameAs": [
               "https://www.facebook.com/ravehub",
               "https://www.instagram.com/ravehub.pe",
-              "https://twitter.com/dldkchile",
+              "https://www.tiktok.com/@ravehub.pe",
               "https://www.youtube.com/channel/UC-wATPEqoNpPPcFHfTFae8w"
             ]
           }

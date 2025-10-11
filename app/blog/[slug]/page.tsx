@@ -63,7 +63,8 @@ export async function generateMetadata({ params }: BlogPostPageProps): Promise<M
   if (!post) {
     return {
       title: "Artículo no encontrado | Ravehub Blog",
-      description: "El artículo que buscas no existe o ha sido eliminado.",
+      description: "El artículo que buscas no existe o ha sido eliminado. Descubre otros artículos sobre música electrónica.",
+      robots: "noindex, follow",
     }
   }
 

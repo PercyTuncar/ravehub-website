@@ -46,7 +46,7 @@ export async function EventsPageSchema() {
       organizer: {
         "@type": "Organization",
         name: event.organizer?.name || "Ravehub",
-        url: ensureHttpsProtocol(event.organizer?.url) || ensureHttpsProtocol(baseUrl),
+        url: ensureHttpsProtocol(event.organizer?.url || baseUrl),
       },
       location: event.location
         ? {
@@ -54,7 +54,7 @@ export async function EventsPageSchema() {
             name: event.location.venueName,
             address: {
               "@type": "PostalAddress",
-              streetAddress: event.location.streetAddress || event.location.address,
+              streetAddress: (event.location.streetAddress || event.location.address || "").replace(/^(Exacta \(para SEO\):?\s*)/i, "").trim(),
               addressLocality: event.location.city,
               addressRegion: event.location.region || event.location.city,
               postalCode: event.location.postalCode,
@@ -189,7 +189,7 @@ export async function EventsPageSchema() {
         sameAs: [
           "https://www.facebook.com/ravehub",
           "https://www.instagram.com/ravehub.pe",
-          "https://twitter.com/dldkchile",
+          "https://www.tiktok.com/@ravehub.pe",
           "https://www.youtube.com/channel/UC-wATPEqoNpPPcFHfTFae8w",
         ],
       },
