@@ -1,5 +1,7 @@
-import { collection, getDocs, doc, updateDoc } from "firebase/firestore"
-import { db } from "@/lib/firebase/config"
+require('dotenv').config()
+
+const { collection, getDocs, doc, updateDoc } = require("firebase/firestore")
+const { db } = require("../lib/firebase/config")
 
 // Function to strip HTML tags and create plain text (reuse from existing script)
 const stripHtmlTags = (html: string): string => {
