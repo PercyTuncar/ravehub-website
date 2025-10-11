@@ -35,16 +35,18 @@ export const metadata: Metadata = {
   title: "Ravehub - Eventos de Música Electrónica en Latinoamérica | Entradas y Merchandise",
   description:
     "Descubre los mejores eventos de música electrónica en Latinoamérica. Compra entradas, merchandise oficial y vive experiencias únicas con opciones de pago en cuotas.",
-  manifest: "/manifest.json",
+  manifest: "/site.webmanifest",
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",
     title: "Ravehub",
   },
   icons: {
-    icon: "/favicon-ravehub.ico",
-    shortcut: "/favicon-ravehub.ico",
-    apple: "/apple-touch-icon.png",
+    icon: [
+      { url: '/icons/favicon.svg', type: 'image/svg+xml' },
+      { url: '/icons/favicon.ico', type: 'image/x-icon', sizes: 'any' },
+    ],
+    apple: '/icons/apple-touch-icon.png',
   },
   alternates: {
     canonical: "https://www.ravehublatam.com",
@@ -124,14 +126,9 @@ export default function RootLayout({
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
 
         {/* Añadir los meta tags para PWA */}
-        <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
         <meta name="apple-mobile-web-app-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
         <meta name="apple-mobile-web-app-title" content="Ravehub" />
-
-        {/* Favicon links - ensure they appear on all pages */}
-        <link rel="icon" href="/favicon-ravehub.ico" sizes="any" />
-        <link rel="shortcut icon" href="/favicon-ravehub.ico" />
 
         {/* Optimización de fuentes */}
         <FontOptimization />
