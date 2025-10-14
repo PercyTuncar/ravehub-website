@@ -33,23 +33,47 @@ export async function generateMetadata({ params }: EventPageProps) {
       year: 'numeric'
     })
 
-    // Obtener artista principal (artistLineup es un array de objetos Artist)
-    const mainArtist = event.artistLineup && event.artistLineup.length > 0
-      ? (event.artistLineup[0].name || "Artistas destacados")
-      : "Artistas destacados"
+    // Obtener artista destacado (si existe)
+    const featuredArtist = event.artistLineup?.find(artist => artist.isFeatured);
+    const featuredName = featuredArtist?.name || "Artistas destacados";
 
     // Construir título optimizado
-    const title = `${event.name} en ${event.location?.city || 'Latinoamérica'} - ${formattedDate} | Ravehub`
+    const locationPart = event.eventType === "festival" ? "" : ` en ${event.location?.city || 'Latinoamérica'}`;
+    const title = `${event.name}${locationPart}: Entradas y Fecha | Ravehub`
 
-    // Construir descripción CTA
-    const description = `¡No te pierdas a ${mainArtist} en ${event.name}! Compra tus entradas para este ${formattedDate} en ${event.location?.venueName || event.location?.city || 'Latinoamérica'}. Toda la info aquí.`
+    // Lógica condicional para descripción
+    let description: string;
+    if (event.eventType === "dj_set") {
+      const otherArtists = event.artistLineup?.filter(artist => !artist.isFeatured && artist.name !== featuredName) || [];
+      if (event.artistLineup && event.artistLineup.length <= 4 && otherArtists.length > 0) {
+        // DJ set con ≤4 DJs: Menciona destacado + otros
+        const othersText = otherArtists.map(a => a.name).join(", ");
+        description = `¡No te pierdas a ${featuredName} junto a ${othersText}! Compra tus entradas para este ${formattedDate} en ${event.location?.venueName || event.location?.city || 'Latinoamérica'}.`;
+      } else {
+        // DJ set con solo destacado o >4 DJs
+        description = `¡No te pierdas a ${featuredName}! Compra tus entradas para este ${formattedDate} en ${event.location?.venueName || event.location?.city || 'Latinoamérica'}.`;
+      }
+    } else if (event.eventType === "festival") {
+      if (!event.artistLineup || event.artistLineup.length === 0) {
+        // Festival sin lineup
+        description = `¡No te pierdas ${event.name}! Con un increíble lineup por anunciarse. Compra tus entradas para este ${formattedDate} en ${event.location?.venueName || event.location?.city || 'Latinoamérica'}.`;
+      } else {
+        // Festival con lineup: Menciona destacado + uno más + "y muchos más"
+        const secondArtist = event.artistLineup.find(artist => !artist.isFeatured && artist.name !== featuredName)?.name;
+        const lineupText = secondArtist ? `${featuredName}, ${secondArtist} y muchos más` : `${featuredName} y muchos más`;
+        description = `¡Vive ${event.name} con ${lineupText}! Compra tus entradas para este ${formattedDate} en ${event.location?.venueName || event.location?.city || 'Latinoamérica'}.`;
+      }
+    } else {
+      // Fallback genérico
+      description = `¡No te pierdas ${event.name}! Compra tus entradas para este ${formattedDate} en ${event.location?.venueName || event.location?.city || 'Latinoamérica'}. Toda la info aquí.`;
+    }
 
     return {
       title,
       description,
       keywords: [
         event.name.toLowerCase(),
-        mainArtist.toLowerCase(),
+        featuredName.toLowerCase(),
         event.location?.city?.toLowerCase(),
         "entradas",
         "música electrónica",

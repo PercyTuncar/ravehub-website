@@ -92,6 +92,7 @@ export function EventForm({ eventId }: EventFormProps) {
     subEvents: [],
     specifications: [],
     reviews: [],
+    eventType: "other", // Default event type
   })
   // Add after the existing state declarations (around line 80)
   const currencyOptions = [
@@ -122,6 +123,7 @@ export function EventForm({ eventId }: EventFormProps) {
     spotifyUrl: "",
     soundcloudUrl: "",
     order: 0,
+    isFeatured: false, // Default to not featured
   })
   const [artistImage, setArtistImage] = useState<File | null>(null)
   const [artistImagePreview, setArtistImagePreview] = useState<string>("")
@@ -257,12 +259,13 @@ export function EventForm({ eventId }: EventFormProps) {
       const updatedArtist: Artist = {
         id: editingArtistId,
         name: newArtist.name || "",
-        imageUrl: useImageLink ? newArtist.imageUrl : artistImage ? imageUrl : newArtist.imageUrl || "",
+        imageUrl: useImageLink ? (newArtist.imageUrl || "") : artistImage ? imageUrl : (newArtist.imageUrl || ""),
         description: newArtist.description || "",
         instagramHandle: newArtist.instagramHandle || "",
         spotifyUrl: newArtist.spotifyUrl || "",
         soundcloudUrl: newArtist.soundcloudUrl || "",
         order: newArtist.order || 0,
+        isFeatured: newArtist.isFeatured || false,
       }
 
       setFormData((prev) => ({
@@ -284,6 +287,7 @@ export function EventForm({ eventId }: EventFormProps) {
         spotifyUrl: newArtist.spotifyUrl || "",
         soundcloudUrl: newArtist.soundcloudUrl || "",
         order: formData.artistLineup?.length || 0,
+        isFeatured: newArtist.isFeatured || false,
       }
 
       setFormData((prev) => ({
@@ -972,6 +976,24 @@ export function EventForm({ eventId }: EventFormProps) {
                 <Label htmlFor="isMultiDay">Evento de múltiples días</Label>
               </div>
 
+              <div className="space-y-2">
+                <Label htmlFor="eventType">Tipo de Evento</Label>
+                <Select value={formData.eventType || "other"} onValueChange={(value) => handleChange("eventType", value)}>
+                  <SelectTrigger id="eventType">
+                    <SelectValue placeholder="Selecciona tipo de evento" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="dj_set">DJ Set</SelectItem>
+                    <SelectItem value="festival">Festival</SelectItem>
+                    <SelectItem value="concert">Concierto</SelectItem>
+                    <SelectItem value="other">Otro</SelectItem>
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-muted-foreground">
+                  Selecciona el tipo de evento para optimizar las descripciones SEO.
+                </p>
+              </div>
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="startDate">Fecha de Inicio *</Label>
@@ -1417,6 +1439,18 @@ export function EventForm({ eventId }: EventFormProps) {
                   />
                 </div>
 
+                <div className="flex items-center space-x-2">
+                  <Switch
+                    id="isFeatured"
+                    checked={newArtist.isFeatured || false}
+                    onCheckedChange={(checked) => handleArtistChange("isFeatured", checked)}
+                  />
+                  <Label htmlFor="isFeatured">Artista destacado</Label>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Marca este artista como destacado para que aparezca primero en las descripciones SEO.
+                </p>
+
                 <div className="space-y-2">
                   <div className="flex justify-between items-center">
                     <Label htmlFor="artistImage">Imagen del Artista</Label>
@@ -1493,6 +1527,7 @@ export function EventForm({ eventId }: EventFormProps) {
                             spotifyUrl: "",
                             soundcloudUrl: "",
                             order: 0,
+                            isFeatured: false,
                           })
                           setArtistImage(null)
                           setArtistImagePreview("")
@@ -1505,6 +1540,58 @@ export function EventForm({ eventId }: EventFormProps) {
                     <Button type="button" onClick={addArtist}>
                       {editingArtistId ? "Actualizar Artista" : "Agregar Artista"}
                     </Button>
+                </div>
+
+                {/* SEO Preview Section */}
+                <div className="mt-6 p-4 border rounded-md bg-muted/50">
+                  <h4 className="font-medium mb-3">Vista Previa SEO (Google)</h4>
+                  <div className="space-y-2">
+                    <div>
+                      <p className="text-sm font-medium text-muted-foreground">Título:</p>
+                      <p className="text-blue-600 text-sm">
+                        {formData.name ? (() => {
+                          const locationPart = formData.eventType === "festival" ? "" : ` en ${formData.location?.city || 'Latinoamérica'}`;
+                          return `${formData.name}${locationPart}: Entradas y Fecha | Ravehub`;
+                        })() : 'Título del evento aparecerá aquí'}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-muted-foreground">Descripción:</p>
+                      <p className="text-gray-600 text-sm">
+                        {(() => {
+                          const featuredArtist = formData.artistLineup?.find(artist => artist.isFeatured);
+                          const featuredName = featuredArtist?.name || "Artistas destacados";
+                          const formattedDate = formData.startDate ? new Date(formData.startDate).toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' }) : '[Fecha]';
+                          const location = formData.location?.venueName || formData.location?.city || 'Latinoamérica';
+
+                          let description: string;
+                          if (formData.eventType === "dj_set") {
+                            const otherArtists = formData.artistLineup?.filter(artist => !artist.isFeatured && artist.name !== featuredName) || [];
+                            if (formData.artistLineup && formData.artistLineup.length <= 4 && otherArtists.length > 0) {
+                              const othersText = otherArtists.map(a => a.name).join(", ");
+                              description = `¡No te pierdas a ${featuredName} junto a ${othersText}! Compra tus entradas para este ${formattedDate} en ${location}.`;
+                            } else {
+                              description = `¡No te pierdas a ${featuredName}! Compra tus entradas para este ${formattedDate} en ${location}.`;
+                            }
+                          } else if (formData.eventType === "festival") {
+                            if (!formData.artistLineup || formData.artistLineup.length === 0) {
+                              description = `¡No te pierdas ${formData.name || '[Nombre del evento]'}! Con un increíble lineup por anunciarse. Compra tus entradas para este ${formattedDate} en ${location}.`;
+                            } else {
+                              const secondArtist = formData.artistLineup.find(artist => !artist.isFeatured && artist.name !== featuredName)?.name;
+                              const lineupText = secondArtist ? `${featuredName}, ${secondArtist} y muchos más` : `${featuredName} y muchos más`;
+                              description = `¡Vive ${formData.name || '[Nombre del evento]'} con ${lineupText}! Compra tus entradas para este ${formattedDate} en ${location}.`;
+                            }
+                          } else {
+                            description = `¡No te pierdas ${formData.name || '[Nombre del evento]'}! Compra tus entradas para este ${formattedDate} en ${location}. Toda la info aquí.`;
+                          }
+                          return description;
+                        })()}
+                      </p>
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      Esta es una vista previa de cómo aparecerá tu evento en los resultados de búsqueda de Google.
+                    </p>
+                  </div>
                   </div>
                 </div>
 
@@ -1547,6 +1634,7 @@ export function EventForm({ eventId }: EventFormProps) {
                                       spotifyUrl: currentArtist.spotifyUrl || "",
                                       soundcloudUrl: currentArtist.soundcloudUrl || "",
                                       order: currentArtist.order,
+                                      isFeatured: currentArtist.isFeatured || false,
                                     })
 
                                     // Set preview if it's a firebase image
@@ -1574,7 +1662,14 @@ export function EventForm({ eventId }: EventFormProps) {
                             </div>
                           </div>
                           <CardContent className="p-4">
-                            <h4 className="font-bold">{artist.name}</h4>
+                            <div className="flex items-center justify-between">
+                              <h4 className="font-bold">{artist.name}</h4>
+                              {artist.isFeatured && (
+                                <span className="text-xs bg-primary text-primary-foreground px-2 py-1 rounded-full">
+                                  Destacado
+                                </span>
+                              )}
+                            </div>
                             {artist.instagramHandle && (
                               <p className="text-sm text-muted-foreground">{artist.instagramHandle}</p>
                             )}

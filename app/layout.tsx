@@ -32,7 +32,7 @@ const inter = Inter({
 // Actualizar el metadata para incluir el manifest y los colores de tema
 export const metadata: Metadata = {
   metadataBase: new URL("https://www.ravehublatam.com"),
-  title: "Ravehub - Eventos de Música Electrónica en Latinoamérica | Entradas y Merchandise",
+  title: "Ravehub - Eventos de Música Electrónica en Latinoamérica",
   description:
     "Descubre los mejores eventos de música electrónica en Latinoamérica. Compra entradas, merchandise oficial y vive experiencias únicas con opciones de pago en cuotas.",
   manifest: "/site.webmanifest",
@@ -58,7 +58,7 @@ export const metadata: Metadata = {
     type: "website",
     locale: "es_LA",
     url: "https://www.ravehublatam.com",
-    title: "Ravehub - Eventos de Música Electrónica en Latinoamérica | Entradas y Merchandise",
+    title: "Ravehub - Eventos de Música Electrónica en Latinoamérica",
     description:
       "Descubre los mejores eventos de música electrónica en Latinoamérica. Compra entradas, merchandise oficial y vive experiencias únicas con opciones de pago en cuotas.",
     siteName: "Ravehub",
@@ -73,7 +73,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "Ravehub - Eventos de Música Electrónica en Latinoamérica | Entradas y Merchandise",
+    title: "Ravehub - Eventos de Música Electrónica en Latinoamérica",
     description: "Descubre los mejores eventos de música electrónica en Latinoamérica. Compra entradas, merchandise oficial y vive experiencias únicas.",
     images: ["https://www.ravehublatam.com/electronic-music-festival-night.png"],
   },

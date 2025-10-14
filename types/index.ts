@@ -58,6 +58,7 @@ export interface Event {
     question: string
     answer: string
   }[]
+  eventType: "dj_set" | "festival" | "concert" | "other" // New field for event type
   [key: string]: any
 }
 
@@ -216,6 +217,7 @@ export interface Artist {
   spotifyUrl?: string
   soundcloudUrl?: string
   order: number
+  isFeatured?: boolean // New field to mark featured artist
   [key: string]: any
 }
 

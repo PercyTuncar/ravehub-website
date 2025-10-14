@@ -4,7 +4,7 @@ import type { Metadata } from "next"
 import { HomeClient } from "@/components/home/home-client"
 
 export const metadata: Metadata = {
-  title: "Ravehub - Eventos de Música Electrónica en Latinoamérica | Entradas y Merchandise",
+  title: "Ravehub - Eventos de Música Electrónica en Latinoamérica",
   description: "Descubre los mejores eventos de música electrónica en Latinoamérica. Compra entradas, merchandise oficial y vive experiencias únicas con opciones de pago en cuotas.",
   authors: [{ name: "Ravehub" }],
   keywords: [
