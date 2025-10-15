@@ -36,7 +36,7 @@ export async function EventsPageSchema() {
       "@type": "MusicEvent",
       "@id": ensureHttpsProtocol(`${baseUrl}/eventos/${event.slug}#event`),
       name: event.name,
-      description: event.description || event.shortDescription,
+      description: event.descriptionText || event.shortDescription,
       url: ensureHttpsProtocol(`${baseUrl}/eventos/${event.slug}/`),
       image: event.mainImageUrl,
       startDate: event.startDate ? new Date(event.startDate).toISOString() : undefined,
