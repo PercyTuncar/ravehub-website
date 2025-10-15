@@ -253,20 +253,6 @@ export function EventSchema({ event }: EventSchemaProps) {
         // Add additional properties for better SEO
         keywords: event.tags?.join(", "),
         genre: event.categories?.join(", "),
-        ...(event.isHighlighted && {
-          superEvent: {
-            "@type": "Festival",
-            name: "RAVEHUB Music Festival Series",
-          },
-        }),
-        // Add superEvent for series of events
-        ...(event.eventType === "festival" && {
-          superEvent: {
-            "@type": "Festival",
-            name: event.name,
-            description: event.shortDescription,
-          },
-        }),
       },
       // Remove the BreadcrumbList from here as it's already handled by the Breadcrumbs component
       ...(Array.isArray(event.faqSection) && event.faqSection.length > 0
