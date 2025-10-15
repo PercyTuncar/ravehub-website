@@ -56,7 +56,11 @@ export function EventSchema({ event }: EventSchemaProps) {
     // Formatear el offset como string
     const offsetString = `${offsetHours >= 0 ? '+' : ''}${String(Math.abs(offsetHours)).padStart(2, '0')}:00`
 
-    return d.toISOString().replace('Z', offsetString)
+    // Obtener ISO string sin milisegundos y reemplazar Z con el offset
+    const isoString = d.toISOString()
+    const dateTimeWithoutMs = isoString.replace(/\.\d{3}Z$/, 'Z')
+
+    return dateTimeWithoutMs.replace('Z', offsetString)
   }
 
   // Formatear fechas para el esquema con zona horaria correcta
