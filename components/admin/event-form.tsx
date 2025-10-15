@@ -850,8 +850,8 @@ export function EventForm({ eventId }: EventFormProps) {
 
       const offsetHours = timezones[country || ""] || -5 // Default Lima
 
-      // Ajustar las horas para que toISOString() produzca la hora correcta en UTC
-      d.setHours(hours + Math.abs(offsetHours), minutes || 0, 0, 0)
+      // Establecer la hora UTC directamente (los inputs dan la hora deseada en zona local del evento)
+      d.setUTCHours(hours, minutes || 0, 0, 0)
 
       // Formatear el offset como string
       const offsetString = `${offsetHours >= 0 ? '+' : ''}${String(Math.abs(offsetHours)).padStart(2, '0')}:00`
