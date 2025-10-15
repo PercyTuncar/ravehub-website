@@ -19,17 +19,43 @@ export function EventSchema({ event }: EventSchemaProps) {
     return url
   }
 
-  // Función para combinar fecha y hora
-  const combineDateTime = (date: Date | string, time: string): string => {
+  // Función para combinar fecha y hora con zona horaria correcta
+  const combineDateTime = (date: Date | string, time: string, country?: string): string => {
     const d = new Date(date)
     const [hours, minutes] = time.split(':').map(Number)
     d.setHours(hours || 0, minutes || 0, 0, 0)
-    return d.toISOString()
+
+    // Mapa de zonas horarias por país (desfase desde UTC)
+    const timezones: Record<string, string> = {
+      "Argentina": "-03:00",
+      "Bolivia": "-04:00",
+      "Brasil": "-03:00", // São Paulo
+      "Chile": "-04:00", // Santiago
+      "Colombia": "-05:00",
+      "Costa Rica": "-06:00",
+      "Cuba": "-05:00",
+      "Ecuador": "-05:00",
+      "El Salvador": "-06:00",
+      "Guatemala": "-06:00",
+      "Honduras": "-06:00",
+      "México": "-06:00", // Ciudad de México
+      "Nicaragua": "-06:00",
+      "Panamá": "-05:00",
+      "Paraguay": "-04:00",
+      "Perú": "-05:00",
+      "Puerto Rico": "-04:00",
+      "República Dominicana": "-04:00",
+      "Uruguay": "-03:00",
+      "Venezuela": "-04:00"
+    }
+
+    const timezone = timezones[country || ""] || "-05:00" // Default Lima
+    return d.toISOString().replace('Z', timezone)
   }
 
-  // Formatear fechas para el esquema
-  const startDateISO = event.startDate ? combineDateTime(event.startDate, event.startTime || '00:00') : undefined
-  let endDateISO = event.endDate ? combineDateTime(event.endDate, event.endTime || '23:59') : undefined
+  // Formatear fechas para el esquema con zona horaria correcta
+  const startDateISO = event.startDate ? combineDateTime(event.startDate, event.startTime || '00:00', event.country) : undefined
+  let endDateISO = event.endDate ? combineDateTime(event.endDate, event.endTime || '23:59', event.country) : undefined
 
   // Asegurar que endDate sea posterior a startDate
   if (startDateISO && endDateISO) {
@@ -198,8 +224,8 @@ export function EventSchema({ event }: EventSchemaProps) {
                       url: ensureHttpsProtocol(`${baseUrl}/eventos/${event.slug}`),
                       price: pricing.price,
                       priceCurrency: event.currency || "USD",
-                      validFrom: phase.startDate ? new Date(phase.startDate).toISOString() : startDateISO,
-                      validThrough: phase.endDate ? new Date(phase.endDate).toISOString() : endDateISO,
+                      validFrom: phase.startDate ? combineDateTime(phase.startDate, '00:00', event.country) : startDateISO,
+                      validThrough: phase.endDate ? combineDateTime(phase.endDate, '23:59', event.country) : endDateISO,
                       inventoryLevel: pricing.available,
                     }))
                   : []
@@ -213,7 +239,7 @@ export function EventSchema({ event }: EventSchemaProps) {
                     price: price,
                     priceCurrency: event.currency || "USD",
                     validFrom: startDateISO,
-                    validThrough: endDateISO,
+                    validThrough: endDateISO || startDateISO,
                   },
                 ]
               : undefined,
@@ -223,8 +249,8 @@ export function EventSchema({ event }: EventSchemaProps) {
               "@type": "Event",
               name: subEvent.name,
               description: subEvent.description,
-              startDate: subEvent.startDate ? new Date(subEvent.startDate).toISOString() : undefined,
-              endDate: subEvent.endDate ? new Date(subEvent.endDate).toISOString() : undefined,
+              startDate: subEvent.startDate ? combineDateTime(subEvent.startDate, '00:00', event.country) : undefined,
+              endDate: subEvent.endDate ? combineDateTime(subEvent.endDate, '23:59', event.country) : undefined,
               location: {
                 "@type": "Place",
                 name: event.location?.venueName,
