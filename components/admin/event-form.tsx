@@ -823,34 +823,40 @@ export function EventForm({ eventId }: EventFormProps) {
     const combineDateTime = (date: Date | string, time: string, country?: string): string => {
       const d = new Date(date)
       const [hours, minutes] = time.split(':').map(Number)
-      d.setHours(hours || 0, minutes || 0, 0, 0)
 
-      // Mapa de zonas horarias por país (desfase desde UTC)
-      const timezones: Record<string, string> = {
-        "Argentina": "-03:00",
-        "Bolivia": "-04:00",
-        "Brasil": "-03:00", // São Paulo
-        "Chile": "-04:00", // Santiago
-        "Colombia": "-05:00",
-        "Costa Rica": "-06:00",
-        "Cuba": "-05:00",
-        "Ecuador": "-05:00",
-        "El Salvador": "-06:00",
-        "Guatemala": "-06:00",
-        "Honduras": "-06:00",
-        "México": "-06:00", // Ciudad de México
-        "Nicaragua": "-06:00",
-        "Panamá": "-05:00",
-        "Paraguay": "-04:00",
-        "Perú": "-05:00",
-        "Puerto Rico": "-04:00",
-        "República Dominicana": "-04:00",
-        "Uruguay": "-03:00",
-        "Venezuela": "-04:00"
+      // Mapa de zonas horarias por país (desfase desde UTC en horas)
+      const timezones: Record<string, number> = {
+        "Argentina": -3,
+        "Bolivia": -4,
+        "Brasil": -3, // São Paulo
+        "Chile": -4, // Santiago
+        "Colombia": -5,
+        "Costa Rica": -6,
+        "Cuba": -5,
+        "Ecuador": -5,
+        "El Salvador": -6,
+        "Guatemala": -6,
+        "Honduras": -6,
+        "México": -6, // Ciudad de México
+        "Nicaragua": -6,
+        "Panamá": -5,
+        "Paraguay": -4,
+        "Perú": -5,
+        "Puerto Rico": -4,
+        "República Dominicana": -4,
+        "Uruguay": -3,
+        "Venezuela": -4
       }
 
-      const timezone = timezones[country || ""] || "-05:00" // Default Lima
-      return d.toISOString().replace('Z', timezone)
+      const offsetHours = timezones[country || ""] || -5 // Default Lima
+
+      // Ajustar las horas para que toISOString() produzca la hora correcta en UTC
+      d.setHours(hours + Math.abs(offsetHours), minutes || 0, 0, 0)
+
+      // Formatear el offset como string
+      const offsetString = `${offsetHours >= 0 ? '+' : ''}${String(Math.abs(offsetHours)).padStart(2, '0')}:00`
+
+      return d.toISOString().replace('Z', offsetString)
     }
 
     // Formatear fechas para el esquema con zona horaria correcta
