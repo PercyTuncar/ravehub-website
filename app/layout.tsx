@@ -45,8 +45,11 @@ export const metadata: Metadata = {
     icon: [
       { url: '/icons/favicon.svg', type: 'image/svg+xml' },
       { url: '/icons/favicon.ico', type: 'image/x-icon', sizes: 'any' },
+      { url: '/icons/icon-192x192.png', type: 'image/png', sizes: '192x192' },
+      { url: '/icons/icon-512x512.png', type: 'image/png', sizes: '512x512' },
     ],
     apple: '/icons/apple-touch-icon.png',
+    shortcut: '/icons/favicon.ico',
   },
   alternates: {
     canonical: "https://www.ravehublatam.com",

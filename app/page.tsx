@@ -47,9 +47,6 @@ export const metadata: Metadata = {
       "https://firebasestorage.googleapis.com/v0/b/event-ticket-website-6b541.firebasestorage.app/o/ravehubultra.webp?alt=media&token=126bf601-f0dd-463e-9661-4665ba50e015",
     ],
   },
-  icons: {
-    icon: "https://firebasestorage.googleapis.com/v0/b/event-ticket-website-6b541.firebasestorage.app/o/faviconravehub.ico?alt=media&token=6217b1fa-b7f8-4f1c-96a3-8f4ff3bdf917",
-  },
 }
 
 export const viewport = {
