@@ -43,6 +43,7 @@ import { generateSlug } from "@/lib/utils"
 import { format } from "date-fns"
 import { es } from "date-fns/locale"
 import { EventSchemaPreview } from "@/components/admin/event-schema-preview"
+import { GoogleSearchPreview } from "@/components/admin/google-search-preview"
 
 interface EventFormProps {
   eventId?: string
@@ -695,6 +696,11 @@ export function EventForm({ eventId }: EventFormProps) {
     if (!formData.descriptionText) errors.push("La descripción SEO (Schema.org) es obligatoria")
     if (!formData.slug) errors.push("El slug (URL amigable) es obligatorio")
 
+    // SEO character limits validation
+    if (formData.name && formData.name.length > 60) {
+      errors.push("El nombre del evento no debe exceder 60 caracteres para SEO óptimo")
+    }
+
     // Location fields
     if (!formData.location?.venueName) errors.push("El nombre del lugar es obligatorio")
     if (!formData.location?.address) errors.push("La dirección es obligatoria")
@@ -715,8 +721,8 @@ export function EventForm({ eventId }: EventFormProps) {
       errors.push("Debes agregar al menos una fase de venta")
 
     // Character limits validation
-    if (formData.descriptionText && formData.descriptionText.length > 500) {
-      errors.push("La descripción SEO no debe exceder 500 caracteres")
+    if (formData.descriptionText && formData.descriptionText.length > 160) {
+      errors.push("La descripción SEO no debe exceder 160 caracteres (recomendación de Google)")
     }
 
     // URL validation
@@ -1431,6 +1437,11 @@ export function EventForm({ eventId }: EventFormProps) {
                     onChange={(e) => handleChange("name", e.target.value)}
                     required
                   />
+                  <div className="flex justify-end">
+                    <span className={`text-xs font-medium ${(formData.name?.length || 0) > 60 ? 'text-red-600' : (formData.name?.length || 0) > 50 ? 'text-yellow-600' : 'text-green-600'}`}>
+                      {(formData.name?.length || 0)}/60 caracteres (título)
+                    </span>
+                  </div>
                 </div>
 
                 <div className="space-y-2">
@@ -1536,10 +1547,15 @@ export function EventForm({ eventId }: EventFormProps) {
                   placeholder="Descripción completa y persuasiva del evento para motores de búsqueda. Esta descripción aparecerá en los resultados de Google y es crucial para el SEO."
                   required
                 />
-                <p className="text-xs text-muted-foreground">
-                  Esta descripción se usa en el schema JSON-LD para Google. Debe ser atractiva y persuasiva.
-                  <strong> No incluya código HTML, CSS o JavaScript aquí.</strong>
-                </p>
+                <div className="flex justify-between items-center">
+                  <p className="text-xs text-muted-foreground">
+                    Esta descripción se usa en el schema JSON-LD para Google. Debe ser atractiva y persuasiva.
+                    <strong> No incluya código HTML, CSS o JavaScript aquí.</strong>
+                  </p>
+                  <span className={`text-xs font-medium ${(formData.descriptionText?.length || 0) > 160 ? 'text-red-600' : (formData.descriptionText?.length || 0) > 140 ? 'text-yellow-600' : 'text-green-600'}`}>
+                    {(formData.descriptionText?.length || 0)}/160 caracteres
+                  </span>
+                </div>
               </div>
 
               <div className="space-y-2">
@@ -2337,63 +2353,54 @@ export function EventForm({ eventId }: EventFormProps) {
                 </div>
 
                 {/* SEO Preview Section */}
-                <div className="mt-6 p-4 border rounded-md bg-muted/50">
-                  <h4 className="font-medium mb-3">Vista Previa SEO (Google)</h4>
-                  <div className="space-y-2">
-                    <div>
-                      <p className="text-sm font-medium text-muted-foreground">Título:</p>
-                      <p className="text-blue-600 text-sm">
-                        {formData.name ? (() => {
-                          const locationPart = formData.eventType === "festival" ? "" : ` en ${formData.location?.city || 'Latinoamérica'}`;
-                          return `${formData.name}${locationPart}: Entradas y Fecha | Ravehub`;
-                        })() : 'Título del evento aparecerá aquí'}
-                      </p>
-                    </div>
-                    <div>
-                      <p className="text-sm font-medium text-muted-foreground">Descripción:</p>
-                      <p className="text-gray-600 text-sm">
-                        {(() => {
-                          const featuredArtist = formData.artistLineup?.find(artist => artist.isFeatured);
-                          const featuredName = featuredArtist?.name || "Artistas destacados";
-                          const formattedDate = formData.startDate ? new Date(formData.startDate).toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' }) : '[Fecha]';
-                          const location = formData.location?.venueName || formData.location?.city || 'Latinoamérica';
+                <div className="mt-6 space-y-4">
+                  <GoogleSearchPreview
+                    title={formData.name ? (() => {
+                      const locationPart = formData.eventType === "festival" ? "" : ` en ${formData.location?.city || 'Latinoamérica'}`;
+                      return `${formData.name}${locationPart}: Entradas y Fecha | Ravehub`;
+                    })() : ''}
+                    description={(() => {
+                      const featuredArtist = formData.artistLineup?.find(artist => artist.isFeatured);
+                      const featuredName = featuredArtist?.name || "Artistas destacados";
+                      const formattedDate = formData.startDate ? new Date(formData.startDate).toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' }) : '';
+                      const location = formData.location?.venueName || formData.location?.city || 'Latinoamérica';
 
-                          let description: string;
-                          if (formData.eventType === "festival") {
-                            // Mantener la lógica actual para festivales
-                            if (!formData.artistLineup || formData.artistLineup.length === 0) {
-                              description = `¡No te pierdas ${formData.name || '[Nombre del evento]'}! Con un increíble lineup por anunciarse. Compra tus entradas para este ${formattedDate} en ${location}.`;
-                            } else {
-                              const secondArtist = formData.artistLineup.find(artist => !artist.isFeatured && artist.name !== featuredName)?.name;
-                              const lineupText = secondArtist ? `${featuredName}, ${secondArtist} y muchos más` : `${featuredName} y muchos más`;
-                              description = `¡Vive ${formData.name || '[Nombre del evento]'} con ${lineupText}! Compra tus entradas para este ${formattedDate} en ${location}.`;
-                            }
-                          } else {
-                            // Nueva lógica para eventos que NO son festivales (dj_set, concert, other)
-                            const venueName = formData.location?.venueName || formData.location?.city || 'el lugar';
-                            const cityName = formData.location?.city || 'la ciudad';
-                            const otherArtists = formData.artistLineup?.filter(artist => !artist.isFeatured) || [];
+                      let description: string;
+                      if (formData.eventType === "festival") {
+                        // Mantener la lógica actual para festivales
+                        if (!formData.artistLineup || formData.artistLineup.length === 0) {
+                          description = `¡No te pierdas ${formData.name || '[Nombre del evento]'}! Con un increíble lineup por anunciarse. Compra tus entradas para este ${formattedDate} en ${location}.`;
+                        } else {
+                          const secondArtist = formData.artistLineup.find(artist => !artist.isFeatured && artist.name !== featuredName)?.name;
+                          const lineupText = secondArtist ? `${featuredName}, ${secondArtist} y muchos más` : `${featuredName} y muchos más`;
+                          description = `¡Vive ${formData.name || '[Nombre del evento]'} con ${lineupText}! Compra tus entradas para este ${formattedDate} en ${location}.`;
+                        }
+                      } else {
+                        // Nueva lógica para eventos que NO son festivales (dj_set, concert, other)
+                        const venueName = formData.location?.venueName || formData.location?.city || 'el lugar';
+                        const cityName = formData.location?.city || 'la ciudad';
+                        const otherArtists = formData.artistLineup?.filter(artist => !artist.isFeatured) || [];
 
-                            if (!formData.artistLineup || formData.artistLineup.length === 0) {
-                              description = `${formData.name || '[Nombre del evento]'} llega a ${cityName} este ${formattedDate} en ${venueName}. ¡Compra tus entradas ahora!`;
-                            } else if (formData.artistLineup.length === 1) {
-                              description = `${featuredName} llega a ${cityName} este ${formattedDate} en ${venueName}. ¡Compra tus entradas ahora!`;
-                            } else {
-                              // Para múltiples artistas, incluir hasta 2 adicionales
-                              const additionalArtists = otherArtists.slice(0, 2).map(a => a.name);
-                              const artistsText = additionalArtists.length > 0 ? ` junto a ${additionalArtists.join(' y ')}` : '';
-                              description = `${featuredName} llega a ${cityName} este ${formattedDate} en ${venueName}${artistsText}. ¡Compra tus entradas ahora!`;
-                            }
-                          }
-                          return description;
-                        })()}
-                      </p>
-                    </div>
-                    <p className="text-xs text-muted-foreground">
-                      Esta es una vista previa de cómo aparecerá tu evento en los resultados de búsqueda de Google.
-                    </p>
-                  </div>
-                  </div>
+                        if (!formData.artistLineup || formData.artistLineup.length === 0) {
+                          description = `${formData.name || '[Nombre del evento]'} llega a ${cityName} este ${formattedDate} en ${venueName}. ¡Compra tus entradas ahora!`;
+                        } else if (formData.artistLineup.length === 1) {
+                          description = `${featuredName} llega a ${cityName} este ${formattedDate} en ${venueName}. ¡Compra tus entradas ahora!`;
+                        } else {
+                          // Para múltiples artistas, incluir hasta 2 adicionales
+                          const additionalArtists = otherArtists.slice(0, 2).map(a => a.name);
+                          const artistsText = additionalArtists.length > 0 ? ` junto a ${additionalArtists.join(' y ')}` : '';
+                          description = `${featuredName} llega a ${cityName} este ${formattedDate} en ${venueName}${artistsText}. ¡Compra tus entradas ahora!`;
+                        }
+                      }
+                      return description;
+                    })()}
+                    url={`https://www.ravehublatam.com/eventos/${formData.slug || 'ejemplo'}`}
+                    date={formData.startDate ? new Date(formData.startDate).toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' }) : undefined}
+                    location={formData.location?.city ? `${formData.location.city}${formData.location.venueName ? ` - ${formData.location.venueName}` : ''}` : undefined}
+                    artists={formData.artistLineup?.map(artist => artist.name) || []}
+                    eventType={formData.eventType}
+                  />
+                </div>
                 </div>
 
                 <Separator />

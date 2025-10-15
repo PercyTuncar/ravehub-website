@@ -102,7 +102,7 @@ export const metadata: Metadata = {
     "google-site-verification": "", // Add your Google site verification if available
     "msvalidate.01": "", // Add your Bing verification if available
   },
-    generator: 'v0.dev'
+  generator: 'v0.dev'
 }
 
 // Añadir la exportación de viewport separada
@@ -141,28 +141,30 @@ export default function RootLayout({
           {`
           {
             "@context": "https://schema.org",
-            "@type": "Organization",
-            "name": "Ravehub",
-            "url": "https://www.ravehublatam.com",
-            "logo": "https://www.ravehublatam.com/images/logo-full.png",
-            "description": "Plataforma líder en eventos de música electrónica en Latinoamérica",
-            "address": {
-              "@type": "PostalAddress",
-              "addressCountry": "PE",
-              "addressLocality": "Lima"
-            },
-            "contactPoint": {
-              "@type": "ContactPoint",
-              "telephone": "+51-944-784-488",
-              "contactType": "customer service",
-              "availableLanguage": "Spanish"
-            },
-            "sameAs": [
-              "https://www.facebook.com/ravehub",
-              "https://www.instagram.com/ravehub.pe",
-              "https://www.tiktok.com/@ravehub.pe",
-              "https://www.youtube.com/channel/UC-wATPEqoNpPPcFHfTFae8w"
-            ]
+  "@type": "Organization",
+  "name": "Ravehub",
+  "url": "https://www.ravehublatam.com",
+  "logo": "https://www.ravehublatam.com/images/logo-full.png",
+  "description": "Plataforma líder en eventos de música electrónica en Latinoamérica",
+  "address": {
+    "@type": "PostalAddress",
+    "streetAddress": "Av. Santo Toribio 173, Vía Central 125, Torre Real 8",
+    "addressLocality": "Lima",
+    "postalCode": "15073",
+    "addressCountry": "PE"
+  },
+  "contactPoint": {
+    "@type": "ContactPoint",
+    "telephone": "+51-944-784-488",
+    "contactType": "customer service",
+    "availableLanguage": "Spanish"
+  },
+  "sameAs": [
+    "https://www.facebook.com/ravehub",
+    "https://www.instagram.com/ravehub.pe",
+    "https://www.tiktok.com/@ravehub.pe",
+    "https://www.youtube.com/channel/UC-wATPEqoNpPPcFHfTFae8w"
+  ]
           }
           `}
         </Script>
