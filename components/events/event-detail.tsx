@@ -13,7 +13,7 @@ import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { formatCurrency, formatDate, formatTime } from "@/lib/utils"
 import type { Event, Zone, SalesPhase } from "@/types"
-import { AlertTriangle, CalendarDays, Clock, MapPin, Users, ExternalLink, Music, Info, Ticket } from "lucide-react"
+import { AlertTriangle, CalendarDays, Clock, MapPin, Users, ExternalLink, Music, Info, Ticket, HelpCircle } from "lucide-react"
 import { PurchaseTicketModal } from "@/components/events/purchase-ticket-modal"
 import dynamic from "next/dynamic"
 import { useTheme } from "next-themes"
@@ -86,6 +86,8 @@ export default function EventDetail({ event }: EventDetailProps) {
   const [timeLeft, setTimeLeft] = useState<string>("")
   const [selectedZone, setSelectedZone] = useState<Zone | null>(null)
   const [isPurchaseModalOpen, setIsPurchaseModalOpen] = useState(false)
+  const [ticketQuantities, setTicketQuantities] = useState<Record<string, number>>({})
+  const [showDescriptionModal, setShowDescriptionModal] = useState<string | null>(null)
 
   // Get current theme for syntax highlighting
   const { resolvedTheme } = useTheme()
@@ -211,10 +213,25 @@ export default function EventDetail({ event }: EventDetailProps) {
     setIsPurchaseModalOpen(true)
   }
 
+  // Handle quantity change
+  const handleQuantityChange = (zoneId: string, quantity: number) => {
+    setTicketQuantities(prev => ({
+      ...prev,
+      [zoneId]: Math.max(0, quantity)
+    }))
+  }
+
+  // Get selected phase
+  const getSelectedPhase = () => {
+    return event.salesPhases?.find(phase => phase.id === selectedPhaseId) || null
+  }
+
+  const [selectedPhaseId, setSelectedPhaseId] = useState<string>(getDefaultActivePhaseId())
+
   return (
     <div className="flex flex-col space-y-8">
       {/* Event Header */}
-      <div className="relative h-[300px] md:h-[400px] rounded-xl overflow-hidden">
+      <div className="relative h-[300px] md:h-[400px] overflow-hidden">
         <Image
           src={event.bannerImageUrl || "/placeholder.svg?height=400&width=1200"}
           alt={event.name}
@@ -223,13 +240,13 @@ export default function EventDetail({ event }: EventDetailProps) {
           priority
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent flex flex-col justify-end p-6">
-          <Badge variant="secondary" className="self-start mb-4 bg-primary text-primary-foreground">
+          <Badge variant="secondary" className="self-start mb-4 bg-primary/90 backdrop-blur-sm text-primary-foreground animate-fade-in-up">
             {timeLeft}
           </Badge>
-          <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-2 text-white">{event.name}</h1>
-          <div className="flex flex-wrap gap-2 text-white">
+          <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-2 text-white animate-fade-in-up" style={{ animationDelay: '0.2s' }}>{event.name}</h1>
+          <div className="flex flex-wrap gap-2 text-white animate-fade-in-up" style={{ animationDelay: '0.4s' }}>
             {event.categories.map((category) => (
-              <Badge key={category} variant="outline" className="border-white text-white">
+              <Badge key={category} variant="outline" className="border-white/70 text-white backdrop-blur-sm">
                 {category}
               </Badge>
             ))}
@@ -237,170 +254,6 @@ export default function EventDetail({ event }: EventDetailProps) {
         </div>
       </div>
 
-      {/* Mobile WhatsApp Group CTA - Only visible on mobile and if event hasn't passed yet */}
-      {(event.endDate ? new Date(event.endDate) > new Date() : new Date(event.startDate) > new Date()) && (
-        <div className="md:hidden relative overflow-hidden rounded-3xl bg-gradient-to-br from-emerald-50 via-green-50 to-teal-50 dark:from-emerald-950/30 dark:via-green-950/20 dark:to-teal-950/30 border border-emerald-200/60 dark:border-emerald-800/40 shadow-lg backdrop-blur-sm">
-          {/* Subtle animated background pattern */}
-          <div className="absolute inset-0 overflow-hidden pointer-events-none">
-            <div className="absolute top-4 right-4 w-32 h-32 bg-gradient-to-br from-emerald-200/30 to-green-300/20 dark:from-emerald-700/20 dark:to-green-600/10 rounded-full blur-2xl animate-pulse"></div>
-            <div
-              className="absolute -bottom-8 -left-8 w-40 h-40 bg-gradient-to-tr from-teal-200/20 to-emerald-300/20 dark:from-teal-700/10 dark:to-emerald-600/10 rounded-full blur-3xl animate-pulse"
-              style={{ animationDelay: "1.5s" }}
-            ></div>
-            <div
-              className="absolute top-1/2 left-1/4 w-24 h-24 bg-green-200/20 dark:bg-green-600/10 rounded-full blur-xl animate-pulse"
-              style={{ animationDelay: "3s" }}
-            ></div>
-          </div>
-
-          {/* Content */}
-          <div className="relative p-6 space-y-4">
-            {/* Header with icon */}
-            <div className="flex items-center justify-center space-x-3">
-              <div className="relative">
-                <div className="w-12 h-12 bg-gradient-to-br from-emerald-500 to-green-600 rounded-2xl flex items-center justify-center shadow-lg">
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    width="24"
-                    height="24"
-                    viewBox="0 0 24 24"
-                    className="w-6 h-6 text-white"
-                  >
-                    <path
-                      fill="white"
-                      d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.148-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372s-1.04 1.016-1.04 2.479 1.065 2.876 1.213 3.074c.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.695.248-1.29.173-1.414z"
-                    />
-                  </svg>
-                </div>
-                {/* Pulse indicator */}
-                <div className="absolute -top-1 -right-1 w-4 h-4">
-                  <div className="absolute inset-0 bg-emerald-400 rounded-full animate-ping opacity-75"></div>
-                  <div className="absolute inset-0 bg-emerald-500 rounded-full"></div>
-                </div>
-              </div>
-              <div className="text-center">
-                <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100">
-                  Únete a nuestra{" "}
-                  <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-600 to-green-600 dark:from-emerald-400 dark:to-green-400">
-                    comunidad
-                  </span>
-                </h3>
-                <p className="text-sm text-gray-600 dark:text-gray-400 font-medium">Grupo oficial de WhatsApp</p>
-              </div>
-            </div>
-
-            {/* Benefits */}
-            <div className="grid grid-cols-2 gap-3">
-              <div className="flex items-center space-x-2 p-3 bg-white/60 dark:bg-gray-800/40 rounded-xl backdrop-blur-sm border border-emerald-100/50 dark:border-emerald-800/30">
-                <div className="w-8 h-8 bg-gradient-to-br from-emerald-100 to-green-100 dark:from-emerald-900/50 dark:to-green-900/50 rounded-lg flex items-center justify-center">
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    className="h-4 w-4 text-emerald-600 dark:text-emerald-400"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                  </svg>
-                </div>
-                <div>
-                  <p className="text-xs font-semibold text-gray-900 dark:text-gray-100">Noticias</p>
-                  <p className="text-xs text-gray-600 dark:text-gray-400">al instante</p>
-                </div>
-              </div>
-
-              <div className="flex items-center space-x-2 p-3 bg-white/60 dark:bg-gray-800/40 rounded-xl backdrop-blur-sm border border-emerald-100/50 dark:border-emerald-800/30">
-                <div className="w-8 h-8 bg-gradient-to-br from-emerald-100 to-green-100 dark:from-emerald-900/50 dark:to-green-900/50 rounded-lg flex items-center justify-center">
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    className="h-4 w-4 text-emerald-600 dark:text-emerald-400"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M12 8v13m0-13V6a2 2 0 112 2h-2zm0 0V5.5A2.5 2.5 0 109.5 8H12zm-7 4h14M5 12a2 2 0 110-4h14a2 2 0 110 4M5 12v7a2 2 0 002 2h10a2 2 0 002-2v-7"
-                    />
-                  </svg>
-                </div>
-                <div>
-                  <p className="text-xs font-semibold text-gray-900 dark:text-gray-100">Ofertas</p>
-                  <p className="text-xs text-gray-600 dark:text-gray-400">exclusivas</p>
-                </div>
-              </div>
-
-              <div className="flex items-center space-x-2 p-3 bg-white/60 dark:bg-gray-800/40 rounded-xl backdrop-blur-sm border border-emerald-100/50 dark:border-emerald-800/30">
-                <div className="w-8 h-8 bg-gradient-to-br from-emerald-100 to-green-100 dark:from-emerald-900/50 dark:to-green-900/50 rounded-lg flex items-center justify-center">
-                  <Users className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
-                </div>
-                <div>
-                  <p className="text-xs font-semibold text-gray-900 dark:text-gray-100">Comunidad</p>
-                  <p className="text-xs text-gray-600 dark:text-gray-400">activa</p>
-                </div>
-              </div>
-
-              <div className="flex items-center space-x-2 p-3 bg-white/60 dark:bg-gray-800/40 rounded-xl backdrop-blur-sm border border-emerald-100/50 dark:border-emerald-800/30">
-                <div className="w-8 h-8 bg-gradient-to-br from-emerald-100 to-green-100 dark:from-emerald-900/50 dark:to-green-900/50 rounded-lg flex items-center justify-center">
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    className="h-4 w-4 text-emerald-600 dark:text-emerald-400"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M15 17h5l-5 5v-5zM4 19h5v-5H4v5zM13 7h5l-5-5v5zM4 1h5v5H4V1z"
-                    />
-                  </svg>
-                </div>
-                <div>
-                  <p className="text-xs font-semibold text-gray-900 dark:text-gray-100">Eventos</p>
-                  <p className="text-xs text-gray-600 dark:text-gray-400">primero</p>
-                </div>
-              </div>
-            </div>
-
-            {/* CTA Button */}
-            <a
-              href="https://chat.whatsapp.com/IUs37U1mJq8FZJSQbMUZpc"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="group relative w-full bg-gradient-to-r from-emerald-500 via-green-500 to-emerald-600 hover:from-emerald-600 hover:via-green-600 hover:to-emerald-700 text-white font-bold py-4 px-6 rounded-2xl flex items-center justify-center space-x-3 transition-all duration-300 shadow-lg hover:shadow-emerald-500/30 transform hover:-translate-y-0.5 overflow-hidden"
-            >
-              {/* Shine effect */}
-              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent transform -skew-x-12 -translate-x-full group-hover:translate-x-full transition-transform duration-700"></div>
-
-              <Users className="w-5 h-5 relative z-10" />
-              <span className="text-base relative z-10 tracking-wide">Unirse al grupo</span>
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="w-5 h-5 relative z-10 group-hover:translate-x-1 transition-transform duration-300"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
-              </svg>
-            </a>
-
-            {/* Member count */}
-            <div className="text-center">
-              <p className="text-xs text-gray-500 dark:text-gray-400">
-                <span className="inline-flex items-center">
-                  <span className="w-2 h-2 bg-emerald-500 rounded-full mr-1 animate-pulse"></span>
-                  Más de 500+ miembros activos
-                </span>
-              </p>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Event Info */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -543,328 +396,174 @@ export default function EventDetail({ event }: EventDetailProps) {
           {/* Artist Lineup Slider - Only show if there are multiple artists */}
 
           <div style={{ height: "45px" }} />
-          {/* Ticket Purchase */}
-          <Card className="lg:shadow-md lg:border-opacity-70">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Ticket className="h-5 w-5" />
-                <span>Entradas</span>
-              </CardTitle>
-              <CardDescription>
-                {event.sellTicketsOnPlatform
-                  ? "Compra tus entradas directamente en Ravehub"
-                  : "Entradas disponibles en ticketera externa"}
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {event.sellTicketsOnPlatform ? (
-                <>
-                  {event.salesPhases && event.salesPhases.length > 0 ? (
-                    <Tabs defaultValue={getDefaultActivePhaseId()}>
-                      <div className="relative">
-                        {event.salesPhases.length > 3 && (
-                          <button
-                            onClick={() => {
-                              const tabsList = document.querySelector('[role="tablist"]')
-                              if (tabsList) {
-                                tabsList.scrollBy({ left: -200, behavior: "smooth" })
-                              }
-                            }}
-                            className="absolute -left-2 top-1/2 -translate-y-1/2 z-10 bg-background/80 backdrop-blur-sm rounded-full p-1 shadow-md hover:bg-muted transition-colors"
-                            aria-label="Ver fases anteriores"
-                          >
-                            <svg
-                              xmlns="http://www.w3.org/2000/svg"
-                              width="20"
-                              height="20"
-                              viewBox="0 0 24 24"
-                              fill="none"
-                              stroke="currentColor"
-                              strokeWidth="2"
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
+          {/* Ticket Purchase - Mobile First Design */}
+          <div className="space-y-6 -mt-8 relative z-10">
+            <div className="bg-background rounded-t-3xl px-6 pt-8 pb-6 shadow-lg">
+              <div className="flex items-center gap-2 mb-6">
+                <Ticket className="h-5 w-5 text-primary" />
+                <h2 className="text-xl font-bold">Entradas</h2>
+              </div>
+
+            {event.sellTicketsOnPlatform ? (
+              <>
+                {event.salesPhases && event.salesPhases.length > 0 ? (
+                  <>
+                    {/* Segmented Control for Sales Phases */}
+                    <div className="bg-muted/30 rounded-xl p-1 mb-6">
+                      <div className="flex gap-1">
+                        {event.salesPhases.map((phase, index) => {
+                          const now = new Date()
+                          const startDate = phase.startDate instanceof Date ? phase.startDate : new Date(phase.startDate)
+                          const endDate = phase.endDate instanceof Date ? phase.endDate : new Date(phase.endDate)
+                          const isCurrentPhase = now >= startDate && now <= endDate
+                          const isPastPhase = now > endDate
+                          const isPhaseActive = phase.isActive !== false
+                          const isSoldOut = !isPhaseActive || (isPastPhase && !isCurrentPhase)
+                          const isSelected = phase.id === selectedPhaseId
+
+                          return (
+                            <button
+                              key={phase.id}
+                              onClick={() => setSelectedPhaseId(phase.id)}
+                              className={`flex-1 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
+                                isSelected
+                                  ? "bg-primary text-primary-foreground shadow-sm"
+                                  : isSoldOut
+                                    ? "text-muted-foreground cursor-not-allowed"
+                                    : "text-muted-foreground hover:text-foreground hover:bg-background/50"
+                              }`}
+                              disabled={isSoldOut}
                             >
-                              <path d="m15 18-6-6 6-6" />
-                            </svg>
-                          </button>
-                        )}
-
-                        <TabsList
-                          className="w-full flex overflow-x-auto scrollbar-hide snap-x snap-mandatory"
-                          style={{
-                            scrollbarWidth: "none",
-                            msOverflowStyle: "none",
-                          }}
-                        >
-                          {event.salesPhases.map((phase) => {
-                            // Determine if phase is active, current, past or future
-                            const now = new Date()
-                            const startDate =
-                              phase.startDate instanceof Date ? phase.startDate : new Date(phase.startDate)
-                            const endDate = phase.endDate instanceof Date ? phase.endDate : new Date(phase.endDate)
-                            const isCurrentPhase = now >= startDate && now <= endDate
-                            const isPastPhase = now > endDate
-                            const isPhaseActive = phase.isActive !== false
-                            const isSoldOut = !isPhaseActive || (isPastPhase && !isCurrentPhase)
-
-                            // Check if tickets are available
-                            const hasAvailableTickets = isPhaseActive && !isPastPhase && !isSoldOut
-
-                            return (
-                              <TabsTrigger
-                                key={phase.id}
-                                value={phase.id}
-                                className={`relative flex-1 min-w-[120px] snap-start overflow-hidden ${
-                                  isSoldOut
-                                    ? "bg-amber-50 dark:bg-amber-950/20 border-amber-200 dark:border-amber-800/30"
-                                    : ""
-                                } data-[state=active]:bg-primary data-[state=active]:text-white dark:data-[state=active]:bg-primary dark:data-[state=active]:text-white data-[state=active]:shadow-md data-[state=active]:font-semibold data-[state=active]:border-primary/80 font-medium`}
-                              >
-                                <div className="flex flex-row items-center justify-center w-full gap-1">
-                                  {hasAvailableTickets && (
-                                    <span className="absolute left-2 top-1/2 -translate-y-1/2 w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
-                                  )}
-                                  <span className={isSoldOut ? "text-gray-700 dark:text-gray-300" : ""}>
-                                    {phase.name}
-                                  </span>
-
-                                  {isSoldOut && (
-                                    <Badge variant="destructive" className="text-[10px] py-0">
-                                      AGOTADO
-                                    </Badge>
-                                  )}
-                                </div>
-                              </TabsTrigger>
-                            )
-                          })}
-                        </TabsList>
-
-                        {event.salesPhases.length > 3 && (
-                          <button
-                            onClick={() => {
-                              const tabsList = document.querySelector('[role="tablist"]')
-                              if (tabsList) {
-                                tabsList.scrollBy({ left: 200, behavior: "smooth" })
-                              }
-                            }}
-                            className="absolute -right-2 top-1/2 -translate-y-1/2 z-10 bg-background/80 backdrop-blur-sm rounded-full p-1 shadow-md hover:bg-muted transition-colors"
-                            aria-label="Ver más fases"
-                          >
-                            <svg
-                              xmlns="http://www.w3.org/2000/svg"
-                              width="20"
-                              height="20"
-                              viewBox="0 0 24 24"
-                              fill="none"
-                              stroke="currentColor"
-                              strokeWidth="2"
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                            >
-                              <path d="m9 18 6-6-6-6" />
-                            </svg>
-                          </button>
-                        )}
+                              {phase.name}
+                              {isSoldOut && <span className="block text-xs opacity-75">Agotado</span>}
+                            </button>
+                          )
+                        })}
                       </div>
-                      <style jsx global>{`
-                        .scrollbar-hide::-webkit-scrollbar {
-                          display: none;
-                        }
-                      `}</style>
-                      {event.salesPhases.map((phase) => {
-                        // Determine phase status
-                        const now = new Date()
-                        const startDate = phase.startDate instanceof Date ? phase.startDate : new Date(phase.startDate)
-                        const endDate = phase.endDate instanceof Date ? phase.endDate : new Date(phase.endDate)
-                        const isCurrentPhase = now >= startDate && now <= endDate
-                        const isPastPhase = now > endDate
-                        const isFuturePhase = now < startDate
-                        const isPhaseActive = phase.isActive !== false
+                    </div>
 
-                        // Determine status badge
-                        let phaseStatusBadge = null
-                        if (!isPhaseActive) {
-                          phaseStatusBadge = (
-                            <Badge variant="destructive" className="ml-2">
-                              AGOTADO
-                            </Badge>
-                          )
-                        } else if (isCurrentPhase) {
-                          phaseStatusBadge = (
-                            <Badge variant="secondary" className="ml-2 bg-primary text-primary-foreground">
-                              Actual
-                            </Badge>
-                          )
-                        } else if (isPastPhase) {
-                          phaseStatusBadge = (
-                            <Badge variant="outline" className="ml-2">
-                              Finalizada
-                            </Badge>
-                          )
-                        } else if (isFuturePhase) {
-                          phaseStatusBadge = (
-                            <Badge variant="outline" className="ml-2 border-blue-400 text-blue-500">
-                              Próximamente
-                            </Badge>
-                          )
-                        }
+                    {/* Individual Ticket Cards */}
+                    <div className="space-y-4">
+                      {event.zones.map((zone, index) => {
+                        const selectedPhase = getSelectedPhase()
+                        const pricing = selectedPhase?.zonesPricing.find((p) => p.zoneId === zone.id)
+                        const isSoldOut = !selectedPhase?.isActive || !pricing || pricing.available <= pricing.sold
+                        const quantity = ticketQuantities[zone.id] || 0
+
+                        // Determine zone tier based on index position
+                        const isBasic = index === 0
+                        const isPremium = index === event.zones.length - 1
+                        const isMidTier = !isBasic && !isPremium
 
                         return (
-                          <TabsContent key={phase.id} value={phase.id} className="mt-4 space-y-4">
-                            <div
-                              className={`border rounded-lg overflow-hidden ${!isPhaseActive ? "border-destructive/30" : ""}`}
-                            >
-                              <div
-                                className={`p-3 ${!isPhaseActive ? "bg-destructive/5" : isCurrentPhase ? "bg-primary/10" : "bg-muted/50"}`}
-                              >
-                                <div className="flex items-center justify-between">
-                                  <h3 className="font-medium flex items-center">
-                                    {phase.name}
-                                    {phaseStatusBadge}
-                                  </h3>
-
-                                  {!isPhaseActive && (
-                                    <div className="flex items-center text-destructive text-sm">
-                                      <AlertTriangle className="h-4 w-4 mr-1" />
-                                      <span>Sin disponibilidad</span>
+                          <Card
+                            key={zone.id}
+                            className={`shadow-sm hover:shadow-md transition-all duration-200 border-0 ${
+                              isSoldOut ? "opacity-60" : ""
+                            }`}
+                          >
+                            <CardContent className="p-4">
+                              <div className="flex justify-between items-start mb-3">
+                                <div className="flex-1">
+                                  <div className="flex items-center gap-2 mb-1 flex-wrap">
+                                    <div className="flex items-center gap-1">
+                                      <h3 className="font-bold text-lg">{zone.name}</h3>
+                                      {zone.description && (
+                                        <button
+                                          onClick={() => setShowDescriptionModal(zone.id)}
+                                          className="w-4 h-4 rounded-full bg-muted hover:bg-muted/80 flex items-center justify-center transition-colors flex-shrink-0"
+                                          aria-label="Ver descripción"
+                                        >
+                                          <HelpCircle className="w-3 h-3 text-muted-foreground" />
+                                        </button>
+                                      )}
+                                    </div>
+                                    {isPremium && (
+                                      <Badge variant="secondary" className="bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300">
+                                        Premium
+                                      </Badge>
+                                    )}
+                                    {isMidTier && (
+                                      <Badge variant="secondary" className="bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-300">
+                                        VIP
+                                      </Badge>
+                                    )}
+                                    {isBasic && (
+                                      <Badge variant="outline" className="text-gray-600">
+                                        General
+                                      </Badge>
+                                    )}
+                                  </div>
+                                </div>
+                                <div className="text-right">
+                                  {pricing && (
+                                    <div className="text-lg font-bold text-primary">
+                                      {formatCurrency(pricing.price, event.currency, currency, exchangeRates)}
                                     </div>
                                   )}
                                 </div>
-
-                                <p className="text-xs text-muted-foreground mt-1">
-                                  {formatDate(startDate)} - {formatDate(endDate)}
-                                </p>
                               </div>
 
-                              <div className="p-3 pt-0">
-                                {isPastPhase && (
-                                  <div className="mt-2 text-xs text-muted-foreground bg-muted/50 p-2 rounded-md">
-                                    <p className="flex items-center">
-                                      <svg
-                                        xmlns="http://www.w3.org/2000/svg"
-                                        width="14"
-                                        height="14"
-                                        viewBox="0 0 24 24"
-                                        fill="none"
-                                        stroke="currentColor"
-                                        strokeWidth="2"
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                        className="mr-1"
-                                      >
-                                        <circle cx="12" cy="12" r="10"></circle>
-                                        <line x1="12" y1="16" x2="12" y2="12"></line>
-                                        <line x1="12" y1="8" x2="12.01" y2="8"></line>
-                                      </svg>
-                                      Esta fase de venta ya ha finalizado con un éxito total. ¡Gracias por tu confianza!
-                                      🎉
-                                    </p>
+                              {/* Quantity Selector */}
+                              {!isSoldOut ? (
+                                <div className="flex items-center justify-between">
+                                  <div className="flex items-center gap-2">
+                                    <button
+                                      onClick={() => handleQuantityChange(zone.id, quantity - 1)}
+                                      className="w-8 h-8 rounded-full bg-muted hover:bg-muted/80 flex items-center justify-center transition-colors"
+                                      disabled={quantity <= 0}
+                                    >
+                                      <span className="text-lg font-medium">-</span>
+                                    </button>
+                                    <span className="w-8 text-center font-medium">{quantity}</span>
+                                    <button
+                                      onClick={() => handleQuantityChange(zone.id, quantity + 1)}
+                                      className="w-8 h-8 rounded-full bg-muted hover:bg-muted/80 flex items-center justify-center transition-colors"
+                                      disabled={quantity >= (pricing?.available || 0)}
+                                    >
+                                      <span className="text-lg font-medium">+</span>
+                                    </button>
                                   </div>
-                                )}
-                                <p className="text-xs font-medium mt-3 mb-2">Zonas:</p>
-                                <div className="space-y-2">
-                                  {event.zones.map((zone, index) => {
-                                    const pricing = phase.zonesPricing.find((p) => p.zoneId === zone.id)
-                                    const isSoldOut = !isPhaseActive || !pricing || pricing.available <= pricing.sold
 
-                                    // Determine zone tier based on index position
-                                    // First zones are basic, last zones are premium
-                                    const isBasic = index === 0
-                                    const isPremium = index === event.zones.length - 1
-                                    const isMidTier = !isBasic && !isPremium
-
-                                    // Apply different styling based on tier
-                                    let tierStyle = ""
-                                    if (isBasic) {
-                                      tierStyle = "border-gray-200 dark:border-gray-700"
-                                    } else if (isMidTier) {
-                                      tierStyle =
-                                        "border-blue-200 dark:border-blue-800 bg-blue-50/50 dark:bg-blue-900/20"
-                                    } else if (isPremium) {
-                                      tierStyle =
-                                        "border-amber-200 dark:border-amber-800 bg-amber-50/50 dark:bg-amber-900/20"
-                                    }
-
-                                    return (
-                                      <div
-                                        key={`${phase.id}-${zone.id}`}
-                                        className={`flex justify-between items-center p-2 border rounded-md ${
-                                          isSoldOut ? "bg-muted/40" : tierStyle
-                                        }`}
-                                      >
-                                        <div>
-                                          <p className="text-sm font-medium flex items-center">
-                                            {zone.name}
-                                            {isPremium && (
-                                              <span className="ml-2 text-xs bg-amber-100 dark:bg-amber-900/40 text-amber-800 dark:text-amber-300 px-1.5 py-0.5 rounded-full font-medium"></span>
-                                            )}
-                                            {isMidTier && (
-                                              <span className="ml-2 text-xs bg-blue-100 dark:bg-blue-900/40 text-blue-800 dark:text-blue-300 px-1.5 py-0.5 rounded-full font-medium"></span>
-                                            )}
-                                            {isBasic && (
-                                              <span className="ml-2 text-xs bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 px-1.5 py-0.5 rounded-full font-medium"></span>
-                                            )}
-                                          </p>
-                                          {pricing && (
-                                            <p
-                                              className={`text-xs ${
-                                                isSoldOut
-                                                  ? "text-muted-foreground"
-                                                  : isPremium
-                                                    ? "text-amber-600 dark:text-amber-400 font-semibold"
-                                                    : isMidTier
-                                                      ? "text-blue-600 dark:text-blue-400"
-                                                      : "text-primary"
-                                              }`}
-                                            >
-                                              {formatCurrency(pricing.price, event.currency, currency, exchangeRates)}
-                                            </p>
-                                          )}
-                                        </div>
-
-                                        {isCurrentPhase ? (
-                                          <Button
-                                            onClick={() => handlePurchase(zone)}
-                                            disabled={isSoldOut}
-                                            variant={isSoldOut ? "outline" : isPremium ? "default" : "secondary"}
-                                            size="sm"
-                                            className={
-                                              isPremium && !isSoldOut
-                                                ? "bg-amber-600 hover:bg-amber-700 text-white"
-                                                : ""
-                                            }
-                                          >
-                                            {isSoldOut ? "Agotado" : "Comprar"}
-                                          </Button>
-                                        ) : (
-                                          <Badge variant={isSoldOut ? "destructive" : "outline"} className="text-xs">
-                                            {isSoldOut ? "Agotado" : isPastPhase ? "Finalizado" : "Próximamente"}
-                                          </Badge>
-                                        )}
-                                      </div>
-                                    )
-                                  })}
+                                  <Button
+                                    onClick={() => handlePurchase(zone)}
+                                    disabled={quantity === 0}
+                                    className={`px-6 bg-primary hover:bg-primary/90 ${
+                                      quantity === 0 ? "opacity-60" : ""
+                                    }`}
+                                  >
+                                    {quantity === 0 ? "Seleccionar" : `Comprar ${quantity}`}
+                                  </Button>
                                 </div>
-                              </div>
-                            </div>
-                          </TabsContent>
+                              ) : (
+                                <div className="text-center py-2">
+                                  <Badge variant="destructive" className="w-full justify-center">
+                                    Agotado
+                                  </Badge>
+                                </div>
+                              )}
+                            </CardContent>
+                          </Card>
                         )
                       })}
-                    </Tabs>
-                  ) : (
-                    <div className="text-center py-4">
-                      <p className="text-muted-foreground">No hay fases de venta disponibles para este evento.</p>
                     </div>
-                  )}
 
-                  {event.allowInstallmentPayments && (
-                    <p className="text-xs text-muted-foreground mt-2">
-                      * Este evento permite pago en cuotas. Selecciona una zona para ver las opciones.
-                    </p>
-                  )}
-                </>
-              ) : (
-                <div className="text-center">
+                    {event.allowInstallmentPayments && (
+                      <div className="text-center text-xs text-muted-foreground mt-4 p-3 bg-muted/30 rounded-lg">
+                        💳 Este evento permite pago en cuotas
+                      </div>
+                    )}
+                  </>
+                ) : (
+                  <div className="text-center py-8">
+                    <p className="text-muted-foreground">No hay fases de venta disponibles para este evento.</p>
+                  </div>
+                )}
+              </>
+            ) : (
+              <Card className="shadow-sm border-0">
+                <CardContent className="p-6 text-center">
+                  <ExternalLink className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
                   <p className="text-muted-foreground mb-4">
                     Las entradas para este evento se venden a través de una ticketera externa.
                   </p>
@@ -875,14 +574,15 @@ export default function EventDetail({ event }: EventDetailProps) {
                       rel="noopener noreferrer"
                       className="flex items-center justify-center gap-2"
                     >
+                      <span>Comprar en ticketera externa</span>
                       <ExternalLink className="h-4 w-4" />
-                      <span>Comprar en ticketera</span>
                     </Link>
                   </Button>
-                </div>
-              )}
-            </CardContent>
-          </Card>
+                </CardContent>
+              </Card>
+            )}
+            </div>
+          </div>
         </div>
       </div>
 
@@ -895,6 +595,28 @@ export default function EventDetail({ event }: EventDetailProps) {
           zone={selectedZone}
           phase={currentPhase}
         />
+      )}
+
+      {/* Description Modal */}
+      {showDescriptionModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
+          <div className="bg-background rounded-lg p-6 max-w-md w-full max-h-[80vh] overflow-y-auto">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold">
+                {event.zones.find(z => z.id === showDescriptionModal)?.name}
+              </h3>
+              <button
+                onClick={() => setShowDescriptionModal(null)}
+                className="w-8 h-8 rounded-full bg-muted hover:bg-muted/80 flex items-center justify-center"
+              >
+                <span className="text-lg">×</span>
+              </button>
+            </div>
+            <p className="text-muted-foreground">
+              {event.zones.find(z => z.id === showDescriptionModal)?.description}
+            </p>
+          </div>
+        </div>
       )}
     </div>
   )
@@ -1019,23 +741,39 @@ const htmlStyles = `
     width: 2px;
     height: 2px;
   }
-  
+
   .custom-scrollbar::-webkit-scrollbar-track {
     background: transparent;
   }
-  
+
   .custom-scrollbar::-webkit-scrollbar-thumb {
     background: #FF9900;
     border-radius: 5px;
   }
-  
+
   .custom-scrollbar::-webkit-scrollbar-thumb:hover {
     background: #FF9900;
   }
-  
+
   /* For Firefox */
   .custom-scrollbar {
     scrollbar-width: thin;
     scrollbar-color: #FF9900;
+  }
+
+  /* Banner animations */
+  @keyframes fade-in-up {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .animate-fade-in-up {
+    animation: fade-in-up 0.6s ease-out forwards;
   }
 `
