@@ -20,7 +20,20 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { createEvent, updateEvent, getEventById } from "@/lib/firebase/events"
 import { useToast } from "@/components/ui/use-toast"
 import { Plus, Trash, Upload, MapPin, CalendarIcon, AlertCircle, Pencil } from "lucide-react"
-import type { Event, Artist, Zone, SalesPhase } from "@/types"
+import type { Event, Artist, Zone, SalesPhase, EventDJ } from "@/types"
+import { ArtistAutocomplete } from "@/components/admin/artist-autocomplete"
+import { ArtistListDraggable } from "@/components/admin/artist-list-draggable"
+import { EventTemplates } from "@/components/admin/event-templates"
+
+interface EventTemplate {
+  id: string
+  name: string
+  description: string
+  eventType: "dj_set" | "festival" | "concert" | "other"
+  defaultValues: Partial<Event>
+  icon: React.ReactNode
+  color: string
+}
 import { v4 as uuidv4 } from "uuid"
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage"
 import { storage } from "@/lib/firebase/config"
@@ -43,6 +56,7 @@ export function EventForm({ eventId }: EventFormProps) {
   const [loadingEvent, setLoadingEvent] = useState(!!eventId)
   const [activeTab, setActiveTab] = useState("basic")
   const [showSchemaPreview, setShowSchemaPreview] = useState(false)
+  const [schemaPreviewData, setSchemaPreviewData] = useState<any>(null)
   const [validationErrors, setValidationErrors] = useState<string[]>([])
   const formRef = useRef<HTMLFormElement>(null)
 
@@ -115,7 +129,20 @@ export function EventForm({ eventId }: EventFormProps) {
   const [bannerImagePreview, setBannerImagePreview] = useState<string>("")
   const [newCategory, setNewCategory] = useState("")
   const [newTag, setNewTag] = useState("")
-  const [newArtist, setNewArtist] = useState<Partial<Artist>>({
+  const [newArtist, setNewArtist] = useState<Partial<Artist & {
+    performerType?: string;
+    members?: any[];
+    alternateName?: string;
+    birthDate?: string;
+    jobTitle?: string[];
+    foundingDate?: string;
+    famousTracks?: Array<{ name: string }>;
+    famousAlbums?: Array<{ name: string }>;
+    wikipediaUrl?: string;
+    officialWebsite?: string;
+    facebookUrl?: string;
+    twitterUrl?: string;
+  }>>({
     name: "",
     imageUrl: "",
     description: "",
@@ -124,11 +151,28 @@ export function EventForm({ eventId }: EventFormProps) {
     soundcloudUrl: "",
     order: 0,
     isFeatured: false, // Default to not featured
+    performerType: "Person",
+    members: [],
+    alternateName: "",
+    birthDate: "",
+    jobTitle: [],
+    foundingDate: "",
+    famousTracks: [],
+    famousAlbums: [],
+    wikipediaUrl: "",
+    officialWebsite: "",
+    facebookUrl: "",
+    twitterUrl: "",
   })
+
+  // New state for EventDJ autocompletion
+  const [selectedEventDJ, setSelectedEventDJ] = useState<EventDJ | null>(null)
+  const [artistSearchValue, setArtistSearchValue] = useState("")
   const [artistImage, setArtistImage] = useState<File | null>(null)
   const [artistImagePreview, setArtistImagePreview] = useState<string>("")
   const [editingArtistId, setEditingArtistId] = useState<string | null>(null)
   const [useImageLink, setUseImageLink] = useState<boolean>(false)
+  const [artistImageUrlValue, setArtistImageUrlValue] = useState<string>("")
 
   // New state variables for FAQ and SubEvents
   const [newFaqQuestion, setNewFaqQuestion] = useState("")
@@ -140,6 +184,11 @@ export function EventForm({ eventId }: EventFormProps) {
     endDate: new Date(),
   })
 
+  // New state for Schema.org fields
+  const [doorTime, setDoorTime] = useState("")
+  const [audienceType, setAudienceType] = useState("public")
+  const [isAccessibleForFree, setIsAccessibleForFree] = useState(false)
+
   useEffect(() => {
     if (eventId) {
       const fetchEvent = async () => {
@@ -148,12 +197,18 @@ export function EventForm({ eventId }: EventFormProps) {
           const event = await getEventById(eventId)
           if (event) {
             setFormData(event)
+            // Set schema-specific fields from loaded event
+            setDoorTime((event as any).doorTime || "")
+            setAudienceType((event as any).audienceType || "public")
+            setIsAccessibleForFree((event as any).isAccessibleForFree || false)
             if (event.mainImageUrl) {
               setMainImagePreview(event.mainImageUrl)
             }
             if (event.bannerImageUrl) {
               setBannerImagePreview(event.bannerImageUrl)
             }
+            // Update schema preview when loading existing event
+            updateSchemaPreview(event)
           } else {
             toast({
               title: "Error",
@@ -179,9 +234,82 @@ export function EventForm({ eventId }: EventFormProps) {
   }, [eventId, router, toast])
 
   const handleChange = (name: string, value: any) => {
-    setFormData((prev) => ({ ...prev, [name]: value }))
+    const newData = { ...formData, [name]: value }
+    setFormData(newData)
     // Clear validation errors when user makes changes
     setValidationErrors([])
+    // Update schema preview when form data changes - only if preview is visible
+    if (showSchemaPreview) {
+      updateSchemaPreview(newData)
+    }
+  }
+
+  const handleCountryChange = (countryName: string) => {
+    // Find the country code from the selected country name
+    const countryCodes: Record<string, string> = {
+      "Argentina": "AR",
+      "Bolivia": "BO",
+      "Brasil": "BR",
+      "Chile": "CL",
+      "Colombia": "CO",
+      "Costa Rica": "CR",
+      "Cuba": "CU",
+      "Ecuador": "EC",
+      "El Salvador": "SV",
+      "Guatemala": "GT",
+      "Honduras": "HN",
+      "México": "MX",
+      "Nicaragua": "NI",
+      "Panamá": "PA",
+      "Paraguay": "PY",
+      "Perú": "PE",
+      "Puerto Rico": "PR",
+      "República Dominicana": "DO",
+      "Uruguay": "UY",
+      "Venezuela": "VE"
+    }
+
+    const countryCode = countryCodes[countryName] || countryName
+
+    // Update both country name and country code
+    const newData = {
+      ...formData,
+      country: countryName,
+      location: {
+        ...formData.location,
+        country: countryName,
+        countryCode: countryCode
+      } as any // Type assertion to handle the location type
+    }
+
+    setFormData(newData as any)
+    // Clear validation errors when user makes changes
+    setValidationErrors([])
+    // Update schema preview with new timezone only if preview is visible
+    if (showSchemaPreview) {
+      updateSchemaPreview(newData)
+    }
+  }
+
+  const handleDoorTimeChange = (value: string) => {
+    setDoorTime(value)
+    if (showSchemaPreview) {
+      updateSchemaPreview({ ...formData, doorTime: value })
+    }
+  }
+
+  const handleAudienceTypeChange = (value: string) => {
+    setAudienceType(value)
+    if (showSchemaPreview) {
+      updateSchemaPreview({ ...formData, audienceType: value })
+    }
+  }
+
+  const handleIsAccessibleForFreeChange = (checked: boolean) => {
+    setIsAccessibleForFree(checked)
+    if (showSchemaPreview) {
+      updateSchemaPreview({ ...formData, isAccessibleForFree: checked })
+    }
   }
 
   const handleImageChange = (
@@ -234,6 +362,52 @@ export function EventForm({ eventId }: EventFormProps) {
     setNewArtist((prev) => ({ ...prev, [name]: value }))
   }
 
+  const handleEventDJSelect = (eventDJ: EventDJ) => {
+    setSelectedEventDJ(eventDJ)
+    // Auto-fill artist form with EventDJ data including Schema.org fields
+    setNewArtist({
+      name: eventDJ.name,
+      imageUrl: eventDJ.imageUrl,
+      description: eventDJ.description || eventDJ.bio || "",
+      instagramHandle: eventDJ.instagramHandle,
+      spotifyUrl: eventDJ.spotifyUrl,
+      soundcloudUrl: eventDJ.soundcloudUrl,
+      order: formData.artistLineup?.length || 0,
+      isFeatured: false,
+      performerType: (eventDJ as any).performerType || "Person",
+      alternateName: (eventDJ as any).alternateName || "",
+      birthDate: (eventDJ as any).birthDate || "",
+      jobTitle: (eventDJ as any).jobTitle || [],
+      foundingDate: (eventDJ as any).foundingDate || "",
+      members: (eventDJ as any).members || [],
+      famousTracks: (eventDJ as any).famousTracks || [],
+      famousAlbums: (eventDJ as any).famousAlbums || [],
+      wikipediaUrl: (eventDJ as any).socialLinks?.wikipedia || "",
+      officialWebsite: (eventDJ as any).socialLinks?.website || "",
+      facebookUrl: (eventDJ as any).socialLinks?.facebook || "",
+      twitterUrl: (eventDJ as any).socialLinks?.twitter || "",
+    })
+
+    // Auto-enable image link switch if DJ has an image URL
+    if (eventDJ.imageUrl && eventDJ.imageUrl.trim() !== "") {
+      setUseImageLink(true)
+      setArtistImageUrlValue(eventDJ.imageUrl)
+    } else {
+      setUseImageLink(false)
+      setArtistImageUrlValue("")
+    }
+
+    // Auto-set performer type from DJ data
+    if ((eventDJ as any).performerType) {
+      handleArtistChange("performerType", (eventDJ as any).performerType)
+    }
+
+    // Update schema preview if visible
+    if (showSchemaPreview) {
+      updateSchemaPreview(formData)
+    }
+  }
+
   const addArtist = async () => {
     if (!newArtist.name) return
 
@@ -254,8 +428,13 @@ export function EventForm({ eventId }: EventFormProps) {
       }
     }
 
+    // If using image link and we have a URL, use it directly
+    if (useImageLink && newArtist.imageUrl) {
+      imageUrl = newArtist.imageUrl
+    }
+
     if (editingArtistId) {
-      // Update existing artist
+      // Update existing artist with Schema.org fields
       const updatedArtist: Artist = {
         id: editingArtistId,
         name: newArtist.name || "",
@@ -266,6 +445,21 @@ export function EventForm({ eventId }: EventFormProps) {
         soundcloudUrl: newArtist.soundcloudUrl || "",
         order: newArtist.order || 0,
         isFeatured: newArtist.isFeatured || false,
+        // Schema.org fields
+        performerType: newArtist.performerType,
+        alternateName: newArtist.alternateName,
+        birthDate: newArtist.birthDate,
+        jobTitle: newArtist.jobTitle,
+        foundingDate: newArtist.foundingDate,
+        members: newArtist.members,
+        famousTracks: newArtist.famousTracks,
+        famousAlbums: newArtist.famousAlbums,
+        socialLinks: {
+          wikipedia: newArtist.wikipediaUrl,
+          website: newArtist.officialWebsite,
+          facebook: newArtist.facebookUrl,
+          twitter: newArtist.twitterUrl,
+        },
       }
 
       setFormData((prev) => ({
@@ -277,7 +471,7 @@ export function EventForm({ eventId }: EventFormProps) {
       // Reset editing state
       setEditingArtistId(null)
     } else {
-      // Add new artist
+      // Add new artist with Schema.org fields
       const artist: Artist = {
         id: uuidv4(),
         name: newArtist.name || "",
@@ -288,6 +482,21 @@ export function EventForm({ eventId }: EventFormProps) {
         soundcloudUrl: newArtist.soundcloudUrl || "",
         order: formData.artistLineup?.length || 0,
         isFeatured: newArtist.isFeatured || false,
+        // Schema.org fields
+        performerType: newArtist.performerType,
+        alternateName: newArtist.alternateName,
+        birthDate: newArtist.birthDate,
+        jobTitle: newArtist.jobTitle,
+        foundingDate: newArtist.foundingDate,
+        members: newArtist.members,
+        famousTracks: newArtist.famousTracks,
+        famousAlbums: newArtist.famousAlbums,
+        socialLinks: {
+          wikipedia: newArtist.wikipediaUrl,
+          website: newArtist.officialWebsite,
+          facebook: newArtist.facebookUrl,
+          twitter: newArtist.twitterUrl,
+        },
       }
 
       setFormData((prev) => ({
@@ -304,18 +513,70 @@ export function EventForm({ eventId }: EventFormProps) {
       spotifyUrl: "",
       soundcloudUrl: "",
       order: 0,
+      performerType: "Person",
+      members: [],
+      alternateName: "",
+      birthDate: "",
+      jobTitle: [],
+      foundingDate: "",
+      famousTracks: [],
+      famousAlbums: [],
+      wikipediaUrl: "",
+      officialWebsite: "",
+      facebookUrl: "",
+      twitterUrl: "",
     })
+
+    // Clear EventDJ selection
+    setSelectedEventDJ(null)
+    setArtistSearchValue("")
 
     // Clear artist image preview and file
     setArtistImage(null)
     setArtistImagePreview("")
     setUseImageLink(false)
+    setArtistImageUrlValue("")
+
+    // Update schema preview if visible
+    if (showSchemaPreview) {
+      updateSchemaPreview(formData)
+    }
   }
 
   const removeArtist = (artistId: string) => {
     setFormData((prev) => ({
       ...prev,
       artistLineup: prev.artistLineup?.filter((a) => a.id !== artistId) || [],
+    }))
+  }
+
+  const reorderArtists = (fromIndex: number, toIndex: number) => {
+    setFormData((prev) => {
+      const newLineup = [...(prev.artistLineup || [])]
+      const [moved] = newLineup.splice(fromIndex, 1)
+      newLineup.splice(toIndex, 0, moved)
+
+      // Update order property for all artists
+      const updatedLineup = newLineup.map((artist, index) => ({
+        ...artist,
+        order: index,
+      }))
+
+      return {
+        ...prev,
+        artistLineup: updatedLineup,
+      }
+    })
+  }
+
+  const toggleArtistFeatured = (artistId: string) => {
+    setFormData((prev) => ({
+      ...prev,
+      artistLineup: prev.artistLineup?.map((artist) =>
+        artist.id === artistId
+          ? { ...artist, isFeatured: !artist.isFeatured }
+          : artist
+      ) || [],
     }))
   }
 
@@ -431,7 +692,6 @@ export function EventForm({ eventId }: EventFormProps) {
 
     // Basic required fields
     if (!formData.name) errors.push("El nombre del evento es obligatorio")
-    if (!formData.shortDescription) errors.push("La descripción corta es obligatoria")
     if (!formData.descriptionText) errors.push("La descripción SEO (Schema.org) es obligatoria")
     if (!formData.slug) errors.push("El slug (URL amigable) es obligatorio")
 
@@ -441,6 +701,11 @@ export function EventForm({ eventId }: EventFormProps) {
     if (!formData.location?.city) errors.push("La ciudad es obligatoria")
     if (!formData.location?.country) errors.push("El país es obligatorio")
 
+    // Coordinates validation for better SEO
+    if (!formData.location?.latitude || !formData.location?.longitude) {
+      errors.push("Las coordenadas (latitud y longitud) son obligatorias para mejor posicionamiento SEO")
+    }
+
     // Images
     if (!mainImage && !mainImagePreview) errors.push("La imagen principal es obligatoria")
 
@@ -448,6 +713,17 @@ export function EventForm({ eventId }: EventFormProps) {
     if (!formData.zones || formData.zones.length === 0) errors.push("Debes agregar al menos una zona")
     if (!formData.salesPhases || formData.salesPhases.length === 0)
       errors.push("Debes agregar al menos una fase de venta")
+
+    // Character limits validation
+    if (formData.descriptionText && formData.descriptionText.length > 500) {
+      errors.push("La descripción SEO no debe exceder 500 caracteres")
+    }
+
+    // URL validation
+    const urlRegex = /^https?:\/\/.+/i
+    if (formData.externalTicketUrl && !urlRegex.test(formData.externalTicketUrl)) {
+      errors.push("La URL externa debe ser una URL válida (comenzar con http:// o https://)")
+    }
 
     // Set the errors and return validation result
     setValidationErrors(errors)
@@ -523,6 +799,392 @@ export function EventForm({ eventId }: EventFormProps) {
     }
   }
 
+  const updateSchemaPreview = (data: Partial<Event>) => {
+    if (!showSchemaPreview) return
+
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://ravehublatam.com"
+
+    // Función para asegurarse de que la URL tiene el protocolo 'https://'
+    const ensureHttpsProtocol = (url: string) => {
+      if (!url) return undefined
+      if (!/^https?:\/\//i.test(url)) {
+        return `https://${url}`
+      }
+      return url
+    }
+
+    // Función para combinar fecha y hora con zona horaria correcta
+    const combineDateTime = (date: Date | string, time: string, country?: string): string => {
+      const d = new Date(date)
+      const [hours, minutes] = time.split(':').map(Number)
+      d.setHours(hours || 0, minutes || 0, 0, 0)
+
+      // Mapa de zonas horarias por país (desfase desde UTC)
+      const timezones: Record<string, string> = {
+        "Argentina": "-03:00",
+        "Bolivia": "-04:00",
+        "Brasil": "-03:00", // São Paulo
+        "Chile": "-04:00", // Santiago
+        "Colombia": "-05:00",
+        "Costa Rica": "-06:00",
+        "Cuba": "-05:00",
+        "Ecuador": "-05:00",
+        "El Salvador": "-06:00",
+        "Guatemala": "-06:00",
+        "Honduras": "-06:00",
+        "México": "-06:00", // Ciudad de México
+        "Nicaragua": "-06:00",
+        "Panamá": "-05:00",
+        "Paraguay": "-04:00",
+        "Perú": "-05:00",
+        "Puerto Rico": "-04:00",
+        "República Dominicana": "-04:00",
+        "Uruguay": "-03:00",
+        "Venezuela": "-04:00"
+      }
+
+      const timezone = timezones[country || ""] || "-05:00" // Default Lima
+      return d.toISOString().replace('Z', timezone)
+    }
+
+    // Formatear fechas para el esquema con zona horaria correcta
+    const startDateISO = data.startDate ? combineDateTime(data.startDate, data.startTime || '00:00', data.country) : undefined
+    const endDateISO = data.endDate ? combineDateTime(data.endDate, data.endTime || '23:59', data.country) : undefined
+    const doorTimeISO = doorTime && data.startDate ? combineDateTime(data.startDate, doorTime, data.country) : undefined
+
+    // Helper function to safely get price
+    const getPrice = () => {
+      try {
+        if (
+          data.salesPhases &&
+          data.salesPhases.length > 0 &&
+          data.salesPhases[0].zonesPricing &&
+          data.salesPhases[0].zonesPricing.length > 0
+        ) {
+          return data.salesPhases[0].zonesPricing[0].price
+        }
+        return undefined
+      } catch (error) {
+        return undefined
+      }
+    }
+    const price = getPrice()
+
+    // Determinar el tipo de evento para Schema.org
+    const getEventType = () => {
+      if (data.eventType === "festival") {
+        return ["Festival", "MusicEvent"]
+      }
+      return "MusicEvent"
+    }
+
+    // Crear el objeto JSON-LD completo según ejemplos
+    const schemaData = {
+      "@context": "https://schema.org",
+      "@graph": [
+        {
+          "@type": "WebPage",
+          "@id": ensureHttpsProtocol(`${baseUrl}/eventos/${data.slug}#webpage`),
+          url: ensureHttpsProtocol(`${baseUrl}/eventos/${data.slug}/`),
+          inLanguage: data.inLanguage || "es",
+          name: `Entradas para ${data.name} - RAVEHUB`,
+          datePublished: startDateISO,
+          dateModified: startDateISO,
+          description: data.descriptionText,
+          isPartOf: {
+            "@type": "WebSite",
+            "@id": ensureHttpsProtocol(`${baseUrl}/#website`),
+            url: ensureHttpsProtocol(baseUrl),
+            name: "RAVEHUB",
+            publisher: {
+              "@type": "Organization",
+              "@id": ensureHttpsProtocol(`${baseUrl}/#organization`),
+              name: "RAVEHUB",
+              url: ensureHttpsProtocol(baseUrl),
+              logo: {
+                "@type": "ImageObject",
+                "@id": ensureHttpsProtocol(`${baseUrl}/#logo`),
+                url: ensureHttpsProtocol(`${baseUrl}/logo.png`),
+                width: 261,
+                height: 60,
+                caption: "RAVEHUB",
+              },
+              image: {
+                "@type": "ImageObject",
+                "@id": ensureHttpsProtocol(`${baseUrl}/#logo`),
+                url: ensureHttpsProtocol(`${baseUrl}/logo.png`),
+                width: 261,
+                height: 60,
+                caption: "RAVEHUB",
+              },
+            },
+          },
+          potentialAction: {
+            "@type": "SearchAction",
+            target: {
+              "@type": "EntryPoint",
+              urlTemplate: ensureHttpsProtocol(`${baseUrl}/?s={search_term_string}`),
+            },
+            "query-input": "required name=search_term_string",
+          },
+        },
+        {
+          "@type": getEventType(),
+          "@id": ensureHttpsProtocol(`${baseUrl}/eventos/${data.slug}#event`),
+          name: (() => {
+            // Generar nombre descriptivo como el title meta
+            const locationPart = data.eventType === "festival" ? "" : ` en ${data.location?.city || 'Latinoamérica'}`
+            const datePart = data.startDate ? new Date(data.startDate).toLocaleDateString('es-ES', {
+              day: 'numeric',
+              month: 'long',
+              year: 'numeric'
+            }) : ''
+            return `${data.name}${locationPart} ${datePart} | Ravehub`
+          })(),
+          description: data.descriptionText,
+          url: ensureHttpsProtocol(`${baseUrl}/eventos/${data.slug}/`),
+          ...(doorTimeISO && { doorTime: doorTimeISO }),
+          startDate: startDateISO,
+          endDate: endDateISO || startDateISO,
+          eventStatus: data.eventStatus || "https://schema.org/EventScheduled",
+          eventAttendanceMode: data.eventAttendanceMode || "https://schema.org/OfflineEventAttendanceMode",
+          isAccessibleForFree: isAccessibleForFree,
+          typicalAgeRange: data.typicalAgeRange || "18+",
+          organizer: {
+            "@type": "Organization",
+            name: data.organizer?.name || "RAVEHUB",
+            url: ensureHttpsProtocol(data.organizer?.url || baseUrl),
+          },
+          location: data.location
+            ? {
+                "@type": "Place",
+                name: data.location.venueName,
+                address: {
+                  "@type": "PostalAddress",
+                  streetAddress: data.location.streetAddress || data.location.address,
+                  addressLocality: data.location.city,
+                  addressRegion: data.location.region || data.location.city,
+                  postalCode: data.location.postalCode,
+                  addressCountry: (data.location as any).countryCode || data.location.country,
+                },
+                geo:
+                  data.location.latitude && data.location.longitude
+                    ? {
+                        "@type": "GeoCoordinates",
+                        latitude: data.location.latitude,
+                        longitude: data.location.longitude,
+                      }
+                    : undefined,
+              }
+            : undefined,
+          performer:
+            Array.isArray(data.artistLineup) && data.artistLineup.length > 0
+              ? data.artistLineup.map((artist) => {
+                  // Determinar el tipo correcto basado en los datos del artista
+                  const performerType = (artist as any).performerType === "MusicGroup" ? "MusicGroup" : "Person";
+
+                  return {
+                    "@type": performerType,
+                    "@id": ensureHttpsProtocol(`${baseUrl}/eventos/${data.slug}#performer-${artist.id}`),
+                    name: artist.name,
+                    image: artist.imageUrl ? {
+                      "@type": "ImageObject",
+                      url: artist.imageUrl,
+                      width: 400,
+                      height: 400,
+                    } : undefined,
+                    ...(artist.description && { description: artist.description }),
+                    sameAs: [
+                      ...(artist.instagramHandle ? [`https://instagram.com/${artist.instagramHandle.replace("@", "")}`] : []),
+                      ...(artist.spotifyUrl ? [artist.spotifyUrl] : []),
+                      ...(artist.soundcloudUrl ? [artist.soundcloudUrl] : []),
+                      ...(((artist as any).socialLinks?.website) ? [(artist as any).socialLinks.website] : []),
+                      ...(((artist as any).socialLinks?.facebook) ? [(artist as any).socialLinks.facebook] : []),
+                      ...(((artist as any).socialLinks?.twitter) ? [(artist as any).socialLinks.twitter] : []),
+                      ...(((artist as any).socialLinks?.wikipedia) ? [(artist as any).socialLinks.wikipedia] : []),
+                    ].filter(Boolean),
+                    // Add members for MusicGroup
+                    ...(performerType === "MusicGroup" && (artist as any).members && (artist as any).members.length > 0 && {
+                      member: (artist as any).members.map((member: any) => ({
+                        "@type": "Person",
+                        name: member.name
+                      }))
+                    }),
+                  };
+                })
+              : undefined,
+          offers:
+            Array.isArray(data.salesPhases) && data.salesPhases.length > 0
+              ? data.salesPhases.map((phase) => ({
+                  "@type": "Offer",
+                  name: phase.name,
+                  availability: "https://schema.org/LimitedAvailability",
+                  url: ensureHttpsProtocol(`${baseUrl}/eventos/${data.slug}`),
+                  price: phase.zonesPricing && phase.zonesPricing.length > 0 ? phase.zonesPricing[0].price : undefined,
+                  priceCurrency: data.currency || "USD",
+                  validFrom: phase.startDate ? new Date(phase.startDate).toISOString() : startDateISO,
+                  validThrough: phase.endDate ? new Date(phase.endDate).toISOString() : endDateISO,
+                }))
+              : price
+                ? [
+                    {
+                      "@type": "Offer",
+                      availability: "https://schema.org/LimitedAvailability",
+                      url: ensureHttpsProtocol(`${baseUrl}/eventos/${data.slug}`),
+                      price: price,
+                      priceCurrency: data.currency || "USD",
+                      validFrom: startDateISO,
+                      validThrough: endDateISO,
+                    },
+                  ]
+                : undefined,
+          ...(data.eventType === "festival" && data.subEvents &&
+            data.subEvents.length > 0 && {
+              subEvent: data.subEvents.map((subEvent) => ({
+                "@type": "MusicEvent",
+                name: subEvent.name,
+                description: subEvent.description,
+                startDate: subEvent.startDate ? new Date(subEvent.startDate).toISOString() : undefined,
+                endDate: subEvent.endDate ? new Date(subEvent.endDate).toISOString() : undefined,
+                location: {
+                  "@type": "Place",
+                  name: data.location?.venueName,
+                },
+                performer: data.artistLineup?.slice(0, 2).map(artist => ({ "@type": "Person", name: artist.name })),
+                offers: !isAccessibleForFree && data.salesPhases && data.salesPhases.length > 0 ? {
+                  "@type": "Offer",
+                  name: `Entrada ${subEvent.name}`,
+                  price: data.salesPhases[0].zonesPricing[0]?.price || "0",
+                  priceCurrency: data.currency || "USD",
+                  availability: "https://schema.org/InStock",
+                  url: ensureHttpsProtocol(`${baseUrl}/eventos/${data.slug}`),
+                  validFrom: data.salesPhases[0]?.startDate ? new Date(data.salesPhases[0].startDate).toISOString() : startDateISO,
+                  validThrough: data.salesPhases[0]?.endDate ? new Date(data.salesPhases[0].endDate).toISOString() : endDateISO,
+                } : undefined,
+              })),
+            }),
+          ...(data.mainImageUrl && {
+            image: [
+              {
+                "@type": "ImageObject",
+                url: data.mainImageUrl,
+                width: 1200,
+                height: 630,
+                caption: data.name,
+              },
+              ...(data.bannerImageUrl ? [{
+                "@type": "ImageObject",
+                url: data.bannerImageUrl,
+                width: 1200,
+                height: 400,
+                caption: `${data.name} - Banner`,
+              }] : []),
+            ],
+          }),
+          audience: {
+            "@type": "Audience",
+            audienceType: audienceType,
+            name: audienceType === "public" ? "Público General" : audienceType,
+          },
+          aggregateRating:
+            data.reviews && data.reviews.length > 0
+              ? {
+                  "@type": "AggregateRating",
+                  ratingValue: data.reviews.reduce((sum, review) => sum + review.rating, 0) / data.reviews.length,
+                  reviewCount: data.reviews.length,
+                  bestRating: 5,
+                  worstRating: 1,
+                }
+              : undefined,
+          keywords: data.tags?.join(", "),
+          genre: data.categories?.join(", "),
+          ...(data.isHighlighted && {
+            superEvent: {
+              "@type": "Festival",
+              name: "RAVEHUB Music Festival Series",
+            },
+          }),
+        },
+        {
+          "@type": "BreadcrumbList",
+          itemListElement: [
+            {
+              "@type": "ListItem",
+              position: 1,
+              item: {
+                "@type": "Thing",
+                "@id": ensureHttpsProtocol(baseUrl),
+                name: "Home",
+              },
+            },
+            {
+              "@type": "ListItem",
+              position: 2,
+              item: {
+                "@type": "Thing",
+                "@id": ensureHttpsProtocol(`${baseUrl}/eventos/`),
+                name: "Eventos",
+              },
+            },
+            {
+              "@type": "ListItem",
+              position: 3,
+              item: {
+                "@type": "Thing",
+                "@id": ensureHttpsProtocol(`${baseUrl}/eventos/${data.slug}/`),
+                name: data.name,
+              },
+            },
+          ],
+        },
+        // Add FAQ only if it exists
+        ...(Array.isArray(data.faqSection) && data.faqSection.length > 0
+          ? [
+              {
+                "@type": "FAQPage",
+                "@id": ensureHttpsProtocol(`${baseUrl}/eventos/${data.slug}#faq`),
+                mainEntity: data.faqSection.map((faq) => ({
+                  "@type": "Question",
+                  name: faq.question,
+                  acceptedAnswer: {
+                    "@type": "Answer",
+                    text: faq.answer,
+                  },
+                })),
+              },
+            ]
+          : []),
+      ],
+    }
+
+    setSchemaPreviewData(schemaData)
+  }
+
+  const handleSelectTemplate = (template: EventTemplate) => {
+    const newData = {
+      ...formData,
+      ...template.defaultValues,
+      // Keep existing values that shouldn't be overwritten
+      name: formData.name || "",
+      slug: formData.slug || "",
+      startDate: formData.startDate,
+      endDate: formData.endDate,
+      location: formData.location,
+    }
+    setFormData(newData)
+
+    // Set template-specific values
+    if (template.id === "festival") {
+      setAudienceType("public")
+      setIsAccessibleForFree(false)
+    } else if (template.id === "music-event") {
+      setAudienceType("public")
+      setIsAccessibleForFree(false)
+    }
+
+    updateSchemaPreview(newData)
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
@@ -589,16 +1251,20 @@ export function EventForm({ eventId }: EventFormProps) {
 
       const slug = formData.slug || generateSlug(formData.name || "")
 
-      // Use the user-provided descriptionText for schema (no automatic generation from HTML)
-      const descriptionText = formData.descriptionText || formData.shortDescription
+      // Use the user-provided descriptionText for schema
+      const descriptionText = formData.descriptionText
 
-      // Prepare event data
+      // Prepare event data with additional schema fields
       const eventData = {
         ...(formData as Event),
         slug,
         mainImageUrl,
         bannerImageUrl,
         descriptionText, // Use user-provided plain text for schema
+        doorTime: doorTime ? doorTime : undefined,
+        audienceType: audienceType,
+        isAccessibleForFree: isAccessibleForFree,
+        typicalAgeRange: formData.typicalAgeRange || "18+",
         createdAt: eventId ? formData.createdAt! : new Date(),
         updatedAt: new Date(),
         createdBy: eventId ? formData.createdBy! : user.id,
@@ -713,6 +1379,7 @@ export function EventForm({ eventId }: EventFormProps) {
       <div className="flex justify-between items-center">
         <h1 className="text-2xl font-bold">{eventId ? "Editar Evento" : "Crear Nuevo Evento"}</h1>
         <div className="flex gap-2">
+          {!eventId && <EventTemplates onSelectTemplate={handleSelectTemplate} />}
           <Button type="button" variant="outline" onClick={() => router.push("/admin?tab=events")}>
             Cancelar
           </Button>
@@ -825,26 +1492,38 @@ export function EventForm({ eventId }: EventFormProps) {
 
                 <div className="space-y-2">
                   <Label htmlFor="country">País *</Label>
-                  <Input
-                    id="country"
+                  <Select
                     value={formData.country || ""}
-                    onChange={(e) => handleChange("country", e.target.value)}
-                    placeholder="Perú"
+                    onValueChange={handleCountryChange}
                     required
-                  />
+                  >
+                    <SelectTrigger id="country">
+                      <SelectValue placeholder="Selecciona un país" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Argentina">🇦🇷 Argentina</SelectItem>
+                      <SelectItem value="Bolivia">🇧🇴 Bolivia</SelectItem>
+                      <SelectItem value="Brasil">🇧🇷 Brasil</SelectItem>
+                      <SelectItem value="Chile">🇨🇱 Chile</SelectItem>
+                      <SelectItem value="Colombia">🇨🇴 Colombia</SelectItem>
+                      <SelectItem value="Costa Rica">🇨🇷 Costa Rica</SelectItem>
+                      <SelectItem value="Cuba">🇨🇺 Cuba</SelectItem>
+                      <SelectItem value="Ecuador">🇪🇨 Ecuador</SelectItem>
+                      <SelectItem value="El Salvador">🇸🇻 El Salvador</SelectItem>
+                      <SelectItem value="Guatemala">🇬🇹 Guatemala</SelectItem>
+                      <SelectItem value="Honduras">🇭🇳 Honduras</SelectItem>
+                      <SelectItem value="México">🇲🇽 México</SelectItem>
+                      <SelectItem value="Nicaragua">🇳🇮 Nicaragua</SelectItem>
+                      <SelectItem value="Panamá">🇵🇦 Panamá</SelectItem>
+                      <SelectItem value="Paraguay">🇵🇾 Paraguay</SelectItem>
+                      <SelectItem value="Perú">🇵🇪 Perú</SelectItem>
+                      <SelectItem value="Puerto Rico">🇵🇷 Puerto Rico</SelectItem>
+                      <SelectItem value="República Dominicana">🇩🇴 República Dominicana</SelectItem>
+                      <SelectItem value="Uruguay">🇺🇾 Uruguay</SelectItem>
+                      <SelectItem value="Venezuela">🇻🇪 Venezuela</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="shortDescription">Descripción Corta *</Label>
-                <Textarea
-                  id="shortDescription"
-                  value={formData.shortDescription || ""}
-                  onChange={(e) => handleChange("shortDescription", e.target.value)}
-                  rows={2}
-                  required
-                />
-                <p className="text-xs text-muted-foreground">Máximo 150 caracteres</p>
               </div>
 
               <div className="space-y-2">
@@ -853,12 +1532,12 @@ export function EventForm({ eventId }: EventFormProps) {
                   id="descriptionText"
                   value={formData.descriptionText || ""}
                   onChange={(e) => handleChange("descriptionText", e.target.value)}
-                  rows={3}
-                  placeholder="Descripción optimizada para motores de búsqueda. Solo texto plano, sin HTML/CSS/JS."
+                  rows={4}
+                  placeholder="Descripción completa y persuasiva del evento para motores de búsqueda. Esta descripción aparecerá en los resultados de Google y es crucial para el SEO."
                   required
                 />
                 <p className="text-xs text-muted-foreground">
-                  Esta descripción se usa en el schema JSON-LD para Google. Máximo 160 caracteres.
+                  Esta descripción se usa en el schema JSON-LD para Google. Debe ser atractiva y persuasiva.
                   <strong> No incluya código HTML, CSS o JavaScript aquí.</strong>
                 </p>
               </div>
@@ -978,19 +1657,17 @@ export function EventForm({ eventId }: EventFormProps) {
 
               <div className="space-y-2">
                 <Label htmlFor="eventType">Tipo de Evento</Label>
-                <Select value={formData.eventType || "other"} onValueChange={(value) => handleChange("eventType", value)}>
+                <Select value={formData.eventType || "dj_set"} onValueChange={(value) => handleChange("eventType", value)}>
                   <SelectTrigger id="eventType">
                     <SelectValue placeholder="Selecciona tipo de evento" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="dj_set">DJ Set</SelectItem>
-                    <SelectItem value="festival">Festival</SelectItem>
-                    <SelectItem value="concert">Concierto</SelectItem>
-                    <SelectItem value="other">Otro</SelectItem>
+                    <SelectItem value="dj_set">Concierto/DJ Set (MusicEvent)</SelectItem>
+                    <SelectItem value="festival">Festival ([Festival, MusicEvent])</SelectItem>
                   </SelectContent>
                 </Select>
                 <p className="text-xs text-muted-foreground">
-                  Selecciona el tipo de evento para optimizar las descripciones SEO.
+                  Selecciona el tipo de evento para definir el Schema.org correspondiente.
                 </p>
               </div>
 
@@ -1045,10 +1722,58 @@ export function EventForm({ eventId }: EventFormProps) {
                 </div>
               </div>
 
-              {formData.isMultiDay && (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="doorTime">Hora de Apertura de Puertas (Schema.org)</Label>
+                  <Input
+                    id="doorTime"
+                    type="time"
+                    value={doorTime}
+                    onChange={(e) => handleDoorTimeChange(e.target.value)}
+                    placeholder="19:00"
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Hora exacta en que se abren las puertas del evento (mejora SEO).
+                  </p>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="audienceType">Tipo de Público (Schema.org)</Label>
+                  <Select value={audienceType} onValueChange={handleAudienceTypeChange}>
+                    <SelectTrigger id="audienceType">
+                      <SelectValue placeholder="Selecciona tipo de público" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="public">Público General</SelectItem>
+                      <SelectItem value="business">Empresarial</SelectItem>
+                      <SelectItem value="students">Estudiantes</SelectItem>
+                      <SelectItem value="senior">Adultos Mayores</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <p className="text-xs text-muted-foreground">
+                    Define el tipo de público objetivo para el schema.
+                  </p>
+                </div>
+
+                <div className="space-y-2">
+                  <div className="flex items-center space-x-2">
+                    <Switch
+                      id="isAccessibleForFree"
+                      checked={isAccessibleForFree}
+                      onCheckedChange={handleIsAccessibleForFreeChange}
+                    />
+                    <Label htmlFor="isAccessibleForFree">Evento gratuito (sin costo de entrada)</Label>
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    Marca si el evento es gratuito. Esto afecta el Schema.org y las opciones de venta.
+                  </p>
+                </div>
+              </div>
+
+              {formData.isMultiDay ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
                   <div className="space-y-2">
-                    <Label htmlFor="endDate">Fecha de Fin</Label>
+                    <Label htmlFor="endDate">Fecha de Fin *</Label>
                     <Popover>
                       <PopoverTrigger asChild>
                         <Button
@@ -1082,6 +1807,36 @@ export function EventForm({ eventId }: EventFormProps) {
                         />
                       </PopoverContent>
                     </Popover>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="endTime">Hora de Fin *</Label>
+                    <Input
+                      id="endTime"
+                      type="time"
+                      value={formData.endTime || ""}
+                      onChange={(e) => handleChange("endTime", e.target.value)}
+                    />
+                  </div>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="endDate">Fecha de Fin</Label>
+                    <Input
+                      id="endDate"
+                      type="text"
+                      value={formData.startDate ? format(
+                        new Date(formData.startDate instanceof Date ? formData.startDate : Date.now()),
+                        "PPP",
+                        { locale: es }
+                      ) : ""}
+                      disabled
+                      className="bg-muted"
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      Los conciertos duran un día. La fecha de fin es la misma que la de inicio.
+                    </p>
                   </div>
 
                   <div className="space-y-2">
@@ -1185,62 +1940,6 @@ export function EventForm({ eventId }: EventFormProps) {
                 </div>
               </div>
 
-              {/* Ticket Settings */}
-              <div className="space-y-4 border rounded-md p-4 mt-4">
-                <h3 className="text-lg font-medium">Configuración de Entradas</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="flex items-center space-x-2">
-                    <Switch
-                      id="sellTicketsOnPlatform"
-                      checked={formData.sellTicketsOnPlatform}
-                      onCheckedChange={(checked) => handleChange("sellTicketsOnPlatform", checked)}
-                    />
-                    <Label htmlFor="sellTicketsOnPlatform">Vender entradas en la plataforma</Label>
-                  </div>
-
-                  <div className="flex items-center space-x-2">
-                    <Switch
-                      id="isHighlighted"
-                      checked={formData.isHighlighted}
-                      onCheckedChange={(checked) => handleChange("isHighlighted", checked)}
-                    />
-                    <Label htmlFor="isHighlighted">Destacar en la página principal</Label>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="flex items-center space-x-2">
-                    <Switch
-                      id="allowOfflinePayments"
-                      checked={formData.allowOfflinePayments}
-                      onCheckedChange={(checked) => handleChange("allowOfflinePayments", checked)}
-                    />
-                    <Label htmlFor="allowOfflinePayments">Permitir pagos offline</Label>
-                  </div>
-
-                  <div className="flex items-center space-x-2">
-                    <Switch
-                      id="allowInstallmentPayments"
-                      checked={formData.allowInstallmentPayments}
-                      onCheckedChange={(checked) => handleChange("allowInstallmentPayments", checked)}
-                    />
-                    <Label htmlFor="allowInstallmentPayments">Permitir pagos en cuotas</Label>
-                  </div>
-                </div>
-
-                {!formData.sellTicketsOnPlatform && (
-                  <div className="space-y-2">
-                    <Label htmlFor="externalTicketUrl">URL externa para la venta de entradas</Label>
-                    <Input
-                      id="externalTicketUrl"
-                      type="url"
-                      value={formData.externalTicketUrl || ""}
-                      onChange={(e) => handleChange("externalTicketUrl", e.target.value)}
-                      placeholder="https://..."
-                    />
-                  </div>
-                )}
-              </div>
             </CardContent>
           </Card>
         </TabsContent>
@@ -1322,12 +2021,68 @@ export function EventForm({ eventId }: EventFormProps) {
 
               <div className="space-y-2">
                 <Label htmlFor="location.country">País *</Label>
-                <Input
-                  id="location.country"
+                <Select
                   value={formData.location?.country || ""}
-                  onChange={(e) => handleChange("location", { ...formData.location, country: e.target.value })}
+                  onValueChange={(value) => {
+                    // Map country names to ISO codes for Schema.org
+                    const countryCodes: Record<string, string> = {
+                      "Argentina": "AR",
+                      "Bolivia": "BO",
+                      "Brasil": "BR",
+                      "Chile": "CL",
+                      "Colombia": "CO",
+                      "Costa Rica": "CR",
+                      "Cuba": "CU",
+                      "Ecuador": "EC",
+                      "El Salvador": "SV",
+                      "Guatemala": "GT",
+                      "Honduras": "HN",
+                      "México": "MX",
+                      "Nicaragua": "NI",
+                      "Panamá": "PA",
+                      "Paraguay": "PY",
+                      "Perú": "PE",
+                      "Puerto Rico": "PR",
+                      "República Dominicana": "DO",
+                      "Uruguay": "UY",
+                      "Venezuela": "VE"
+                    }
+                    handleChange("location", {
+                      ...formData.location,
+                      country: value,
+                      countryCode: countryCodes[value] || value
+                    })
+                    // Also update the main country field for timezone calculation
+                    handleCountryChange(value)
+                  }}
                   required
-                />
+                >
+                  <SelectTrigger id="location.country">
+                    <SelectValue placeholder="Selecciona un país" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Argentina">🇦🇷 Argentina</SelectItem>
+                    <SelectItem value="Bolivia">🇧🇴 Bolivia</SelectItem>
+                    <SelectItem value="Brasil">🇧🇷 Brasil</SelectItem>
+                    <SelectItem value="Chile">🇨🇱 Chile</SelectItem>
+                    <SelectItem value="Colombia">🇨🇴 Colombia</SelectItem>
+                    <SelectItem value="Costa Rica">🇨🇷 Costa Rica</SelectItem>
+                    <SelectItem value="Cuba">🇨🇺 Cuba</SelectItem>
+                    <SelectItem value="Ecuador">🇪🇨 Ecuador</SelectItem>
+                    <SelectItem value="El Salvador">🇸🇻 El Salvador</SelectItem>
+                    <SelectItem value="Guatemala">🇬🇹 Guatemala</SelectItem>
+                    <SelectItem value="Honduras">🇭🇳 Honduras</SelectItem>
+                    <SelectItem value="México">🇲🇽 México</SelectItem>
+                    <SelectItem value="Nicaragua">🇳🇮 Nicaragua</SelectItem>
+                    <SelectItem value="Panamá">🇵🇦 Panamá</SelectItem>
+                    <SelectItem value="Paraguay">🇵🇾 Paraguay</SelectItem>
+                    <SelectItem value="Perú">🇵🇪 Perú</SelectItem>
+                    <SelectItem value="Puerto Rico">🇵🇷 Puerto Rico</SelectItem>
+                    <SelectItem value="República Dominicana">🇩🇴 República Dominicana</SelectItem>
+                    <SelectItem value="Uruguay">🇺🇾 Uruguay</SelectItem>
+                    <SelectItem value="Venezuela">🇻🇪 Venezuela</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -1386,6 +2141,23 @@ export function EventForm({ eventId }: EventFormProps) {
             <CardContent className="space-y-4">
               <div className="space-y-4 border rounded-md p-4">
                 <h3 className="text-lg font-medium">{editingArtistId ? "Editar Artista" : "Agregar Nuevo Artista"}</h3>
+
+                {/* EventDJ Autocomplete */}
+                {!editingArtistId && (
+                  <div className="space-y-2">
+                    <Label htmlFor="artistSearch">Buscar DJ existente</Label>
+                    <ArtistAutocomplete
+                      value={artistSearchValue}
+                      onChange={setArtistSearchValue}
+                      onArtistSelect={handleEventDJSelect}
+                      placeholder="Escribe el nombre del DJ..."
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      Busca DJs existentes o crea uno nuevo. Si no encuentras al DJ, escribe su nombre y presiona "Agregar Artista".
+                    </p>
+                  </div>
+                )}
+
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="artistName">Nombre del Artista *</Label>
@@ -1394,6 +2166,25 @@ export function EventForm({ eventId }: EventFormProps) {
                       value={newArtist.name || ""}
                       onChange={(e) => handleArtistChange("name", e.target.value)}
                     />
+                  </div>
+  
+                  <div className="space-y-2">
+                    <Label htmlFor="performerType">Tipo de Artista</Label>
+                    <Select
+                      value={(newArtist as any).performerType || "Person"}
+                      onValueChange={(value) => handleArtistChange("performerType", value)}
+                    >
+                      <SelectTrigger id="performerType">
+                        <SelectValue placeholder="Selecciona tipo" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="Person">Artista Individual (Person)</SelectItem>
+                        <SelectItem value="MusicGroup">Grupo Musical (MusicGroup)</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <p className="text-xs text-muted-foreground">
+                      Selecciona si es un artista solista o un grupo musical.
+                    </p>
                   </div>
 
                   <div className="space-y-2">
@@ -1472,13 +2263,16 @@ export function EventForm({ eventId }: EventFormProps) {
                         id="artistImageUrl"
                         type="url"
                         placeholder="https://ejemplo.com/imagen.jpg"
-                        value={newArtist.imageUrl || ""}
-                        onChange={(e) => handleArtistChange("imageUrl", e.target.value)}
+                        value={artistImageUrlValue}
+                        onChange={(e) => {
+                          setArtistImageUrlValue(e.target.value)
+                          handleArtistChange("imageUrl", e.target.value)
+                        }}
                       />
-                      {newArtist.imageUrl && (
+                      {artistImageUrlValue && (
                         <div className="relative h-40 mt-2 rounded-md overflow-hidden">
                           <Image
-                            src={newArtist.imageUrl || "/placeholder.svg"}
+                            src={artistImageUrlValue || "/placeholder.svg"}
                             alt="Vista previa de imagen del artista"
                             fill
                             className="object-cover"
@@ -1565,15 +2359,8 @@ export function EventForm({ eventId }: EventFormProps) {
                           const location = formData.location?.venueName || formData.location?.city || 'Latinoamérica';
 
                           let description: string;
-                          if (formData.eventType === "dj_set") {
-                            const otherArtists = formData.artistLineup?.filter(artist => !artist.isFeatured && artist.name !== featuredName) || [];
-                            if (formData.artistLineup && formData.artistLineup.length <= 4 && otherArtists.length > 0) {
-                              const othersText = otherArtists.map(a => a.name).join(", ");
-                              description = `¡No te pierdas a ${featuredName} junto a ${othersText}! Compra tus entradas para este ${formattedDate} en ${location}.`;
-                            } else {
-                              description = `¡No te pierdas a ${featuredName}! Compra tus entradas para este ${formattedDate} en ${location}.`;
-                            }
-                          } else if (formData.eventType === "festival") {
+                          if (formData.eventType === "festival") {
+                            // Mantener la lógica actual para festivales
                             if (!formData.artistLineup || formData.artistLineup.length === 0) {
                               description = `¡No te pierdas ${formData.name || '[Nombre del evento]'}! Con un increíble lineup por anunciarse. Compra tus entradas para este ${formattedDate} en ${location}.`;
                             } else {
@@ -1582,7 +2369,21 @@ export function EventForm({ eventId }: EventFormProps) {
                               description = `¡Vive ${formData.name || '[Nombre del evento]'} con ${lineupText}! Compra tus entradas para este ${formattedDate} en ${location}.`;
                             }
                           } else {
-                            description = `¡No te pierdas ${formData.name || '[Nombre del evento]'}! Compra tus entradas para este ${formattedDate} en ${location}. Toda la info aquí.`;
+                            // Nueva lógica para eventos que NO son festivales (dj_set, concert, other)
+                            const venueName = formData.location?.venueName || formData.location?.city || 'el lugar';
+                            const cityName = formData.location?.city || 'la ciudad';
+                            const otherArtists = formData.artistLineup?.filter(artist => !artist.isFeatured) || [];
+
+                            if (!formData.artistLineup || formData.artistLineup.length === 0) {
+                              description = `${formData.name || '[Nombre del evento]'} llega a ${cityName} este ${formattedDate} en ${venueName}. ¡Compra tus entradas ahora!`;
+                            } else if (formData.artistLineup.length === 1) {
+                              description = `${featuredName} llega a ${cityName} este ${formattedDate} en ${venueName}. ¡Compra tus entradas ahora!`;
+                            } else {
+                              // Para múltiples artistas, incluir hasta 2 adicionales
+                              const additionalArtists = otherArtists.slice(0, 2).map(a => a.name);
+                              const artistsText = additionalArtists.length > 0 ? ` junto a ${additionalArtists.join(' y ')}` : '';
+                              description = `${featuredName} llega a ${cityName} este ${formattedDate} en ${venueName}${artistsText}. ¡Compra tus entradas ahora!`;
+                            }
                           }
                           return description;
                         })()}
@@ -1598,89 +2399,68 @@ export function EventForm({ eventId }: EventFormProps) {
                 <Separator />
 
                 <div className="space-y-4">
-                  <h3 className="text-lg font-medium">Artistas Agregados</h3>
-                  {formData.artistLineup && formData.artistLineup.length > 0 ? (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                      {formData.artistLineup.map((artist) => (
-                        <Card key={artist.id} className="overflow-hidden">
-                          <div className="relative h-48">
-                            <Image
-                              src={artist.imageUrl || "/placeholder.svg?height=200&width=300"}
-                              alt={artist.name}
-                              fill
-                              className="object-cover"
-                            />
-                            <div className="absolute top-2 right-2 flex gap-1">
-                              <Button
-                                type="button"
-                                variant="secondary"
-                                size="icon"
-                                onClick={() => {
-                                  const currentArtist = formData.artistLineup?.find((a) => a.id === artist.id)
-                                  if (currentArtist) {
-                                    // First determine if this was a link image
-                                    const isImageLink =
-                                      !!currentArtist.imageUrl && !currentArtist.imageUrl.includes("firebase")
+                  <h3 className="text-lg font-medium">Lineup de Artistas</h3>
+                  <p className="text-sm text-muted-foreground">
+                    Arrastra y suelta para reordenar los artistas. El orden afecta el SEO y la presentación.
+                  </p>
+                  <ArtistListDraggable
+                    artists={formData.artistLineup || []}
+                    onReorder={reorderArtists}
+                    onEdit={(artistId) => {
+                      const currentArtist = formData.artistLineup?.find((a) => a.id === artistId)
+                      if (currentArtist) {
+                        // First determine if this was a link image
+                        const isImageLink =
+                          !!currentArtist.imageUrl && !currentArtist.imageUrl.includes("firebase")
 
-                                    // Set these states in this order
-                                    setUseImageLink(isImageLink)
+                        // Set these states in this order
+                        setUseImageLink(isImageLink)
 
-                                    // Then update the artist details
-                                    setNewArtist({
-                                      name: currentArtist.name,
-                                      imageUrl: currentArtist.imageUrl || "",
-                                      description: currentArtist.description || "",
-                                      instagramHandle: currentArtist.instagramHandle || "",
-                                      spotifyUrl: currentArtist.spotifyUrl || "",
-                                      soundcloudUrl: currentArtist.soundcloudUrl || "",
-                                      order: currentArtist.order,
-                                      isFeatured: currentArtist.isFeatured || false,
-                                    })
+                        // Then update the artist details
+                        setNewArtist({
+                          name: currentArtist.name,
+                          imageUrl: currentArtist.imageUrl || "",
+                          description: currentArtist.description || "",
+                          instagramHandle: currentArtist.instagramHandle || "",
+                          spotifyUrl: currentArtist.spotifyUrl || "",
+                          soundcloudUrl: currentArtist.soundcloudUrl || "",
+                          order: currentArtist.order,
+                          isFeatured: currentArtist.isFeatured || false,
+                          performerType: (currentArtist as any).performerType || "Person",
+                          members: (currentArtist as any).members || [],
+                          alternateName: (currentArtist as any).alternateName || "",
+                          birthDate: (currentArtist as any).birthDate || "",
+                          jobTitle: (currentArtist as any).jobTitle || [],
+                          foundingDate: (currentArtist as any).foundingDate || "",
+                          famousTracks: (currentArtist as any).famousTracks || [],
+                          famousAlbums: (currentArtist as any).famousAlbums || [],
+                          wikipediaUrl: (currentArtist as any).socialLinks?.wikipedia || "",
+                          officialWebsite: (currentArtist as any).socialLinks?.website || "",
+                          facebookUrl: (currentArtist as any).socialLinks?.facebook || "",
+                          twitterUrl: (currentArtist as any).socialLinks?.twitter || "",
+                        })
 
-                                    // Set preview if it's a firebase image
-                                    if (!isImageLink && currentArtist.imageUrl) {
-                                      setArtistImagePreview(currentArtist.imageUrl)
-                                    } else {
-                                      setArtistImagePreview("")
-                                    }
+                        // Set preview if it's a firebase image
+                        if (!isImageLink && currentArtist.imageUrl) {
+                          setArtistImagePreview(currentArtist.imageUrl)
+                        } else {
+                          setArtistImagePreview("")
+                        }
 
-                                    // Set editing ID last
-                                    setEditingArtistId(currentArtist.id)
-                                  }
-                                }}
-                              >
-                                <Pencil className="h-4 w-4" />
-                              </Button>
-                              <Button
-                                type="button"
-                                variant="destructive"
-                                size="icon"
-                                onClick={() => removeArtist(artist.id)}
-                              >
-                                <Trash className="h-4 w-4" />
-                              </Button>
-                            </div>
-                          </div>
-                          <CardContent className="p-4">
-                            <div className="flex items-center justify-between">
-                              <h4 className="font-bold">{artist.name}</h4>
-                              {artist.isFeatured && (
-                                <span className="text-xs bg-primary text-primary-foreground px-2 py-1 rounded-full">
-                                  Destacado
-                                </span>
-                              )}
-                            </div>
-                            {artist.instagramHandle && (
-                              <p className="text-sm text-muted-foreground">{artist.instagramHandle}</p>
-                            )}
-                            {artist.description && <p className="text-sm mt-2 line-clamp-3">{artist.description}</p>}
-                          </CardContent>
-                        </Card>
-                      ))}
-                    </div>
-                  ) : (
-                    <p className="text-muted-foreground">No hay artistas agregados</p>
-                  )}
+                        // Set URL value for link input
+                        if (isImageLink && currentArtist.imageUrl) {
+                          setArtistImageUrlValue(currentArtist.imageUrl)
+                        } else {
+                          setArtistImageUrlValue("")
+                        }
+
+                        // Set editing ID last
+                        setEditingArtistId(currentArtist.id)
+                      }
+                    }}
+                    onRemove={removeArtist}
+                    onToggleFeatured={toggleArtistFeatured}
+                  />
                 </div>
               </div>
             </CardContent>
@@ -1786,6 +2566,62 @@ export function EventForm({ eventId }: EventFormProps) {
               </Button>
             </CardHeader>
             <CardContent className="space-y-4">
+              {/* Ticket Settings */}
+              <div className="space-y-4 border rounded-md p-4">
+                <h3 className="text-lg font-medium">Configuración de Entradas</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="flex items-center space-x-2">
+                    <Switch
+                      id="sellTicketsOnPlatform"
+                      checked={formData.sellTicketsOnPlatform}
+                      onCheckedChange={(checked) => handleChange("sellTicketsOnPlatform", checked)}
+                    />
+                    <Label htmlFor="sellTicketsOnPlatform">Vender entradas en la plataforma</Label>
+                  </div>
+
+                  <div className="flex items-center space-x-2">
+                    <Switch
+                      id="isHighlighted"
+                      checked={formData.isHighlighted}
+                      onCheckedChange={(checked) => handleChange("isHighlighted", checked)}
+                    />
+                    <Label htmlFor="isHighlighted">Destacar en la página principal</Label>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="flex items-center space-x-2">
+                    <Switch
+                      id="allowOfflinePayments"
+                      checked={formData.allowOfflinePayments}
+                      onCheckedChange={(checked) => handleChange("allowOfflinePayments", checked)}
+                    />
+                    <Label htmlFor="allowOfflinePayments">Permitir pagos offline</Label>
+                  </div>
+
+                  <div className="flex items-center space-x-2">
+                    <Switch
+                      id="allowInstallmentPayments"
+                      checked={formData.allowInstallmentPayments}
+                      onCheckedChange={(checked) => handleChange("allowInstallmentPayments", checked)}
+                    />
+                    <Label htmlFor="allowInstallmentPayments">Permitir pagos en cuotas</Label>
+                  </div>
+                </div>
+
+                {!formData.sellTicketsOnPlatform && (
+                  <div className="space-y-2">
+                    <Label htmlFor="externalTicketUrl">URL externa para la venta de entradas</Label>
+                    <Input
+                      id="externalTicketUrl"
+                      type="url"
+                      value={formData.externalTicketUrl || ""}
+                      onChange={(e) => handleChange("externalTicketUrl", e.target.value)}
+                      placeholder="https://..."
+                    />
+                  </div>
+                )}
+              </div>
               {formData.zones?.length === 0 ? (
                 <div className="text-center py-8">
                   <p className="text-muted-foreground">Primero debes agregar zonas al evento</p>
@@ -2118,9 +2954,10 @@ export function EventForm({ eventId }: EventFormProps) {
                 )}
               </div>
 
-              {/* Sub-events Section */}
-              <div className="space-y-4 mt-6">
-                <h3 className="text-lg font-medium">Sub-eventos</h3>
+              {/* Sub-events Section - Only show for festivals */}
+              {formData.eventType === "festival" && (
+                <div className="space-y-4 mt-6">
+                  <h3 className="text-lg font-medium">Sub-eventos (Días del Festival)</h3>
 
                 <div className="space-y-4 border rounded-md p-4">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -2230,7 +3067,8 @@ export function EventForm({ eventId }: EventFormProps) {
                 ) : (
                   <p className="text-sm text-muted-foreground">No hay sub-eventos agregados</p>
                 )}
-              </div>
+                </div>
+              )}
 
               {/* Schema Preview Button */}
               <div className="mt-6">
@@ -2244,7 +3082,13 @@ export function EventForm({ eventId }: EventFormProps) {
       </Tabs>
 
       {/* Update the EventSchemaPreview component import and usage. Add the currency prop when calling EventSchemaPreview (around line 1200): */}
-      {showSchemaPreview && <EventSchemaPreview event={formData as Event} currency={formData.currency || "USD"} />}
+      {showSchemaPreview && (
+        <EventSchemaPreview
+          event={formData as Event}
+          currency={formData.currency || "USD"}
+          schemaData={schemaPreviewData}
+        />
+      )}
       <div className="flex justify-end gap-2">
         <Button type="button" variant="outline" onClick={() => router.push("/admin?tab=events")}>
           Cancelar

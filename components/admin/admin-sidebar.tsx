@@ -83,6 +83,11 @@ const navigation: NavItem[] = [
     ],
   },
   {
+    title: "Artistas",
+    href: "/admin/event-artists",
+    icon: Music,
+  },
+  {
     title: "Herramientas",
     icon: Settings,
     children: [

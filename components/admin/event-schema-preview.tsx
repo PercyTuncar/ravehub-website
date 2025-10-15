@@ -12,9 +12,10 @@ import { Pre } from "@/components/ui/pre"
 interface EventSchemaPreviewProps {
   event: Event
   currency?: string
+  schemaData?: any
 }
 
-export function EventSchemaPreview({ event, currency = "USD" }: EventSchemaPreviewProps) {
+export function EventSchemaPreview({ event, currency = "USD", schemaData: externalSchemaData }: EventSchemaPreviewProps) {
   const [copied, setCopied] = useState(false)
   const [activeTab, setActiveTab] = useState("preview")
   const [validationResult, setValidationResult] = useState<{ valid: boolean; message?: string } | null>(null)
@@ -53,8 +54,8 @@ export function EventSchemaPreview({ event, currency = "USD" }: EventSchemaPrevi
   }
   const price = getPrice()
 
-  // Crear el objeto JSON-LD
-  const schemaData = {
+  // Usar datos externos si están disponibles, de lo contrario generar
+  const schemaData = externalSchemaData || {
     "@context": "https://schema.org",
     "@graph": [
       {
@@ -300,7 +301,7 @@ export function EventSchemaPreview({ event, currency = "USD" }: EventSchemaPrevi
     // Por ahora, solo hacemos una validación básica
     try {
       // Verificar campos obligatorios para MusicEvent
-      const musicEvent = schemaData["@graph"].find((item) => item["@type"] === "MusicEvent")
+      const musicEvent = schemaData["@graph"].find((item: any) => item["@type"] === "MusicEvent")
 
       if (!musicEvent) {
         setValidationResult({ valid: false, message: "No se encontró un objeto MusicEvent en el schema" })

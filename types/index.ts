@@ -412,3 +412,27 @@ export interface EventCTA {
   createdBy: string
   updatedBy?: string
 }
+
+export interface EventDJ {
+  id: string
+  name: string
+  imageUrl: string
+  description: string
+  instagramHandle?: string
+  spotifyUrl?: string
+  soundcloudUrl?: string
+  genres?: string[]
+  country?: string
+  bio?: string
+  socialLinks?: {
+    facebook?: string
+    twitter?: string
+    soundcloud?: string
+    spotify?: string
+    website?: string
+  }
+  approved: boolean
+  createdAt: Date
+  updatedAt: Date
+  createdBy: string
+}

@@ -117,7 +117,9 @@ export function EventSchema({ event }: EventSchemaProps) {
         },
       },
       {
-        "@type": "MusicEvent",
+        "@type": event.eventType === "festival" ? "Festival" :
+                event.eventType === "concert" ? "MusicEvent" :
+                event.eventType === "dj_set" ? "MusicEvent" : "MusicEvent",
         "@id": ensureHttpsProtocol(`${baseUrl}/eventos/${event.slug}#event`),
         name: event.name,
         description: event.descriptionText || event.shortDescription,
@@ -187,16 +189,21 @@ export function EventSchema({ event }: EventSchemaProps) {
             : undefined,
         offers:
           Array.isArray(event.salesPhases) && event.salesPhases.length > 0
-            ? event.salesPhases.map((phase) => ({
-                "@type": "Offer",
-                name: phase.name,
-                availability: "https://schema.org/LimitedAvailability",
-                url: ensureHttpsProtocol(`${baseUrl}/eventos/${event.slug}`),
-                price: phase.zonesPricing && phase.zonesPricing.length > 0 ? phase.zonesPricing[0].price : undefined,
-                priceCurrency: event.currency || "USD",
-                validFrom: phase.startDate ? new Date(phase.startDate).toISOString() : startDateISO,
-                validThrough: phase.endDate ? new Date(phase.endDate).toISOString() : endDateISO,
-              }))
+            ? event.salesPhases.flatMap((phase) =>
+                phase.zonesPricing && phase.zonesPricing.length > 0
+                  ? phase.zonesPricing.map((pricing) => ({
+                      "@type": "Offer",
+                      name: `${phase.name} - ${event.zones?.find(z => z.id === pricing.zoneId)?.name || 'Zona'}`,
+                      availability: "https://schema.org/LimitedAvailability",
+                      url: ensureHttpsProtocol(`${baseUrl}/eventos/${event.slug}`),
+                      price: pricing.price,
+                      priceCurrency: event.currency || "USD",
+                      validFrom: phase.startDate ? new Date(phase.startDate).toISOString() : startDateISO,
+                      validThrough: phase.endDate ? new Date(phase.endDate).toISOString() : endDateISO,
+                      inventoryLevel: pricing.available,
+                    }))
+                  : []
+              )
             : price
               ? [
                   {
@@ -245,10 +252,19 @@ export function EventSchema({ event }: EventSchemaProps) {
         }),
         // Add additional properties for better SEO
         keywords: event.tags?.join(", "),
+        genre: event.categories?.join(", "),
         ...(event.isHighlighted && {
           superEvent: {
             "@type": "Festival",
             name: "RAVEHUB Music Festival Series",
+          },
+        }),
+        // Add superEvent for series of events
+        ...(event.eventType === "festival" && {
+          superEvent: {
+            "@type": "Festival",
+            name: event.name,
+            description: event.shortDescription,
           },
         }),
       },
