@@ -462,86 +462,84 @@ export default function EventDetail({ event }: EventDetailProps) {
                               isSoldOut ? "opacity-60" : ""
                             }`}
                           >
-                            <CardContent className="p-4">
-                              <div className="flex justify-between items-start mb-3">
-                                <div className="flex-1">
-                                  <div className="flex items-center gap-2 mb-1 flex-wrap">
-                                    <div className="flex items-center gap-1">
-                                      <h3 className="font-bold text-lg">{zone.name}</h3>
-                                      {zone.description && (
-                                        <button
-                                          onClick={() => setShowDescriptionModal(zone.id)}
-                                          className="w-4 h-4 rounded-full bg-muted hover:bg-muted/80 flex items-center justify-center transition-colors flex-shrink-0"
-                                          aria-label="Ver descripción"
-                                        >
-                                          <HelpCircle className="w-3 h-3 text-muted-foreground" />
-                                        </button>
-                                      )}
-                                    </div>
+                            <CardContent className="p-3 lg:p-4">
+                              <div className="flex items-center justify-between gap-3">
+                                {/* Left Side - Information */}
+                                <div className="flex-1 min-w-0">
+                                  <div className="flex items-center gap-1 mb-1 flex-wrap">
+                                    <h3 className="font-bold text-xs lg:text-sm leading-tight">{zone.name}</h3>
+                                    {zone.description && (
+                                      <button
+                                        onClick={() => setShowDescriptionModal(zone.id)}
+                                        className="w-3 h-3 rounded-full bg-muted hover:bg-muted/80 flex items-center justify-center transition-colors flex-shrink-0 ml-1"
+                                        aria-label="Ver descripción"
+                                      >
+                                        <HelpCircle className="w-2.5 h-2.5 text-muted-foreground" />
+                                      </button>
+                                    )}
                                     {isPremium && (
-                                      <Badge variant="secondary" className="bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300">
+                                      <Badge variant="secondary" className="bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300 text-[10px] px-1 py-0 ml-1">
                                         Premium
                                       </Badge>
                                     )}
                                     {isMidTier && (
-                                      <Badge variant="secondary" className="bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-300">
+                                      <Badge variant="secondary" className="bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-300 text-[10px] px-1 py-0 ml-1">
                                         VIP
                                       </Badge>
                                     )}
                                     {isBasic && (
-                                      <Badge variant="outline" className="text-gray-600">
+                                      <Badge variant="outline" className="text-gray-600 text-[10px] px-1 py-0 ml-1">
                                         General
                                       </Badge>
                                     )}
                                   </div>
                                 </div>
-                                <div className="text-right">
+
+                                {/* Right Side - Price and Actions */}
+                                <div className="flex flex-col items-end gap-1 lg:gap-2 flex-shrink-0">
                                   {pricing && (
                                     <div className="text-lg font-bold text-primary">
                                       {formatCurrency(pricing.price, event.currency, currency, exchangeRates)}
                                     </div>
                                   )}
+
+                                  {!isSoldOut ? (
+                                    <div className="flex items-center gap-2 lg:gap-3">
+                                      <div className="flex items-center gap-1">
+                                        <button
+                                          onClick={() => handleQuantityChange(zone.id, quantity - 1)}
+                                          className="w-6 h-6 lg:w-7 lg:h-7 rounded-full bg-muted hover:bg-muted/80 flex items-center justify-center transition-colors text-xs lg:text-sm"
+                                          disabled={quantity <= 0}
+                                        >
+                                          -
+                                        </button>
+                                        <span className="w-5 lg:w-6 text-center font-medium text-xs lg:text-sm">{quantity}</span>
+                                        <button
+                                          onClick={() => handleQuantityChange(zone.id, quantity + 1)}
+                                          className="w-6 h-6 lg:w-7 lg:h-7 rounded-full bg-muted hover:bg-muted/80 flex items-center justify-center transition-colors text-xs lg:text-sm"
+                                          disabled={quantity >= (pricing?.available || 0)}
+                                        >
+                                          +
+                                        </button>
+                                      </div>
+
+                                      <Button
+                                        onClick={() => handlePurchase(zone)}
+                                        disabled={quantity === 0}
+                                        className={`px-2 lg:px-3 py-1 text-[10px] lg:text-xs bg-primary hover:bg-primary/90 transition-colors h-6 lg:h-7 ${
+                                          quantity === 0 ? "opacity-60" : ""
+                                        }`}
+                                      >
+                                        {quantity === 0 ? "Seleccionar" : `Comprar ${quantity}`}
+                                      </Button>
+                                    </div>
+                                  ) : (
+                                    <Badge variant="destructive" className="px-2 lg:px-3 py-1 text-xs">
+                                      AGOTADO
+                                    </Badge>
+                                  )}
                                 </div>
                               </div>
-
-                              {/* Quantity Selector */}
-                              {!isSoldOut ? (
-                                <div className="flex items-center justify-between">
-                                  <div className="flex items-center gap-2">
-                                    <button
-                                      onClick={() => handleQuantityChange(zone.id, quantity - 1)}
-                                      className="w-8 h-8 rounded-full bg-muted hover:bg-muted/80 flex items-center justify-center transition-colors"
-                                      disabled={quantity <= 0}
-                                    >
-                                      <span className="text-lg font-medium">-</span>
-                                    </button>
-                                    <span className="w-8 text-center font-medium">{quantity}</span>
-                                    <button
-                                      onClick={() => handleQuantityChange(zone.id, quantity + 1)}
-                                      className="w-8 h-8 rounded-full bg-muted hover:bg-muted/80 flex items-center justify-center transition-colors"
-                                      disabled={quantity >= (pricing?.available || 0)}
-                                    >
-                                      <span className="text-lg font-medium">+</span>
-                                    </button>
-                                  </div>
-
-                                  <Button
-                                    onClick={() => handlePurchase(zone)}
-                                    disabled={quantity === 0}
-                                    className={`px-6 bg-primary hover:bg-primary/90 ${
-                                      quantity === 0 ? "opacity-60" : ""
-                                    }`}
-                                  >
-                                    {quantity === 0 ? "Seleccionar" : `Comprar ${quantity}`}
-                                  </Button>
-                                </div>
-                              ) : (
-                                <div className="text-center py-2">
-                                  <Badge variant="destructive" className="w-full justify-center">
-                                    Agotado
-                                  </Badge>
-                                </div>
-                              )}
                             </CardContent>
                           </Card>
                         )
