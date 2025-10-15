@@ -252,7 +252,6 @@ export function EventSchema({ event }: EventSchemaProps) {
         }),
         // Add additional properties for better SEO
         keywords: event.tags?.join(", "),
-        genre: event.categories?.join(", "),
       },
       // Remove the BreadcrumbList from here as it's already handled by the Breadcrumbs component
       ...(Array.isArray(event.faqSection) && event.faqSection.length > 0
