@@ -67,6 +67,35 @@ export async function getEventDJById(id: string): Promise<EventDJ | null> {
   }
 }
 
+// Get EventDJ by slug
+export async function getEventDJBySlug(slug: string): Promise<EventDJ | null> {
+  try {
+    const djsRef = collection(db, "eventDjs")
+    const q = query(
+      djsRef,
+      where("slug", "==", slug),
+      where("approved", "==", true),
+      limit(1)
+    )
+    const querySnapshot = await getDocs(q)
+
+    if (!querySnapshot.empty) {
+      const doc = querySnapshot.docs[0]
+      const data = doc.data()
+      return {
+        id: doc.id,
+        ...data,
+        createdAt: data.createdAt?.toDate(),
+        updatedAt: data.updatedAt?.toDate(),
+      } as EventDJ
+    }
+    return null
+  } catch (error) {
+    console.error("Error getting EventDJ by slug:", error)
+    throw error
+  }
+}
+
 // Search EventDJs by name
 export async function searchEventDJs(name: string, limitCount = 10): Promise<EventDJ[]> {
   try {

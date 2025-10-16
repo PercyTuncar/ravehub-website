@@ -512,3 +512,53 @@ export async function getEventCountsByCountry(): Promise<Record<string, number>>
     return {}
   }
 }
+
+// Get events by artist (for artist profile schema)
+export async function getEventsByArtist(artistName: string, limitCount = 10): Promise<Event[]> {
+  try {
+    const eventsRef = collection(db, "events")
+    const q = query(
+      eventsRef,
+      where("status", "==", "published"),
+      orderBy("startDate", "desc"),
+      limit(limitCount * 2) // Get more to filter
+    )
+
+    const querySnapshot = await getDocs(q)
+    const allEvents: Event[] = []
+
+    querySnapshot.forEach((doc) => {
+      const data = doc.data()
+      const event = {
+        id: doc.id,
+        ...data,
+        startDate: data.startDate?.toDate?.() || new Date(data.startDate),
+        endDate: data.endDate?.toDate?.() || (data.endDate ? new Date(data.endDate) : undefined),
+        createdAt: data.createdAt?.toDate?.() || new Date(data.createdAt || Date.now()),
+        updatedAt: data.updatedAt?.toDate?.() || new Date(data.updatedAt || Date.now()),
+      } as Event
+
+      allEvents.push(event)
+    })
+
+    // Filter events that include this artist in the lineup
+    const artistEvents = allEvents.filter((event) => {
+      return event.artistLineup?.some((artist) =>
+        artist.name?.toLowerCase().includes(artistName.toLowerCase())
+      )
+    })
+
+    // Sort by date (upcoming first, then past)
+    const now = new Date()
+    const upcomingEvents = artistEvents.filter(event => new Date(event.startDate) >= now)
+    const pastEvents = artistEvents.filter(event => new Date(event.startDate) < now)
+
+    upcomingEvents.sort((a, b) => new Date(a.startDate).getTime() - new Date(b.startDate).getTime())
+    pastEvents.sort((a, b) => new Date(b.startDate).getTime() - new Date(a.startDate).getTime())
+
+    return [...upcomingEvents, ...pastEvents].slice(0, limitCount)
+  } catch (error) {
+    console.error(`Error fetching events for artist ${artistName}:`, error)
+    return []
+  }
+}
