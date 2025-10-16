@@ -39,7 +39,7 @@ export async function generateMetadata({ params }: EventPageProps) {
 
     // Construir título optimizado
     const locationPart = event.eventType === "festival" ? "" : ` en ${event.location?.city || 'Latinoamérica'}`;
-    const title = `${event.name}${locationPart}: Entradas y Fecha | Ravehub`
+    const title = `${event.name}${locationPart} ${eventDate.getFullYear()}: Entradas y Fecha | Ravehub`
 
     // Lógica condicional para descripción
     let description: string;
