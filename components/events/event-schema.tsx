@@ -1,5 +1,3 @@
-"use client"
-
 import Script from "next/script"
 import type { Event } from "@/types"
 
@@ -289,7 +287,29 @@ export function EventSchema({ event }: EventSchemaProps) {
         // Add additional properties for better SEO
         keywords: event.tags?.join(", "),
       },
-      // Remove the BreadcrumbList from here as it's already handled by the Breadcrumbs component
+      {
+        "@type": "BreadcrumbList",
+        "@id": ensureHttpsProtocol(`${baseUrl}/eventos/${event.slug}#breadcrumb`),
+        itemListElement: [
+          {
+            "@type": "ListItem",
+            position: 1,
+            name: "Inicio",
+            item: ensureHttpsProtocol(baseUrl),
+          },
+          {
+            "@type": "ListItem",
+            position: 2,
+            name: "Eventos",
+            item: ensureHttpsProtocol(`${baseUrl}/eventos`),
+          },
+          {
+            "@type": "ListItem",
+            position: 3,
+            name: event.name,
+          },
+        ],
+      },
       ...(Array.isArray(event.faqSection) && event.faqSection.length > 0
         ? [
             {

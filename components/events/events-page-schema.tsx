@@ -161,6 +161,23 @@ export async function EventsPageSchema() {
           },
         },
       },
+      {
+        "@type": "BreadcrumbList",
+        "@id": ensureHttpsProtocol(`${baseUrl}/eventos#breadcrumb`),
+        itemListElement: [
+          {
+            "@type": "ListItem",
+            position: 1,
+            name: "Inicio",
+            item: ensureHttpsProtocol(baseUrl),
+          },
+          {
+            "@type": "ListItem",
+            position: 2,
+            name: "Eventos",
+          },
+        ],
+      },
       // Organization schema
       {
         "@type": "Organization",
