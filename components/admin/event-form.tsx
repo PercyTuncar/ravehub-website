@@ -44,6 +44,7 @@ import { format } from "date-fns"
 import { es } from "date-fns/locale"
 import { EventSchemaPreview } from "@/components/admin/event-schema-preview"
 import { GoogleSearchPreview } from "@/components/admin/google-search-preview"
+import { SEOPreview } from "@/components/admin/seo-preview"
 
 interface EventFormProps {
   eventId?: string
@@ -1421,12 +1422,13 @@ export function EventForm({ eventId }: EventFormProps) {
       )}
 
       <Tabs defaultValue="basic" onValueChange={setActiveTab} value={activeTab}>
-        <TabsList className="grid grid-cols-6">
+        <TabsList className="grid grid-cols-7">
           <TabsTrigger value="basic">Básico</TabsTrigger>
           <TabsTrigger value="location">Ubicación</TabsTrigger>
           <TabsTrigger value="artists">Artistas</TabsTrigger>
           <TabsTrigger value="zones">Zonas</TabsTrigger>
           <TabsTrigger value="sales">Fases de Venta</TabsTrigger>
+          <TabsTrigger value="seo">SEO Preview</TabsTrigger>
           <TabsTrigger value="advanced">Avanzado</TabsTrigger>
         </TabsList>
 
@@ -2362,57 +2364,6 @@ export function EventForm({ eventId }: EventFormProps) {
                     </Button>
                 </div>
 
-                {/* SEO Preview Section */}
-                <div className="mt-6 space-y-4">
-                  <GoogleSearchPreview
-                    title={formData.name ? (() => {
-                      const locationPart = formData.eventType === "festival" ? "" : ` en ${formData.location?.city || 'Latinoamérica'}`;
-                      const year = formData.startDate ? new Date(formData.startDate).getFullYear() : '';
-                      const yearPart = year ? ` ${year}` : '';
-                      return `${formData.name}${locationPart}${yearPart}: Entradas y Fecha | Ravehub`;
-                    })() : ''}
-                    description={(() => {
-                      const featuredArtist = formData.artistLineup?.find(artist => artist.isFeatured);
-                      const featuredName = featuredArtist?.name || "Artistas destacados";
-                      const formattedDate = formData.startDate ? new Date(formData.startDate).toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' }) : '';
-                      const location = formData.location?.venueName || formData.location?.city || 'Latinoamérica';
-
-                      let description: string;
-                      if (formData.eventType === "festival") {
-                        // Mantener la lógica actual para festivales
-                        if (!formData.artistLineup || formData.artistLineup.length === 0) {
-                          description = `¡No te pierdas ${formData.name || '[Nombre del evento]'}! Con un increíble lineup por anunciarse. Compra tus entradas para este ${formattedDate} en ${location}.`;
-                        } else {
-                          const secondArtist = formData.artistLineup.find(artist => !artist.isFeatured && artist.name !== featuredName)?.name;
-                          const lineupText = secondArtist ? `${featuredName}, ${secondArtist} y muchos más` : `${featuredName} y muchos más`;
-                          description = `¡Vive ${formData.name || '[Nombre del evento]'} con ${lineupText}! Compra tus entradas para este ${formattedDate} en ${location}.`;
-                        }
-                      } else {
-                        // Nueva lógica para eventos que NO son festivales (dj_set, concert, other)
-                        const venueName = formData.location?.venueName || formData.location?.city || 'el lugar';
-                        const cityName = formData.location?.city || 'la ciudad';
-                        const otherArtists = formData.artistLineup?.filter(artist => !artist.isFeatured) || [];
-
-                        if (!formData.artistLineup || formData.artistLineup.length === 0) {
-                          description = `${formData.name || '[Nombre del evento]'} llega a ${cityName} este ${formattedDate} en ${venueName}. ¡Compra tus entradas ahora!`;
-                        } else if (formData.artistLineup.length === 1) {
-                          description = `${featuredName} llega a ${cityName} este ${formattedDate} en ${venueName}. ¡Compra tus entradas ahora!`;
-                        } else {
-                          // Para múltiples artistas, incluir hasta 2 adicionales
-                          const additionalArtists = otherArtists.slice(0, 2).map(a => a.name);
-                          const artistsText = additionalArtists.length > 0 ? ` junto a ${additionalArtists.join(' y ')}` : '';
-                          description = `${featuredName} llega a ${cityName} este ${formattedDate} en ${venueName}${artistsText}. ¡Compra tus entradas ahora!`;
-                        }
-                      }
-                      return description;
-                    })()}
-                    url={`https://www.ravehublatam.com/eventos/${formData.slug || 'ejemplo'}`}
-                    date={formData.startDate ? new Date(formData.startDate).toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' }) : undefined}
-                    location={formData.location?.city ? `${formData.location.city}${formData.location.venueName ? ` - ${formData.location.venueName}` : ''}` : undefined}
-                    artists={formData.artistLineup?.map(artist => artist.name) || []}
-                    eventType={formData.eventType}
-                  />
-                </div>
                 </div>
 
                 <Separator />
@@ -2833,6 +2784,63 @@ export function EventForm({ eventId }: EventFormProps) {
                   </Button>
                 </div>
               )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* SEO Preview Tab */}
+        <TabsContent value="seo" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>Vista Previa SEO y Redes Sociales</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <SEOPreview
+                title={(() => {
+                  const locationPart = formData.eventType === "festival" ? "" : ` en ${formData.location?.city || 'Latinoamérica'}`;
+                  const year = formData.startDate ? new Date(formData.startDate).getFullYear() : '';
+                  const yearPart = year ? ` ${year}` : '';
+                  return `${formData.name || '[Nombre del evento]'}${locationPart}${yearPart}: Entradas y Fecha | Ravehub`;
+                })()}
+                description={(() => {
+                  const featuredArtist = formData.artistLineup?.find(artist => artist.isFeatured);
+                  const featuredName = featuredArtist?.name || "Artistas destacados";
+                  const formattedDate = formData.startDate ? new Date(formData.startDate).toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' }) : '';
+                  const location = formData.location?.venueName || formData.location?.city || 'Latinoamérica';
+
+                  let description: string;
+                  if (formData.eventType === "festival") {
+                    if (!formData.artistLineup || formData.artistLineup.length === 0) {
+                      description = `¡No te pierdas ${formData.name || '[Nombre del evento]'}! Con un increíble lineup por anunciarse. Compra tus entradas para este ${formattedDate} en ${location}.`;
+                    } else {
+                      const secondArtist = formData.artistLineup.find(artist => !artist.isFeatured && artist.name !== featuredName)?.name;
+                      const lineupText = secondArtist ? `${featuredName}, ${secondArtist} y muchos más` : `${featuredName} y muchos más`;
+                      description = `¡Vive ${formData.name || '[Nombre del evento]'} con ${lineupText}! Compra tus entradas para este ${formattedDate} en ${location}.`;
+                    }
+                  } else {
+                    const venueName = formData.location?.venueName || formData.location?.city || 'el lugar';
+                    const cityName = formData.location?.city || 'la ciudad';
+                    const otherArtists = formData.artistLineup?.filter(artist => !artist.isFeatured) || [];
+
+                    if (!formData.artistLineup || formData.artistLineup.length === 0) {
+                      description = `${formData.name || '[Nombre del evento]'} llega a ${cityName} este ${formattedDate} en ${venueName}. ¡Compra tus entradas ahora!`;
+                    } else if (formData.artistLineup.length === 1) {
+                      description = `${featuredName} llega a ${cityName} este ${formattedDate} en ${venueName}. ¡Compra tus entradas ahora!`;
+                    } else {
+                      const additionalArtists = otherArtists.slice(0, 2).map(a => a.name);
+                      const artistsText = additionalArtists.length > 0 ? ` junto a ${additionalArtists.join(' y ')}` : '';
+                      description = `${featuredName} llega a ${cityName} este ${formattedDate} en ${venueName}${artistsText}. ¡Compra tus entradas ahora!`;
+                    }
+                  }
+                  return description;
+                })()}
+                url={`https://www.ravehublatam.com/eventos/${formData.slug || 'ejemplo'}`}
+                imageUrl={mainImagePreview || formData.mainImageUrl}
+                date={formData.startDate ? new Date(formData.startDate).toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' }) : undefined}
+                location={formData.location?.city ? `${formData.location.city}${formData.location.venueName ? ` - ${formData.location.venueName}` : ''}` : undefined}
+                artists={formData.artistLineup?.map(artist => artist.name) || []}
+                eventType={formData.eventType}
+              />
             </CardContent>
           </Card>
         </TabsContent>
