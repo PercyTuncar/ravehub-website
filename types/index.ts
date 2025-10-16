@@ -416,6 +416,7 @@ export interface EventCTA {
 export interface EventDJ {
   id: string
   name: string
+  slug?: string
   imageUrl: string
   description: string
   instagramHandle?: string
@@ -430,9 +431,25 @@ export interface EventDJ {
     soundcloud?: string
     spotify?: string
     website?: string
+    wikipedia?: string
   }
   approved: boolean
   createdAt: Date
   updatedAt: Date
   createdBy: string
+  // Schema.org fields
+  performerType?: "Person" | "MusicGroup"
+  alternateName?: string
+  birthDate?: string
+  jobTitle?: string[]
+  foundingDate?: string
+  members?: Array<{
+    name: string
+    alternateName?: string
+    role?: string
+    sameAs?: string
+  }>
+  famousTracks?: Array<{ name: string }>
+  famousAlbums?: Array<{ name: string }>
+  [key: string]: any
 }

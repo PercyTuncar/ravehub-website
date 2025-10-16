@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import { generateSlug } from "@/lib/utils"
 import { useToast } from "@/hooks/use-toast"
 import { getAllApprovedEventDJs, createEventDJ, updateEventDJ, getEventDJById, deleteEventDJ } from "@/lib/firebase/event-djs"
 import { getAllCountries, searchCountries, createCountry } from "@/lib/firebase/countries"
@@ -30,33 +31,129 @@ import { useAuth } from "@/context/auth-context"
 import { Textarea } from "@/components/ui/textarea"
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog"
 import { CountryAutocomplete } from "@/components/ui/country-autocomplete"
+import { SEOPreview } from "@/components/admin/seo-preview"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
 // Countries will be loaded from database
 
 const genres = [
+ // House y sus derivados
   "House",
+  "Acid House",
+  "Afro House",
+  "Bass House",
+  "Chicago House",
+  "Deep House",
+  "Electro House",
+  "French House",
+  "Future House",
+  "G-House (Gangsta House)",
+  "Melodic House",
+  "Microhouse",
+  "Progressive House",
+  "Tech House",
+  "Tropical House",
+
+  // Techno y sus derivados
   "Techno",
+  "Acid Techno",
+  "Detroit Techno",
+  "Dub Techno",
+  "Hardgroove",
+  "Industrial Techno",
+  "Melodic Techno",
+  "Minimal Techno",
+  "Peak Time Techno",
+  "Raw / Hypnotic Techno",
+
+  // Trance y sus derivados
   "Trance",
+  "Acid Trance",
+  "Classic Trance",
+  "Goa Trance",
+  "Progressive Trance",
+  "Psytrance (Psychedelic Trance)",
+  "Tech Trance",
+  "Uplifting Trance",
+  "Vocal Trance",
+
+  // Hard Dance
   "Hardstyle",
+  "Hardcore",
+  "Gabber",
+  "Frenchcore",
+  "Happy Hardcore",
+  "Jumpstyle",
+  "Rawstyle",
+  "Uptempo Hardcore",
+
+  // Drum & Bass / Jungle
   "Drum & Bass",
+  "Jungle",
+  "Breakcore",
+  "Dancefloor D&B",
+  "Jump-Up",
+  "Liquid Drum & Bass",
+  "Neurofunk",
+  "Techstep",
+
+  // Dubstep y Bass Music
   "Dubstep",
-  "Hip Hop",
-  "R&B",
-  "Pop",
-  "Rock",
-  "Indie",
-  "Electronic",
-  "Latin",
-  "Reggaeton",
-  "Salsa",
-  "Cumbia",
-  "Merengue",
-  "Bachata",
+  "Brostep",
+  "Chillstep",
+  "Future Bass",
+  "Grime",
+  "Riddim",
+  "Trap (EDM)",
+  "Wave",
+
+  // Downtempo y Ambient
+  "Ambient",
+  "Chillwave",
+  "Downtempo",
+  "Glitch",
+  "IDM (Intelligent Dance Music)",
+  "Lofi Hip Hop",
+  "Trip Hop",
+  "Psybient",
+
+  // Breakbeat y relacionados
+  "Breakbeat",
+  "Big Beat",
+  "Florida Breaks",
+  "Nu Skool Breaks",
+
+  // Géneros Retro / Synth
+  "Synthwave",
+  "Retrowave",
+  "Vaporwave",
+  "Darksynth",
+  "Outrun",
+
+  // Otros géneros y fusiones
+  "Big Room House",
+  "Disco / Nu-Disco",
+  "EBM (Electronic Body Music)",
+  "Electro",
+  "Eurodance",
+  "Hardbass",
+  "Italo Disco",
+  "Moombahton",
+  "UK Garage / 2-Step",
+  
+
+  "Other",
+  'EDM'
 ]
 
 const formSchema = z.object({
   name: z.string().min(2, {
     message: "El nombre debe tener al menos 2 caracteres.",
+  }),
+  slug: z.string().min(1, {
+    message: "El slug es requerido.",
+  }).regex(/^[a-z0-9-]+$/, {
+    message: "El slug solo puede contener letras minúsculas, números y guiones.",
   }),
   instagramHandle: z.string().min(1, {
     message: "El Instagram es requerido.",
@@ -116,6 +213,7 @@ export function AdminEventArtists() {
     resolver: zodResolver(formSchema),
     defaultValues: {
       name: "",
+      slug: "",
       instagramHandle: "",
       country: "",
       bio: "",
@@ -190,6 +288,7 @@ export function AdminEventArtists() {
     setIsCreateMode(true)
     form.reset({
       name: "",
+      slug: "",
       instagramHandle: "",
       country: "",
       bio: "",
@@ -214,6 +313,17 @@ export function AdminEventArtists() {
     setIsDialogOpen(true)
   }
 
+  // Auto-generate slug when name changes
+  useEffect(() => {
+    const nameValue = form.watch("name")
+    const currentSlug = form.watch("slug")
+
+    if (nameValue && !currentSlug) {
+      const generatedSlug = generateSlug(nameValue)
+      form.setValue("slug", generatedSlug)
+    }
+  }, [form.watch("name")])
+
   const handleEditArtist = async (artistId: string) => {
     const artist = await getEventDJById(artistId)
     if (artist) {
@@ -222,6 +332,7 @@ export function AdminEventArtists() {
       setIsCreateMode(false)
       form.reset({
         name: artist.name,
+        slug: (artist as any).slug || "",
         instagramHandle: artist.instagramHandle || "",
         country: artist.country || "",
         bio: artist.bio || "",
@@ -278,11 +389,24 @@ export function AdminEventArtists() {
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     if (!user) return
 
+    // Check for duplicate slug
+    if (isCreateMode || (selectedArtist && values.slug !== selectedArtist.slug)) {
+      const existingArtist = artists.find(artist => artist.slug === values.slug)
+      if (existingArtist) {
+        form.setError("slug", {
+          type: "manual",
+          message: "Este slug ya está en uso. Por favor elige uno diferente."
+        })
+        return
+      }
+    }
+
     try {
       if (isCreateMode) {
         // Create new artist
         const newArtist: Omit<EventDJ, "id" | "createdAt" | "updatedAt"> = {
           name: values.name,
+          slug: values.slug,
           imageUrl: values.imageUrl || "",
           description: values.description || "",
           instagramHandle: values.instagramHandle,
@@ -327,6 +451,7 @@ export function AdminEventArtists() {
         // Update existing artist
         const updatedData = {
           name: values.name,
+          slug: values.slug,
           imageUrl: values.imageUrl || "",
           description: values.description || "",
           instagramHandle: values.instagramHandle,
@@ -341,6 +466,7 @@ export function AdminEventArtists() {
             website: values.officialWebsite || "",
             facebook: values.facebookUrl || "",
             twitter: values.twitterUrl || "",
+            wikipedia: values.wikipediaUrl || "",
           },
           // Schema.org fields
           ...(values.performerType && { performerType: values.performerType }),
@@ -528,7 +654,7 @@ export function AdminEventArtists() {
 
       {/* Create/Edit Artist Dialog */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>{isCreateMode ? "Crear Nuevo Artista" : "Editar Artista"}</DialogTitle>
             <DialogDescription>
@@ -541,226 +667,238 @@ export function AdminEventArtists() {
 
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <FormField
-                  control={form.control}
-                  name="name"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Nombre *</FormLabel>
-                      <FormControl>
-                        <Input {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+              <Tabs defaultValue="basic" className="w-full">
+                <TabsList className="grid w-full grid-cols-3">
+                  <TabsTrigger value="basic">Básico</TabsTrigger>
+                  <TabsTrigger value="advanced">Avanzado</TabsTrigger>
+                  <TabsTrigger value="seo">SEO Preview</TabsTrigger>
+                </TabsList>
+               <TabsContent value="basic" className="space-y-6">
+                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                   <FormField
+                     control={form.control}
+                     name="name"
+                     render={({ field }) => (
+                       <FormItem>
+                         <FormLabel>Nombre *</FormLabel>
+                         <FormControl>
+                           <Input {...field} />
+                         </FormControl>
+                         <FormMessage />
+                       </FormItem>
+                     )}
+                   />
 
-                <FormField
-                  control={form.control}
-                  name="instagramHandle"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Instagram *</FormLabel>
-                      <FormControl>
-                        <Input {...field} placeholder="@artistaoficial" />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                   <FormField
+                     control={form.control}
+                     name="slug"
+                     render={({ field }) => (
+                       <FormItem>
+                         <FormLabel>Slug (URL) *</FormLabel>
+                         <FormControl>
+                           <Input {...field} placeholder="martin-garrix" />
+                         </FormControl>
+                         <FormDescription>
+                           URL amigable generada automáticamente. Solo letras minúsculas, números y guiones.
+                         </FormDescription>
+                         <FormMessage />
+                       </FormItem>
+                     )}
+                   />
 
-                <FormField
-                  control={form.control}
-                  name="country"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>País *</FormLabel>
-                      <FormControl>
-                        <CountryAutocomplete
-                          value={field.value}
-                          onChange={field.onChange}
-                          onCountrySelect={(country) => {
-                            field.onChange(country.name)
-                            setSelectedCountry(country)
-                          }}
-                          placeholder="Buscar o crear país..."
-                        />
-                      </FormControl>
-                      <FormDescription>
-                        Busca un país existente o crea uno nuevo si no está en la lista
-                      </FormDescription>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                   <FormField
+                     control={form.control}
+                     name="instagramHandle"
+                     render={({ field }) => (
+                       <FormItem>
+                         <FormLabel>Instagram *</FormLabel>
+                         <FormControl>
+                           <Input {...field} placeholder="@artistaoficial" />
+                         </FormControl>
+                         <FormMessage />
+                       </FormItem>
+                     )}
+                   />
 
-                <FormField
-                  control={form.control}
-                  name="performerType"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Tipo de Artista *</FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Selecciona tipo" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          <SelectItem value="Person">Artista Individual (Person)</SelectItem>
-                          <SelectItem value="MusicGroup">Grupo Musical (MusicGroup)</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <FormDescription>
-                        Selecciona si es un artista solista o un grupo musical. Esto determina el Schema.org generado.
-                      </FormDescription>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                   <FormField
+                     control={form.control}
+                     name="country"
+                     render={({ field }) => (
+                       <FormItem>
+                         <FormLabel>País *</FormLabel>
+                         <FormControl>
+                           <CountryAutocomplete
+                             value={field.value}
+                             onChange={field.onChange}
+                             onCountrySelect={(country) => {
+                               field.onChange(country.name)
+                               setSelectedCountry(country)
+                             }}
+                             placeholder="Buscar o crear país..."
+                           />
+                         </FormControl>
+                         <FormDescription>
+                           Busca un país existente o crea uno nuevo si no está en la lista
+                         </FormDescription>
+                         <FormMessage />
+                       </FormItem>
+                     )}
+                   />
 
-                <FormField
-                  control={form.control}
-                  name="imageUrl"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>URL de Imagen</FormLabel>
-                      <FormControl>
-                        <Input {...field} placeholder="https://ejemplo.com/imagen.jpg" />
-                      </FormControl>
-                      <FormDescription>URL de la foto de perfil del artista</FormDescription>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                   <FormField
+                     control={form.control}
+                     name="performerType"
+                     render={({ field }) => (
+                       <FormItem>
+                         <FormLabel>Tipo de Artista *</FormLabel>
+                         <Select onValueChange={field.onChange} defaultValue={field.value}>
+                           <FormControl>
+                             <SelectTrigger>
+                               <SelectValue placeholder="Selecciona tipo" />
+                             </SelectTrigger>
+                           </FormControl>
+                           <SelectContent>
+                             <SelectItem value="Person">Artista Individual (Person)</SelectItem>
+                             <SelectItem value="MusicGroup">Grupo Musical (MusicGroup)</SelectItem>
+                           </SelectContent>
+                         </Select>
+                         <FormDescription>
+                           Selecciona si es un artista solista o un grupo musical. Esto determina el Schema.org generado.
+                         </FormDescription>
+                         <FormMessage />
+                       </FormItem>
+                     )}
+                   />
 
-                <FormField
-                  control={form.control}
-                  name="spotifyUrl"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>URL de Spotify</FormLabel>
-                      <FormControl>
-                        <Input {...field} placeholder="https://open.spotify.com/artist/..." />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                   <FormField
+                     control={form.control}
+                     name="imageUrl"
+                     render={({ field }) => (
+                       <FormItem>
+                         <FormLabel>URL de Imagen</FormLabel>
+                         <FormControl>
+                           <Input {...field} placeholder="https://ejemplo.com/imagen.jpg" />
+                         </FormControl>
+                         <FormDescription>URL de la foto de perfil del artista</FormDescription>
+                         <FormMessage />
+                       </FormItem>
+                     )}
+                   />
 
-                <FormField
-                  control={form.control}
-                  name="soundcloudUrl"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>URL de SoundCloud</FormLabel>
-                      <FormControl>
-                        <Input {...field} placeholder="https://soundcloud.com/..." />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
+                   <FormField
+                     control={form.control}
+                     name="spotifyUrl"
+                     render={({ field }) => (
+                       <FormItem>
+                         <FormLabel>URL de Spotify</FormLabel>
+                         <FormControl>
+                           <Input {...field} placeholder="https://open.spotify.com/artist/..." />
+                         </FormControl>
+                         <FormMessage />
+                       </FormItem>
+                     )}
+                   />
 
-              <FormField
-                control={form.control}
-                name="bio"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Biografía</FormLabel>
-                    <FormControl>
-                      <Textarea
-                        {...field}
-                        placeholder="Breve biografía del artista..."
-                        className="min-h-[80px]"
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+                   <FormField
+                     control={form.control}
+                     name="soundcloudUrl"
+                     render={({ field }) => (
+                       <FormItem>
+                         <FormLabel>URL de SoundCloud</FormLabel>
+                         <FormControl>
+                           <Input {...field} placeholder="https://soundcloud.com/..." />
+                         </FormControl>
+                         <FormMessage />
+                       </FormItem>
+                     )}
+                   />
+                 </div>
+               </TabsContent>
 
-              <FormField
-                control={form.control}
-                name="description"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Descripción para Eventos</FormLabel>
-                    <FormControl>
-                      <Textarea
-                        {...field}
-                        placeholder="Descripción detallada que aparecerá en los eventos..."
-                        className="min-h-[80px]"
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+                 <FormField
+                   control={form.control}
+                   name="bio"
+                   render={({ field }) => (
+                     <FormItem>
+                       <FormLabel>Biografía</FormLabel>
+                       <FormControl>
+                         <Textarea
+                           {...field}
+                           placeholder="Breve biografía del artista..."
+                           className="min-h-[80px]"
+                         />
+                       </FormControl>
+                       <FormMessage />
+                     </FormItem>
+                   )}
+                 />
 
-              <FormField
-                control={form.control}
-                name="genres"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Géneros Musicales</FormLabel>
-                    <div className="flex flex-wrap gap-2">
-                      {genres.map((genre) => (
-                        <Badge
-                          key={genre}
-                          variant={field.value?.includes(genre) ? "default" : "outline"}
-                          className="cursor-pointer"
-                          onClick={() => {
-                            const currentGenres = field.value || []
-                            if (currentGenres.includes(genre)) {
-                              field.onChange(currentGenres.filter((g) => g !== genre))
-                            } else {
-                              field.onChange([...currentGenres, genre])
-                            }
-                          }}
-                        >
-                          {genre}
-                        </Badge>
-                      ))}
-                    </div>
-                    <FormDescription>Selecciona los géneros musicales que toca el artista</FormDescription>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+                 <FormField
+                   control={form.control}
+                   name="description"
+                   render={({ field }) => (
+                     <FormItem>
+                       <FormLabel>Descripción para Eventos</FormLabel>
+                       <FormControl>
+                         <Textarea
+                           {...field}
+                           placeholder="Descripción detallada que aparecerá en los eventos..."
+                           className="min-h-[80px]"
+                         />
+                       </FormControl>
+                       <FormMessage />
+                     </FormItem>
+                   )}
+                 />
 
-              {/* Schema.org Preview Section */}
-              <div className="mt-6 p-4 border rounded-md bg-muted/50">
-                <h4 className="font-medium mb-3">Vista Previa Schema.org</h4>
-                <div className="space-y-2">
-                  <div>
-                    <p className="text-sm font-medium text-muted-foreground">Tipo de Schema:</p>
-                    <p className="text-blue-600 text-sm">
-                      {form.watch("performerType") === "Person" ? "Person (Artista Individual)" : "MusicGroup (Grupo Musical)"}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-sm font-medium text-muted-foreground">Nombre:</p>
-                    <p className="text-sm">{form.watch("name") || "[Nombre del artista]"}</p>
-                  </div>
-                  <div>
-                    <p className="text-sm font-medium text-muted-foreground">URLs sameAs:</p>
-                    <div className="text-xs space-y-1">
-                      {form.watch("spotifyUrl") && <p>🎵 Spotify: {form.watch("spotifyUrl")}</p>}
-                      {form.watch("soundcloudUrl") && <p>🎵 SoundCloud: {form.watch("soundcloudUrl")}</p>}
-                      {form.watch("officialWebsite") && <p>🌐 Website: {form.watch("officialWebsite")}</p>}
-                      {form.watch("facebookUrl") && <p>📘 Facebook: {form.watch("facebookUrl")}</p>}
-                      {form.watch("twitterUrl") && <p>🐦 Twitter: {form.watch("twitterUrl")}</p>}
-                      {form.watch("wikipediaUrl") && <p>📖 Wikipedia: {form.watch("wikipediaUrl")}</p>}
-                    </div>
-                  </div>
-                </div>
-                <p className="text-xs text-muted-foreground mt-3">
-                  El Schema.org completo se generará automáticamente cuando guardes el artista.
-                </p>
-              </div>
+                 <FormField
+                   control={form.control}
+                   name="genres"
+                   render={({ field }) => (
+                     <FormItem>
+                       <FormLabel>Géneros Musicales</FormLabel>
+                       <div className="flex flex-wrap gap-2">
+                         {genres.map((genre) => (
+                           <Badge
+                             key={genre}
+                             variant={field.value?.includes(genre) ? "default" : "outline"}
+                             className="cursor-pointer"
+                             onClick={() => {
+                               const currentGenres = field.value || []
+                               if (currentGenres.includes(genre)) {
+                                 field.onChange(currentGenres.filter((g) => g !== genre))
+                               } else {
+                                 field.onChange([...currentGenres, genre])
+                               }
+                             }}
+                           >
+                             {genre}
+                           </Badge>
+                         ))}
+                       </div>
+                       <FormDescription>Selecciona los géneros musicales que toca el artista</FormDescription>
+                       <FormMessage />
+                     </FormItem>
+                   )}
+                 />
+               </TabsContent>
+
+                <TabsContent value="seo" className="space-y-6">
+                  <SEOPreview
+                    title={form.watch("name") || "Nombre del artista"}
+                    description={form.watch("bio") || form.watch("description") || "Descripción del artista"}
+                    url={`https://www.ravehublatam.com/${form.watch("slug") || 'artista'}`}
+                    imageUrl={form.watch("imageUrl")}
+                  />
+                </TabsContent>
+              </Tabs>
+            </form>
+          </Form>
+        </DialogContent>
+      </Dialog>
+    </div>
+  )
+}
 
               {/* Campos dinámicos según el tipo de artista */}
               {form.watch("performerType") === "Person" && (
