@@ -80,7 +80,7 @@ interface EventDetailProps {
 }
 
 // Cambiar a export default
-export default function EventDetail({ event }: EventDetailProps) {
+export function EventDetail({ event }: EventDetailProps) {
   const { user } = useAuth()
   const { currency, exchangeRates } = useCurrency()
   const [timeLeft, setTimeLeft] = useState<string>("")

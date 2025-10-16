@@ -2367,7 +2367,9 @@ export function EventForm({ eventId }: EventFormProps) {
                   <GoogleSearchPreview
                     title={formData.name ? (() => {
                       const locationPart = formData.eventType === "festival" ? "" : ` en ${formData.location?.city || 'Latinoamérica'}`;
-                      return `${formData.name}${locationPart}: Entradas y Fecha | Ravehub`;
+                      const year = formData.startDate ? new Date(formData.startDate).getFullYear() : '';
+                      const yearPart = year ? ` ${year}` : '';
+                      return `${formData.name}${locationPart}${yearPart}: Entradas y Fecha | Ravehub`;
                     })() : ''}
                     description={(() => {
                       const featuredArtist = formData.artistLineup?.find(artist => artist.isFeatured);

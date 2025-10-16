@@ -2,7 +2,7 @@
 
 import type React from "react"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { useAuth } from "@/context/auth-context"
 import { useCurrency } from "@/context/currency-context"
@@ -66,6 +66,20 @@ export function PurchaseTicketModal({ isOpen, onClose, event, zone, phase }: Pur
   const [frequency, setFrequency] = useState<"weekly" | "biweekly" | "monthly">("monthly")
   const [paymentProof, setPaymentProof] = useState<File | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
+
+  // Add styles to document head on client side
+  useEffect(() => {
+    const styleTag = document.createElement("style")
+    styleTag.textContent = styles
+    document.head.appendChild(styleTag)
+
+    // Cleanup on unmount
+    return () => {
+      if (styleTag.parentNode) {
+        styleTag.parentNode.removeChild(styleTag)
+      }
+    }
+  }, [])
 
   // Get pricing for the selected zone
   const zonePricing = phase.zonesPricing.find((p) => p.zoneId === zone.id)
@@ -667,7 +681,3 @@ const styles = `
   }
 `
 
-// Add style tag to the component
-const styleTag = document.createElement("style")
-styleTag.textContent = styles
-document.head.appendChild(styleTag)

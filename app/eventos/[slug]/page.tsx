@@ -4,7 +4,7 @@ import { Suspense } from "react"
 import { EventSchema } from "@/components/events/event-schema"
 import { EventCTA } from "@/components/events/event-cta"
 import EventDetailSkeleton from "@/components/events/event-detail-skeleton"
-import EventDetailClientWrapper from "@/components/events/event-detail-client-wrapper"
+import { EventDetail } from "@/components/events/event-detail"
 
 interface EventPageProps {
   params: {
@@ -145,7 +145,7 @@ export default async function EventPage({ params }: EventPageProps) {
         <EventSchema event={normalizedEvent} />
         <div className="container mx-auto px-4 py-8">
           <Suspense fallback={<EventDetailSkeleton />}>
-            <EventDetailClientWrapper event={normalizedEvent} />
+            <EventDetail event={normalizedEvent} />
           </Suspense>
           <EventCTA eventId={event.id} />
         </div>
