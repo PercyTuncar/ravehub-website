@@ -14,7 +14,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Switch } from "@/components/ui/switch"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { ImageUploader } from "@/components/admin/image-uploader"
-import { SeoPreview } from "@/components/admin/seo-preview"
+import { SEOPreview } from "@/components/admin/seo-preview"
 import { Editor } from "@/components/admin/editor"
 import { toast } from "@/components/ui/use-toast"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
@@ -355,7 +355,7 @@ export function TagForm({ tagId }: TagFormProps) {
 
               <div className="mt-6 border p-4 rounded-md">
                 <h3 className="font-medium mb-2">Vista previa en Google</h3>
-                <SeoPreview
+                <SEOPreview
                   title={
                     tag.seoTitle ||
                     (tag.name ? `Posts etiquetados con ${tag.name} | Ravehub Blog` : "Título de la Etiqueta")

@@ -21,7 +21,7 @@ import { Progress } from "@/components/ui/progress"
 import { Editor } from "@/components/admin/editor"
 import { ImageUploader } from "@/components/admin/image-uploader"
 import { CategorySelect } from "@/components/admin/category-select"
-import { SeoPreview } from "@/components/admin/seo-preview"
+import { SEOPreview } from "@/components/admin/seo-preview"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Card, CardContent } from "@/components/ui/card"
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
@@ -2281,7 +2281,7 @@ export default function BlogFormPage({ postId, isEditing }: BlogFormPageProps) {
 
               <div className="mt-6">
                 <Label>Vista previa en Google</Label>
-                <SeoPreview
+                <SEOPreview
                   title={post.seoTitle || post.title || ""}
                   description={post.seoDescription || post.excerpt || ""}
                   url={`https://ravehub.es/blog/${post.slug || "titulo-del-articulo"}`}
