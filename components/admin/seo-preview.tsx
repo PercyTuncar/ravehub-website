@@ -69,40 +69,64 @@ export function SEOPreview({
           {/* Google Search Preview */}
           <TabsContent value="google" className="mt-4">
             <div className="border rounded-lg p-4 bg-white shadow-sm">
-              <h3 className="text-xl text-blue-600 hover:underline cursor-pointer mb-1 leading-tight">
-                {title || "Título del evento aparecerá aquí"}
-              </h3>
-              <div className="text-sm text-green-700 mb-2 flex items-center gap-1">
-                <span className="text-xs">🔒</span>
-                <span>{displayUrl || "ravehublatam.com/eventos/ejemplo"}</span>
-              </div>
-              <p className="text-sm text-gray-600 leading-relaxed mb-3">
-                {description || "La descripción del evento aparecerá aquí. Esta es la parte más importante para convencer a los usuarios de hacer clic en tu resultado."}
-              </p>
-              <div className="flex flex-wrap gap-2 text-xs text-gray-500">
-                {date && (
-                  <div className="flex items-center gap-1">
-                    <Calendar className="w-3 h-3" />
-                    <span>{date}</span>
+              <div className="flex gap-4">
+                {/* Left side - Text content */}
+                <div className="flex-1 min-w-0">
+                  <h3 className="text-xl text-blue-600 hover:underline cursor-pointer mb-1 leading-tight">
+                    {title || "Título del evento aparecerá aquí"}
+                  </h3>
+                  <div className="text-sm text-green-700 mb-2 flex items-center gap-1">
+                    <span className="text-xs">🔒</span>
+                    <span>{displayUrl || "ravehublatam.com/eventos/ejemplo"}</span>
                   </div>
-                )}
-                {location && (
-                  <div className="flex items-center gap-1">
-                    <MapPin className="w-3 h-3" />
-                    <span>{location}</span>
+                  <p className="text-sm text-gray-600 leading-relaxed mb-3">
+                    {description || "La descripción del evento aparecerá aquí. Esta es la parte más importante para convencer a los usuarios de hacer clic en tu resultado."}
+                  </p>
+                  <div className="flex flex-wrap gap-2 text-xs text-gray-500">
+                    {date && (
+                      <div className="flex items-center gap-1">
+                        <Calendar className="w-3 h-3" />
+                        <span>{date}</span>
+                      </div>
+                    )}
+                    {location && (
+                      <div className="flex items-center gap-1">
+                        <MapPin className="w-3 h-3" />
+                        <span>{location}</span>
+                      </div>
+                    )}
+                    {artists.length > 0 && (
+                      <div className="flex items-center gap-1">
+                        <Users className="w-3 h-3" />
+                        <span>{artists.slice(0, 2).join(", ")}{artists.length > 2 ? ` y ${artists.length - 2} más` : ""}</span>
+                      </div>
+                    )}
+                    {eventType && (
+                      <Badge variant="outline" className="text-xs px-1 py-0">
+                        {eventType === "festival" ? "Festival" : "Evento"}
+                      </Badge>
+                    )}
                   </div>
-                )}
-                {artists.length > 0 && (
-                  <div className="flex items-center gap-1">
-                    <Users className="w-3 h-3" />
-                    <span>{artists.slice(0, 2).join(", ")}{artists.length > 2 ? ` y ${artists.length - 2} más` : ""}</span>
-                  </div>
-                )}
-                {eventType && (
-                  <Badge variant="outline" className="text-xs px-1 py-0">
-                    {eventType === "festival" ? "Festival" : "Evento"}
-                  </Badge>
-                )}
+                </div>
+
+                {/* Right side - Image */}
+                <div className="flex-shrink-0">
+                  {imageUrl ? (
+                    <div className="w-20 h-20 bg-gray-100 rounded-lg overflow-hidden border">
+                      <Image
+                        src={imageUrl}
+                        alt="Vista previa del evento"
+                        width={80}
+                        height={80}
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                  ) : (
+                    <div className="w-20 h-20 bg-gray-100 rounded-lg border flex items-center justify-center">
+                      <span className="text-xs text-gray-400 text-center px-1">Sin imagen</span>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           </TabsContent>
