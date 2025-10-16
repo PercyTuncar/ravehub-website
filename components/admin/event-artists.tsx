@@ -11,7 +11,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Edit, Music, Search, Plus, Trash2 } from "lucide-react"
+import { Edit, Music, Search, Plus, Trash2, ExternalLink } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
@@ -609,6 +609,15 @@ export function AdminEventArtists() {
                         </TableCell>
                         <TableCell className="text-right">
                           <div className="flex justify-end gap-2">
+                            {(artist as any).slug && (
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => window.open(`/${(artist as any).slug}`, '_blank')}
+                              >
+                                <ExternalLink className="h-4 w-4 mr-1" /> Ver Página
+                              </Button>
+                            )}
                             <Button size="sm" variant="outline" onClick={() => handleEditArtist(artist.id)}>
                               <Edit className="h-4 w-4 mr-1" /> Editar
                             </Button>
