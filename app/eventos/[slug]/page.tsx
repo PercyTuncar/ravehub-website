@@ -158,6 +158,8 @@ export default async function EventPage({ params }: EventPageProps) {
     console.error("Error rendering event page:", error)
     notFound()
   }
+}
+
 export const revalidate = 10
 
 // Función para calcular revalidate dinámico basado en fecha del evento
@@ -178,5 +180,4 @@ function getRevalidateTime(eventDate: Date): number {
 
   // Para eventos lejanos, mantener 10 minutos
   return 600 // 10 minutos
-}
 }
