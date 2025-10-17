@@ -95,6 +95,9 @@ export async function generateMetadata({ params }: EventPageProps) {
       },
       alternates: {
         canonical: `https://www.ravehublatam.com/eventos/${slug}`,
+        languages: {
+          es: `https://www.ravehublatam.com/eventos/${slug}`,
+        }
       },
     }
   } catch (error) {
@@ -155,4 +158,25 @@ export default async function EventPage({ params }: EventPageProps) {
     console.error("Error rendering event page:", error)
     notFound()
   }
+export const revalidate = 10
+
+// Función para calcular revalidate dinámico basado en fecha del evento
+function getRevalidateTime(eventDate: Date): number {
+  const now = new Date()
+  const timeDiff = eventDate.getTime() - now.getTime()
+  const daysDiff = timeDiff / (1000 * 60 * 60 * 24)
+
+  // Si el evento es en menos de 7 días, revalidar cada 5 minutos
+  if (daysDiff <= 7 && daysDiff > 0) {
+    return 300 // 5 minutos
+  }
+
+  // Si el evento es en menos de 30 días, revalidar cada hora
+  if (daysDiff <= 30 && daysDiff > 0) {
+    return 3600 // 1 hora
+  }
+
+  // Para eventos lejanos, mantener 10 minutos
+  return 600 // 10 minutos
+}
 }

@@ -96,244 +96,62 @@ export function EventSchema({ event }: EventSchemaProps) {
   }
   const price = getPrice()
 
-  // Crear el objeto JSON-LD
+  // Crear el objeto JSON-LD simplificado
   const schemaData = {
     "@context": "https://schema.org",
-    "@graph": [
-      {
-        "@type": "WebPage",
-        "@id": ensureHttpsProtocol(`${baseUrl}/eventos/${event.slug}#webpage`),
-        url: ensureHttpsProtocol(`${baseUrl}/eventos/${event.slug}/`),
-        inLanguage: event.inLanguage || "es",
-        name: `Entradas para ${event.name} - RAVEHUB`,
-        datePublished: startDateISO,
-        dateModified: startDateISO,
-        description: event.shortDescription,
-        isPartOf: {
-          "@type": "WebSite",
-          "@id": ensureHttpsProtocol(`${baseUrl}/#website`),
-          url: ensureHttpsProtocol(baseUrl),
-          name: "RAVEHUB",
-          publisher: {
-            "@type": "Organization",
-            "@id": ensureHttpsProtocol(`${baseUrl}/#organization`),
-            name: "RAVEHUB",
-            url: ensureHttpsProtocol(baseUrl),
-            logo: {
-              "@type": "ImageObject",
-              "@id": ensureHttpsProtocol(`${baseUrl}/#logo`),
-              url: ensureHttpsProtocol(`${baseUrl}/logo.png`),
-              width: 261,
-              height: 60,
-              caption: "RAVEHUB",
-            },
-            image: {
-              "@type": "ImageObject",
-              "@id": ensureHttpsProtocol(`${baseUrl}/#logo`),
-              url: ensureHttpsProtocol(`${baseUrl}/logo.png`),
-              width: 261,
-              height: 60,
-              caption: "RAVEHUB",
-            },
-          },
-        },
-        potentialAction: {
-          "@type": "SearchAction",
-          target: {
-            "@type": "EntryPoint",
-            urlTemplate: ensureHttpsProtocol(`${baseUrl}/?s={search_term_string}`),
-          },
-          "query-input": {
-            "@type": "PropertyValueSpecification",
-            valueRequired: "http://schema.org/True",
-            valueName: "search_term_string",
-          },
-        },
+    "@type": event.eventType === "festival" ? "Festival" :
+            event.eventType === "concert" ? "MusicEvent" :
+            event.eventType === "dj_set" ? "MusicEvent" : "Event",
+    name: event.name,
+    description: event.descriptionText || event.shortDescription,
+    startDate: startDateISO,
+    endDate: endDateISO || startDateISO,
+    eventStatus: "https://schema.org/EventScheduled",
+    eventAttendanceMode: "https://schema.org/OfflineEventAttendanceMode",
+    location: event.location ? {
+      "@type": "Place",
+      name: event.location.venueName,
+      address: {
+        "@type": "PostalAddress",
+        streetAddress: event.location.streetAddress || event.location.address || "",
+        addressLocality: event.location.city,
+        addressRegion: event.location.region || event.location.city,
+        postalCode: event.location.postalCode,
+        addressCountry: event.location.country,
       },
-      {
-        "@type": event.eventType === "festival" ? "Festival" :
-                event.eventType === "concert" ? "MusicEvent" :
-                event.eventType === "dj_set" ? "MusicEvent" : "MusicEvent",
-        "@id": ensureHttpsProtocol(`${baseUrl}/eventos/${event.slug}#event`),
-        name: event.name,
-        description: event.descriptionText || event.shortDescription,
-        url: ensureHttpsProtocol(`${baseUrl}/eventos/${event.slug}/`),
-        startDate: startDateISO,
-        endDate: endDateISO || startDateISO, // Usar startDate como fallback si no hay endDate
-        eventStatus: event.eventStatus || "https://schema.org/EventScheduled",
-        eventAttendanceMode: event.eventAttendanceMode || "https://schema.org/OfflineEventAttendanceMode",
-        organizer: {
-          "@type": "Organization",
-          name: event.organizer?.name || "RAVEHUB",
-          url: ensureHttpsProtocol(event.organizer?.url || baseUrl),
-        },
-        location: event.location
-          ? {
-              "@type": "Place",
-              name: event.location.venueName,
-              address: {
-                "@type": "PostalAddress",
-                streetAddress: (event.location.streetAddress || event.location.address || "").replace(/^(Exacta \(para SEO\):?\s*)/i, "").trim(),
-                addressLocality: event.location.city,
-                addressRegion: event.location.region || event.location.city,
-                postalCode: event.location.postalCode,
-                addressCountry: {
-                  "@type": "Country",
-                  name: event.location.country,
-                },
-              },
-              geo:
-                event.location.latitude && event.location.longitude
-                  ? {
-                      "@type": "GeoCoordinates",
-                      latitude: event.location.latitude,
-                      longitude: event.location.longitude,
-                    }
-                  : undefined,
-            }
-          : undefined,
-        performer:
-          Array.isArray(event.artistLineup) && event.artistLineup.length > 0
-            ? event.artistLineup.map((artist) => ({
-                "@type": artist.name.toLowerCase().includes('duo') ||
-                        artist.name.toLowerCase().includes('&') ||
-                        artist.name.toLowerCase().includes('y ') ? "MusicGroup" : "Person",
-                "@id": ensureHttpsProtocol(`${baseUrl}/eventos/${event.slug}#performer-${artist.id}`),
-                name: artist.name,
-                image: artist.imageUrl ? {
-                  "@type": "ImageObject",
-                  url: artist.imageUrl,
-                  width: 400,
-                  height: 400,
-                } : undefined,
-                ...(artist.description && { description: artist.description }),
-                sameAs: [
-                  ...(artist.instagramHandle ? [`https://instagram.com/${artist.instagramHandle.replace("@", "")}`] : []),
-                  ...(artist.spotifyUrl ? [
-                    // Convertir URLs de Spotify a formato público si es necesario
-                    artist.spotifyUrl.startsWith('https://open.spotify.com')
-                      ? artist.spotifyUrl
-                      : artist.spotifyUrl.includes('spotify.com/artist/')
-                        ? `https://open.spotify.com/artist/${artist.spotifyUrl.split('/artist/')[1]?.split('?')[0]}`
-                        : undefined
-                  ].filter(Boolean) : []),
-                  ...(artist.soundcloudUrl ? [artist.soundcloudUrl] : []),
-                ].filter(Boolean),
-              }))
-            : undefined,
-        offers:
-          Array.isArray(event.salesPhases) && event.salesPhases.length > 0
-            ? event.salesPhases.flatMap((phase) =>
-                phase.zonesPricing && phase.zonesPricing.length > 0
-                  ? phase.zonesPricing.map((pricing) => ({
-                      "@type": "Offer",
-                      name: `${phase.name} - ${event.zones?.find(z => z.id === pricing.zoneId)?.name || 'Zona'}`,
-                      availability: "https://schema.org/LimitedAvailability",
-                      url: ensureHttpsProtocol(`${baseUrl}/eventos/${event.slug}`),
-                      price: pricing.price,
-                      priceCurrency: event.currency || "USD",
-                      validFrom: phase.startDate ? combineDateTime(phase.startDate, '00:00', event.country) : startDateISO,
-                      validThrough: phase.endDate ? combineDateTime(phase.endDate, '23:59', event.country) : endDateISO,
-                      inventoryLevel: pricing.available,
-                    }))
-                  : []
-              )
-            : price
-              ? [
-                  {
-                    "@type": "Offer",
-                    availability: "https://schema.org/LimitedAvailability",
-                    url: ensureHttpsProtocol(`${baseUrl}/eventos/${event.slug}`),
-                    price: price,
-                    priceCurrency: event.currency || "USD",
-                    validFrom: startDateISO,
-                    validThrough: endDateISO || startDateISO,
-                  },
-                ]
-              : undefined,
-        ...(event.subEvents &&
-          event.subEvents.length > 0 && {
-            subEvent: event.subEvents.map((subEvent) => ({
-              "@type": "Event",
-              name: subEvent.name,
-              description: subEvent.description,
-              startDate: subEvent.startDate ? combineDateTime(subEvent.startDate, '00:00', event.country) : undefined,
-              endDate: subEvent.endDate ? combineDateTime(subEvent.endDate, '23:59', event.country) : undefined,
-              location: {
-                "@type": "Place",
-                name: event.location?.venueName,
-              },
-            })),
-          }),
-        ...(event.mainImageUrl && {
-          image: {
-            "@type": "ImageObject",
-            url: event.mainImageUrl,
-            width: 1200,
-            height: 630,
-            caption: event.name,
-          },
-        }),
-        // Add aggregateRating if reviews exist
-        ...(event.reviews && event.reviews.length > 0 && {
-          aggregateRating: {
-            "@type": "AggregateRating",
-            ratingValue: event.reviews.reduce((sum, review) => sum + review.rating, 0) / event.reviews.length,
-            reviewCount: event.reviews.length,
-            bestRating: 5,
-            worstRating: 1,
-          },
-        }),
-        // Add additional properties for better SEO
-        keywords: event.tags?.join(", "),
-      },
-      {
-        "@type": "BreadcrumbList",
-        "@id": ensureHttpsProtocol(`${baseUrl}/eventos/${event.slug}#breadcrumb`),
-        itemListElement: [
-          {
-            "@type": "ListItem",
-            position: 1,
-            name: "Inicio",
-            item: ensureHttpsProtocol(baseUrl),
-          },
-          {
-            "@type": "ListItem",
-            position: 2,
-            name: "Eventos",
-            item: ensureHttpsProtocol(`${baseUrl}/eventos`),
-          },
-          {
-            "@type": "ListItem",
-            position: 3,
-            name: event.name,
-          },
-        ],
-      },
-      ...(Array.isArray(event.faqSection) && event.faqSection.length > 0
-        ? [
-            {
-              "@type": "FAQPage",
-              "@id": ensureHttpsProtocol(`${baseUrl}/eventos/${event.slug}#faq`),
-              mainEntity: event.faqSection.map((faq) => ({
-                "@type": "Question",
-                name: faq.question,
-                acceptedAnswer: {
-                  "@type": "Answer",
-                  text: faq.answer,
-                },
-              })),
-            },
-          ]
-        : []),
-    ],
+      geo: event.location.latitude && event.location.longitude ? {
+        "@type": "GeoCoordinates",
+        latitude: event.location.latitude,
+        longitude: event.location.longitude,
+      } : undefined,
+    } : undefined,
+    image: event.mainImageUrl ? [event.mainImageUrl] : undefined,
+    organizer: {
+      "@type": "Organization",
+      name: "Ravehub",
+      url: "https://www.ravehublatam.com/"
+    },
+    performer: Array.isArray(event.artistLineup) && event.artistLineup.length > 0
+      ? event.artistLineup.map((artist) => ({
+          "@type": "Person",
+          name: artist.name,
+        }))
+      : undefined,
+    offers: price ? [{
+      "@type": "Offer",
+      price: price.toString(),
+      priceCurrency: event.currency || "PEN",
+      availability: "https://schema.org/InStock",
+      url: `${baseUrl}/eventos/${event.slug}`
+    }] : undefined,
+    url: `${baseUrl}/eventos/${event.slug}`
   }
 
   return (
     <Script
       id="event-schema"
       type="application/ld+json"
-      dangerouslySetInnerHTML={{ __html: JSON.stringify(schemaData, null, 2) }}
+      dangerouslySetInnerHTML={{ __html: JSON.stringify(schemaData).replace(/</g, "\\u003c") }}
     />
   )
 }

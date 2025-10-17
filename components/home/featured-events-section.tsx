@@ -58,7 +58,7 @@ const FeaturedEventsSectionInner = memo(({ events }: FeaturedEventsSectionProps)
             <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold tracking-tight">Eventos destacados</h2>
           </div>
           <Button asChild variant="outline" className="group self-start">
-            <Link href="/eventos">
+            <Link href="/eventos" title="Ver todos los eventos de música electrónica en Latinoamérica">
               Ver todos
               <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
             </Link>
@@ -74,7 +74,7 @@ const FeaturedEventsSectionInner = memo(({ events }: FeaturedEventsSectionProps)
               onMouseEnter={() => handleMouseEnter(index)}
               onMouseLeave={handleMouseLeave}
             >
-              <EventCard event={event} lazyLoad={true} />
+              <EventCard event={event} />
             </div>
           ))}
         </div>
@@ -85,7 +85,7 @@ const FeaturedEventsSectionInner = memo(({ events }: FeaturedEventsSectionProps)
             size="lg"
             className="bg-primary hover:bg-primary/90 group shadow-lg hover:shadow-xl transition-shadow"
           >
-            <Link href="/eventos">
+            <Link href="/eventos" title="Descubre todos los eventos de música electrónica en Latinoamérica">
               Explorar todos los eventos
               <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
             </Link>

@@ -136,35 +136,52 @@ export default function RootLayout({
         {/* Optimización de fuentes */}
         <FontOptimization />
 
-        {/* Local Business Schema */}
-        <Script id="local-business-schema" type="application/ld+json" strategy="beforeInteractive">
+        {/* Organization Schema */}
+        <Script id="organization-schema" type="application/ld+json" strategy="beforeInteractive">
           {`
           {
             "@context": "https://schema.org",
-  "@type": "Organization",
-  "name": "Ravehub",
-  "url": "https://www.ravehublatam.com",
-  "logo": "https://www.ravehublatam.com/images/logo-full.png",
-  "description": "Plataforma líder en eventos de música electrónica en Latinoamérica",
-  "address": {
-    "@type": "PostalAddress",
-    "streetAddress": "Av. Santo Toribio 173, Vía Central 125, Torre Real 8",
-    "addressLocality": "Lima",
-    "postalCode": "15073",
-    "addressCountry": "PE"
-  },
-  "contactPoint": {
-    "@type": "ContactPoint",
-    "telephone": "+51-944-784-488",
-    "contactType": "customer service",
-    "availableLanguage": "Spanish"
-  },
-  "sameAs": [
-    "https://www.facebook.com/ravehub",
-    "https://www.instagram.com/ravehub.pe",
-    "https://www.tiktok.com/@ravehub.pe",
-    "https://www.youtube.com/channel/UC-wATPEqoNpPPcFHfTFae8w"
-  ]
+            "@type": "Organization",
+            "name": "Ravehub",
+            "url": "https://www.ravehublatam.com",
+            "logo": "https://www.ravehublatam.com/images/logo-full.png",
+            "description": "Plataforma líder en eventos de música electrónica en Latinoamérica",
+            "address": {
+              "@type": "PostalAddress",
+              "streetAddress": "Av. Santo Toribio 173, Vía Central 125, Torre Real 8",
+              "addressLocality": "Lima",
+              "postalCode": "15073",
+              "addressCountry": "PE"
+            },
+            "contactPoint": {
+              "@type": "ContactPoint",
+              "telephone": "+51-944-784-488",
+              "contactType": "customer service",
+              "availableLanguage": "Spanish"
+            },
+            "sameAs": [
+              "https://www.facebook.com/ravehub",
+              "https://www.instagram.com/ravehub.pe",
+              "https://www.tiktok.com/@ravehub.pe",
+              "https://www.youtube.com/channel/UC-wATPEqoNpPPcFHfTFae8w"
+            ]
+          }
+          `}
+        </Script>
+
+        {/* WebSite Schema */}
+        <Script id="website-schema" type="application/ld+json" strategy="beforeInteractive">
+          {`
+          {
+            "@context": "https://schema.org",
+            "@type": "WebSite",
+            "name": "Ravehub",
+            "url": "https://www.ravehublatam.com/",
+            "potentialAction": {
+              "@type": "SearchAction",
+              "target": "https://www.ravehublatam.com/buscar?q={search_term_string}",
+              "query-input": "required name=search_term_string"
+            }
           }
           `}
         </Script>

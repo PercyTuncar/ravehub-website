@@ -16,7 +16,7 @@ export default function robots(): MetadataRoute.Robots {
         "/completar-registro",
       ],
     },
-    sitemap: "https://www.ravehublatam.com/sitemap-index.xml",
+    sitemap: "https://www.ravehublatam.com/sitemap.xml",
     host: "https://www.ravehublatam.com",
   }
 }
