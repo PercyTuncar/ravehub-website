@@ -138,8 +138,7 @@ export default function RootLayout({
 
         {/* Organization Schema */}
         <Script id="organization-schema" type="application/ld+json" strategy="beforeInteractive">
-          {`
-          {
+          {JSON.stringify({
             "@context": "https://schema.org",
             "@type": "Organization",
             "name": "Ravehub",
@@ -165,14 +164,12 @@ export default function RootLayout({
               "https://www.tiktok.com/@ravehub.pe",
               "https://www.youtube.com/channel/UC-wATPEqoNpPPcFHfTFae8w"
             ]
-          }
-          `}
+          })}
         </Script>
 
         {/* WebSite Schema */}
         <Script id="website-schema" type="application/ld+json" strategy="beforeInteractive">
-          {`
-          {
+          {JSON.stringify({
             "@context": "https://schema.org",
             "@type": "WebSite",
             "name": "Ravehub",
@@ -182,8 +179,7 @@ export default function RootLayout({
               "target": "https://www.ravehublatam.com/buscar?q={search_term_string}",
               "query-input": "required name=search_term_string"
             }
-          }
-          `}
+          })}
         </Script>
       </head>
       <body className={inter.className}>

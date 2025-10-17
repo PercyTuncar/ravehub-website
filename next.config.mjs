@@ -5,7 +5,7 @@ const nextConfig = {
     domains: ['firebasestorage.googleapis.com', 'v0.blob.com'],
     unoptimized: true,
   },
-  // Add proper headers for Service Worker
+  // Add proper headers for Service Worker and security
   async headers() {
     return [
       {
@@ -26,6 +26,27 @@ const nextConfig = {
           {
             key: 'Expires',
             value: '0',
+          },
+        ],
+      },
+      {
+        source: '/(.*)',
+        headers: [
+          {
+            key: 'Strict-Transport-Security',
+            value: 'max-age=63072000; includeSubDomains; preload',
+          },
+          {
+            key: 'X-Frame-Options',
+            value: 'DENY',
+          },
+          {
+            key: 'X-Content-Type-Options',
+            value: 'nosniff',
+          },
+          {
+            key: 'Referrer-Policy',
+            value: 'strict-origin-when-cross-origin',
           },
         ],
       },
